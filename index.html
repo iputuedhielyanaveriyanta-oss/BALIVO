@@ -107,7 +107,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 async function loadProducts(){
   const {data,error}=await sb.from('products')
-    .select('id,name,brand,category,description,details,image,images,price,stock,status')
+    .select('id,name,brand,category,description,details,image,images,price,stock,status,stock_source,supplier_cost,markup,supplier_product_url')
     .eq('status','ACTIVE')
     .order('created_at',{ascending:false});
 
@@ -395,7 +395,7 @@ function openCart(){document.getElementById('drawer').classList.add('open');rend
 function closeCart(){document.getElementById('drawer').classList.remove('open')}
 function openCheckout(){
   if(!cart.length)return;
-  document.getElementById('checkoutSummary').innerHTML='<b>Total: '+document.getElementById('cartTotal').textContent+'</b>';
+  document.getElementById('checkoutSummary').innerHTML='<b>Total: '+document.getElementById('cartTotal').textContent+'</b><div style="font-size:12px;color:#777;margin-top:5px">Setelah order dibuat, Admin BALIVO akan memproses pesanan.</div>';
   document.getElementById('checkoutModal').classList.add('open');
 }
 function closeCheckout(){document.getElementById('checkoutModal').classList.remove('open')}
@@ -431,6 +431,13 @@ document.getElementById('checkoutForm').addEventListener('submit',async e=>{
   }).filter(Boolean);
 
   const total=items.reduce((s,x)=>s+x.subtotal,0);
+  const sourceProducts=cart.map(x=>products.find(p=>p.id===x.id)).filter(Boolean);
+  const isDropship=sourceProducts.some(p=>p.stock_source==='SUPPLIER');
+  const supplierCost=sourceProducts.reduce((sum,p)=>{
+    const line=cart.find(x=>x.id===p.id);
+    return sum+(Number(p.supplier_cost||p.cost||0)*Number(line?.qty||0));
+  },0);
+  const profit=total-supplierCost;
 
   const {data:order,error:orderError}=await sb.from('orders').insert({
     customer_name:name,
@@ -459,5 +466,5 @@ saveCart();
 loadProducts();
 
 </script>
-</body>
+<div id="orderSuccess" class="modal" style="display:none"></div></body>
 </html>

@@ -59,6 +59,10 @@
     <div id="ownSupplierWrap"><label>Supplier (opsional)</label><input id="ownSupplier" placeholder="Nama supplier"></div>
     <div><label>Harga Modal *</label><input id="ownCost" type="number" min="0" step="1000" placeholder="100000"></div>
     <div><label>Harga Jual *</label><input id="ownPrice" type="number" min="0" step="1000" placeholder="149000"></div>
+    <div><label>Harga Supplier</label><input id="supplierCost" type="number" min="0" step="1000" value="0" placeholder="100000"></div>
+    <div><label>Markup</label><input id="supplierMarkup" type="number" min="0" step="1000" value="0" placeholder="39000"></div>
+    <div class="wide"><label>Link Produk Supplier</label><input id="supplierProductUrl" type="url" placeholder="https://shopee.co.id/..."></div>
+
     <div><label>Stok *</label><input id="ownStock" type="number" min="0" step="1" value="0"></div>
     <div class="wide">
       <label>Stok per Size (opsional untuk pakaian)</label>
@@ -82,11 +86,17 @@
 <div class="panel">
   <h2>Produk BALIVO</h2>
   <p style="color:#777">Stok bisa langsung diubah di sini. Perubahan tersimpan ke database.</p>
-  <table class="table"><thead><tr><th>Produk</th><th>Sumber</th><th>Modal</th><th>Harga Jual</th><th>Size / Stok</th><th>Stok</th><th>Profit</th><th>Aksi</th></tr></thead><tbody id="productRows"></tbody></table>
+  <table class="table"><thead><tr><th>Produk</th><th>Sumber</th><th>Modal</th><th>Harga Jual</th><th>Size / Stok</th><th>Stok</th><th>Profit</th><th>Supplier</th><th>Aksi</th></tr></thead><tbody id="productRows"></tbody></table>
 </div>
 </section>
 
-<section id="orders" class="tab hidden"><div class="panel"><h2>Order BALIVO</h2><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Pembayaran</th><th>Status</th></tr></thead><tbody id="orderRows"></tbody></table></div></section>
+<section id="orders" class="tab hidden">
+<section id="dropshipWorkflow" class="panel">
+  <h2>🚚 Dropship — Siap Diproses</h2>
+  <p style="color:#777">Setelah customer membayar, order dropship masuk di sini. Satu klik menyiapkan data untuk checkout ke supplier.</p>
+  <div id="dropshipRows"></div>
+</section>
+<div class="panel"><h2>Order BALIVO</h2><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Pembayaran</th><th>Status</th></tr></thead><tbody id="orderRows"></tbody></table></div></section>
 </div>
 <script>
 const SUPABASE_URL='https://hftgmssnzvrlwlslcaet.supabase.co';
@@ -132,11 +142,72 @@ function readSizeStock(){
   return any?s:null;
 }
 
+
+function renderDropship(){
+  const el=document.getElementById('dropshipRows');
+  if(!el)return;
+  const ds=orders.filter(o=>o.fulfillment_type==='DROPSHIP');
+  if(!ds.length){el.innerHTML='<div class="preview">Belum ada order dropship.</div>';return;}
+  el.innerHTML=ds.map(o=>`
+    <div class="panel" style="margin:10px 0">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <strong>${esc(o.order_number)}</strong>
+        <span class="pill">${esc(o.fulfillment_status||'NEW')}</span>
+      </div>
+      <div style="margin-top:8px"><b>${esc(o.customer_name||'')}</b> · ${esc(o.customer_phone||'')}</div>
+      <div style="font-size:12px;color:#666;margin-top:4px">${esc(o.customer_address||'')}</div>
+      <div style="margin-top:8px">Customer bayar: <b>${money(o.total)}</b> · Supplier: <b>${money(o.supplier_cost)}</b> · Profit: <b>${money(o.markup_profit)}</b></div>
+      <div style="font-size:12px;color:#777;margin-top:5px">Pembayaran customer: <b>${esc(o.payment_status||'PENDING')}</b> · Supplier: <b>${esc(o.supplier_payment_status||'WAITING')}</b></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="primary" onclick="prepareSupplierOrder('${o.id}')">PROSES KE SUPPLIER</button>
+        <button class="btn" onclick="copyCustomerData('${o.id}')">COPY DATA CUSTOMER</button>
+        ${o.supplier_payment_status==='WAITING'?`<button class="btn" onclick="markSupplierPaid('${o.id}')">SUDAH DIBAYAR SUPPLIER</button>`:''}
+        <button class="btn" onclick="markSupplierShipped('${o.id}')">SUDAH DIKIRIM</button>
+      </div>
+      <div id="supplier_${o.id}" class="preview" style="margin-top:10px"></div>
+    </div>`).join('');
+}
+
+async function copyCustomerData(id){
+  const o=orders.find(x=>x.id===id); if(!o)return;
+  const {data:items}=await sb.from('order_items').select('product_name,size,quantity').eq('order_id',id);
+  const text=`${o.customer_name||''}\n${o.customer_phone||''}\n${o.customer_address||''}\n\n${(items||[]).map(x=>`${x.product_name} | Size ${x.size||'-'} | Qty ${x.quantity}`).join('\n')}`;
+  if(navigator.clipboard) await navigator.clipboard.writeText(text);
+  alert('Data customer sudah disalin.');
+}
+
+async function prepareSupplierOrder(id){
+  if(!requireAdmin())return;
+  const o=orders.find(x=>x.id===id); if(!o)return;
+  const {data:items,error}=await sb.from('order_items').select('product_name,quantity,unit_price,size,product_id').eq('order_id',id);
+  if(error){alert(error.message);return}
+  const lines=(items||[]).map(x=>`${x.product_name} | Size: ${x.size||'-'} | Qty: ${x.quantity}`).join('\\n');
+  const text=`ORDER ${o.order_number}\\nNama: ${o.customer_name}\\nHP: ${o.customer_phone}\\nAlamat: ${o.customer_address}\\n\\n${lines}`;
+  const box=document.getElementById('supplier_'+id);
+  box.textContent=text;
+  const {error:upErr}=await sb.from('orders').update({fulfillment_status:'SUPPLIER_PAYMENT_PENDING',supplier_payment_status:'WAITING',supplier_order_note:text}).eq('id',id);
+  if(upErr){alert(upErr.message);return}
+  if(navigator.clipboard) await navigator.clipboard.writeText(text);
+  alert('Data order supplier sudah disiapkan dan disalin. Buka link produk supplier dari produk terkait untuk checkout.');
+  await refresh();
+}
+async function markSupplierPaid(id){
+  if(!requireAdmin())return;
+  const {error}=await sb.from('orders').update({supplier_payment_status:'PAID',fulfillment_status:'SUPPLIER_PAID'}).eq('id',id);
+  if(error)alert(error.message);else await refresh();
+}
+async function markSupplierShipped(id){
+  if(!requireAdmin())return;
+  const tracking=prompt('Masukkan nomor resi supplier (opsional):','');
+  const {error}=await sb.from('orders').update({fulfillment_status:'SHIPPED',supplier_tracking_number:tracking||null,status:'SHIPPED'}).eq('id',id);
+  if(error)alert(error.message);else await refresh();
+}
+
 async function refresh(){
-  const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,stock,status,stock_source,image,sizes,supplier_id,suppliers(name)').order('created_at',{ascending:false});
+  const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,stock,status,stock_source,image,sizes,supplier_id,supplier_cost,markup,supplier_product_url,suppliers(name)').order('created_at',{ascending:false});
   if(pe){console.error(pe);return}
   products=(p||[]).map(x=>({...x,supplier:x.suppliers?.name||'-'}));
-  const {data:o,error:oe}=session?await sb.from('orders').select('id,order_number,customer_name,total,payment_method,payment_status,status,created_at').order('created_at',{ascending:false}):{data:[],error:null};
+  const {data:o,error:oe}=session?await sb.from('orders').select('id,order_number,customer_name,customer_phone,customer_address,total,subtotal,payment_method,payment_status,status,fulfillment_type,supplier_cost,markup_profit,supplier_payment_status,fulfillment_status,supplier_order_note,supplier_tracking_number,created_at').order('created_at',{ascending:false}):{data:[],error:null};
   if(oe)console.error(oe);orders=o||[];
   sProducts.textContent=products.length;
   sStock.textContent=products.reduce((a,x)=>a+Number(x.stock||0),0);
@@ -150,6 +221,7 @@ async function refresh(){
     <td class="profit">${money(Number(p.price||0)-Number(p.cost||0))}</td>
     <td><button class="mini" onclick="editSizes('${p.id}')">Edit Size</button> <button class="mini" onclick="deleteProduct('${p.id}')">Hapus</button></td>
   </tr>`).join('');
+  renderDropship();
   orderRows.innerHTML=orders.map(o=>`<tr><td>${esc(o.order_number||o.id)}</td><td>${esc(o.customer_name||'-')}</td><td>${money(o.total)}</td><td>${esc(o.payment_method||'-')} / ${esc(o.payment_status||'-')}</td><td><span class="pill">${esc(o.status||'-')}</span></td></tr>`).join('');
 }
 
@@ -182,10 +254,13 @@ async function saveOwnProduct(){
     let image=ownImageUrl.value.trim();
     if(ownImageFile.files[0])image=await uploadProductImage(ownImageFile.files[0]);
     const supplierId=ownSource.value==='SUPPLIER'?await getSupplierId(ownSupplier.value.trim()):null;
+    const supCost=Number(document.getElementById('supplierCost').value)||cost;
+    const mk=Number(document.getElementById('supplierMarkup').value)||Math.max(0,price-supCost);
+    const supplierProductUrl=document.getElementById('supplierProductUrl').value.trim();
     const {error}=await sb.from('products').insert({
       name,brand:ownBrand.value.trim()||'BALIVO',category:ownCategory.value.trim()||'Lainnya',
       supplier_id:supplierId,cost,price,stock,stock_source:ownSource.value,
-      image,images:image?[image]:[],sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE'
+      image,images:image?[image]:[],sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',supplier_cost:supCost,markup:mk,supplier_product_url:supplierProductUrl
     });
     if(error)throw error;
     ownMessage.textContent='Produk berhasil disimpan ke Supabase.';
