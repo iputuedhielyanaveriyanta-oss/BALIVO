@@ -181,18 +181,27 @@ async function importShopeeProduct(){
   msg.textContent='Mengambil data produk Shopee...';
   const {data,error}=await sb.functions.invoke('import-product-universal',{body:{url}});
   if(error || data?.error){msg.textContent='Gagal: '+(data?.error||error.message);return}
+  const price=Number(String(data.price||'').replace(/[^0-9]/g,''))||0;
   document.getElementById('ownName').value=data.title||'';
-  document.getElementById('ownBrand').value=data.source||'Supplier';
+  document.getElementById('ownBrand').value=data.brand||data.source||'Supplier';
   document.getElementById('ownSource').value='SUPPLIER';
-  document.getElementById('supplierCost').value=Number(data.price||0);
+  document.getElementById('ownCost').value=price||'';
+  document.getElementById('supplierCost').value=price;
   document.getElementById('supplierMarkup').value=0;
-  document.getElementById('ownPrice').value=Number(data.price||0);
+  document.getElementById('ownPrice').value=price||'';
   document.getElementById('supplierProductUrl').value=data.url||url;
   document.getElementById('ownDescription').value=data.description||'';
+  document.getElementById('ownDetails').value=data.availability?('Ketersediaan supplier: '+data.availability):'';
   document.getElementById('ownImageUrl').value=data.image||'';
   document.getElementById('ownSupplier').value=data.source||'Supplier';
   document.getElementById('ownCategory').value='Tshirt';
-  msg.innerHTML='Produk berhasil dibaca. <b>Periksa harga/markup/stok lalu tekan SIMPAN PRODUK & STOK.</b>';
+  const missing=[];
+  if(!data.title)missing.push('nama');
+  if(!price)missing.push('harga');
+  if(!data.image)missing.push('foto');
+  msg.innerHTML=missing.length
+    ? `Link berhasil dibuka, tetapi data ${missing.join(', ')} tidak tersedia dari supplier. <b>Data yang berhasil ditemukan tetap sudah dimasukkan ke form.</b>`
+    : 'Produk berhasil dibaca. <b>Periksa harga/markup/stok lalu tekan SIMPAN PRODUK & STOK.</b>';
   document.getElementById('ownName').scrollIntoView({behavior:'smooth',block:'center'});
 }
 
