@@ -1,17 +1,38 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta name="theme-color" content="#111"><title>BALIVO ADMIN — Dropship</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#111;--muted:#737373;--line:#e5e7eb;--dark:#111;--ok:#15803d;--red:#dc2626}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif}.top{background:#111;color:#fff;padding:14px 20px}.top b{letter-spacing:2px}.wrap{max-width:1200px;margin:auto;padding:20px}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:18px}.tabs button{padding:11px 14px;border:1px solid var(--line);background:#fff;border-radius:10px;white-space:nowrap}.tabs button.active{background:#111;color:#fff}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{padding:15px;border:1px solid var(--line);border-radius:12px}.stat small{color:var(--muted)}.stat b{display:block;font-size:24px;margin-top:5px}.form{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.form input,.form textarea,.form select{padding:11px;border:1px solid var(--line);border-radius:9px;width:100%}.wide{grid-column:1/-1}button.primary{background:#111;color:#fff;padding:11px 15px;border-radius:9px;font-weight:700}.btn{padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:#fff}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line);font-size:13px}.pill{padding:4px 7px;border-radius:999px;background:#f0f0f0;font-size:11px}.profit{color:var(--ok);font-weight:800}.danger{color:var(--red)}.preview{background:#fafafa;border:1px dashed #ccc;padding:12px;border-radius:10px;white-space:pre-wrap;font-size:12px}.hidden{display:none!important}@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.table{display:block;overflow:auto;white-space:nowrap}}
+</style>
+
+<style>
+.authbar{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:-6px 0 14px}
+.authdot{font-size:12px;color:#737373}
+.own-panel{border:1px solid #dfe3e8;background:#fff}
+.product-form .wide{grid-column:1/-1}
+.product-form label{font-size:12px;color:#666;display:block;margin-bottom:5px}
+.product-form input,.product-form select,.product-form textarea{font:inherit}
+.file-note{font-size:11px;color:#777;margin-top:5px}
+.stock-edit{display:flex;align-items:center;gap:5px}
+.stock-edit input{width:72px;padding:7px;border:1px solid #ddd;border-radius:7px}
+.mini{padding:6px 8px;border:1px solid #ddd;border-radius:7px;background:#fff}
+.login-box{max-width:420px;margin:70px auto;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:22px}
+.login-box h2{margin-top:0}
 </style>
 </head>
 <body>
 <div class="top"><b>BALIVO ADMIN</b> <span style="opacity:.7">— Dropship & Marketplace</span></div>
 <div class="wrap">
 <div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="import">Dropship Import</button><button data-tab="products">Produk</button><button data-tab="orders">Order</button></div>
+<div class="authbar">
+  <span id="authStatus" class="authdot">Belum login admin</span>
+  <button id="loginBtn" class="btn" onclick="openLogin()">Login Admin</button>
+  <button id="logoutBtn" class="btn hidden" onclick="logoutAdmin()">Logout</button>
+</div>
+
 
 <section id="dashboard" class="tab"><div class="grid">
 <div class="stat"><small>Total Produk</small><b id="sProducts">0</b></div><div class="stat"><small>Stok</small><b id="sStock">0</b></div><div class="stat"><small>Order</small><b id="sOrders">0</b></div><div class="stat"><small>Profit Kotor</small><b id="sProfit">Rp0</b></div>
@@ -23,18 +44,186 @@
   {"name":"Produk Supplier","brand":"Supplier A","category":"T-Shirt","cost":100000,"stock":10,"image":"https://...jpg"}
 ]</div></div></section>
 
-<section id="products" class="tab hidden"><div class="panel"><h2>Produk BALIVO</h2><table class="table"><thead><tr><th>Produk</th><th>Supplier</th><th>Modal</th><th>Harga Jual</th><th>Stok</th><th>Profit</th></tr></thead><tbody id="productRows"></tbody></table></div></section>
+<section id="products" class="tab hidden">
+<div class="panel own-panel">
+  <h2>Tambah Produk Saya</h2>
+  <p style="color:#777">Untuk barang milik sendiri, kamu bisa input produk, modal, harga jual, stok, dan foto. Produk akan tersimpan di Supabase.</p>
+  <div class="form product-form">
+    <div><label>Nama Produk *</label><input id="ownName" required placeholder="Contoh: Kaos Bali Premium"></div>
+    <div><label>Brand</label><input id="ownBrand" placeholder="BALIVO / Brand sendiri"></div>
+    <div><label>Kategori</label><input id="ownCategory" placeholder="T-Shirt"></div>
+    <div><label>Sumber Stok</label><select id="ownSource"><option value="OWN">STOK SAYA</option><option value="SUPPLIER">SUPPLIER</option></select></div>
+    <div id="ownSupplierWrap"><label>Supplier (opsional)</label><input id="ownSupplier" placeholder="Nama supplier"></div>
+    <div><label>Harga Modal *</label><input id="ownCost" type="number" min="0" step="1000" placeholder="100000"></div>
+    <div><label>Harga Jual *</label><input id="ownPrice" type="number" min="0" step="1000" placeholder="149000"></div>
+    <div><label>Stok *</label><input id="ownStock" type="number" min="0" step="1" value="0"></div>
+    <div><label>Foto Produk (upload)</label><input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp"><div class="file-note">Maks. 5 MB. Foto disimpan di Supabase Storage.</div></div>
+    <div><label>Atau URL Foto</label><input id="ownImageUrl" type="url" placeholder="https://...jpg"></div>
+    <div class="wide"><label>Deskripsi</label><textarea id="ownDescription" rows="3" placeholder="Deskripsi produk"></textarea></div>
+    <div class="wide"><label>Detail</label><textarea id="ownDetails" rows="3" placeholder="Material, ukuran, warna, dll."></textarea></div>
+  </div>
+  <br><button class="primary" onclick="saveOwnProduct()">SIMPAN PRODUK & STOK</button>
+  <div id="ownMessage" class="preview" style="margin-top:12px">Belum ada perubahan.</div>
+</div>
+<div class="panel">
+  <h2>Produk BALIVO</h2>
+  <p style="color:#777">Stok bisa langsung diubah di sini. Perubahan tersimpan ke database.</p>
+  <table class="table"><thead><tr><th>Produk</th><th>Sumber</th><th>Modal</th><th>Harga Jual</th><th>Stok</th><th>Profit</th><th>Aksi</th></tr></thead><tbody id="productRows"></tbody></table>
+</div>
+</section>
 
 <section id="orders" class="tab hidden"><div class="panel"><h2>Order BALIVO</h2><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Pembayaran</th><th>Status</th></tr></thead><tbody id="orderRows"></tbody></table></div></section>
 </div>
 <script>
-const demo=[{id:'demo-1',name:'Bali Sunset Tee',brand:'BALIVO',category:'T-Shirt',cost:100000,price:149000,stock:12,image:'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80',supplier:'Demo Supplier'},{id:'demo-2',name:'Island Everyday Cap',brand:'BALIVO',category:'Accessories',cost:70000,price:99000,stock:8,image:'https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=700&q=80',supplier:'Demo Supplier'}];
-let products=JSON.parse(localStorage.getItem('balivo_products')||'null')||demo;localStorage.setItem('balivo_products',JSON.stringify(products));
-const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n);
-function refresh(){products=JSON.parse(localStorage.getItem('balivo_products')||'[]');let orders=JSON.parse(localStorage.getItem('balivo_orders')||'[]');sProducts.textContent=products.length;sStock.textContent=products.reduce((a,p)=>a+Number(p.stock||0),0);sOrders.textContent=orders.length;sProfit.textContent=money(products.reduce((a,p)=>a+(Number(p.price||0)-Number(p.cost||0))*Number(p.stock||0),0));productRows.innerHTML=products.map(p=>`<tr><td>${p.name}</td><td>${p.supplier||p.brand||'-'}</td><td>${money(p.cost||0)}</td><td>${money(p.price||0)}</td><td>${p.stock||0}</td><td class="profit">${money((p.price-p.cost)||0)}</td></tr>`).join('');orderRows.innerHTML=orders.map(o=>`<tr><td>${o.id}</td><td>${o.customer?.name||'-'}</td><td>${money(o.total||0)}</td><td>${o.payment||'-'}</td><td><span class="pill">${o.status}</span></td></tr>`).join('')}
-function parseCSV(t){let lines=t.trim().split(/\r?\n/),head=lines.shift().split(',').map(x=>x.trim());return lines.map(l=>{let v=l.split(',');let o={};head.forEach((h,i)=>o[h]=v[i]?.trim()||'');return o})}
-async function importFile(){let f=file.files[0];if(!f)return alert('Pilih file JSON atau CSV.');let text=await f.text(),raw=f.name.toLowerCase().endsWith('.json')?JSON.parse(text):parseCSV(text),rows=Array.isArray(raw)?raw:(raw.products||[]);let m=Number(markup.value||0)/100;let imported=rows.map((r,i)=>{let cost=Number(r.cost??r.modal??r.price_supplier??r.price??0),stock=Number(r.stock??0);return {id:'imp-'+Date.now()+'-'+i,name:r.name||r.title||'Produk Import',brand:r.brand||'Supplier',category:r.category||'Lainnya',cost,price:Math.round(cost*(1+m)),stock,image:r.image||r.image_url||'',supplier:r.supplier||r.store||'Supplier',status:mode.value==='draft'?'DRAFT':'ACTIVE'}});products=[...products,...imported];localStorage.setItem('balivo_products',JSON.stringify(products));importPreview.textContent=`Berhasil membaca ${imported.length} produk.\nMarkup: ${markup.value}%\nHarga jual sudah dihitung.\nMode: ${mode.value==='draft'?'DRAFT':'PUBLISH'}`;refresh()}
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));document.getElementById(b.dataset.tab).classList.remove('hidden')});refresh();
+const SUPABASE_URL='https://hftgmssnzvrlwlslcaet.supabase.co';
+const SUPABASE_KEY='sb_publishable_xOadp1YRBil2PZ9RHeeWIQ_Z3LqMF-D';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let products=[],orders=[],session=null;
+const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function openLogin(){document.getElementById('loginModal').classList.remove('hidden');document.getElementById('loginModal').style.display='flex';}
+function closeLogin(){document.getElementById('loginModal').classList.add('hidden');document.getElementById('loginModal').style.display='none';}
+async function loginAdmin(){
+  const email=document.getElementById('loginEmail').value.trim(),password=document.getElementById('loginPassword').value;
+  if(!email||!password){loginMessage.textContent='Email dan password wajib diisi.';return}
+  loginMessage.textContent='Sedang login...';
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error){loginMessage.textContent='Login gagal: '+error.message;return}
+  session=data.session;closeLogin();updateAuthUI();await refresh();
+}
+async function logoutAdmin(){await sb.auth.signOut();session=null;updateAuthUI();await refresh();}
+async function updateAuthUI(){
+  const {data}=await sb.auth.getSession();session=data.session;
+  authStatus.textContent=session?('Login: '+(session.user.email||'Admin')):'Belum login admin';
+  loginBtn.classList.toggle('hidden',!!session);logoutBtn.classList.toggle('hidden',!session);
+}
+function requireAdmin(){if(!session){openLogin();return false}return true}
+
+async function refresh(){
+  const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,stock,status,stock_source,image,supplier_id,suppliers(name)').order('created_at',{ascending:false});
+  if(pe){console.error(pe);return}
+  products=(p||[]).map(x=>({...x,supplier:x.suppliers?.name||'-'}));
+  const {data:o,error:oe}=session?await sb.from('orders').select('id,order_number,customer_name,total,payment_method,payment_status,status,created_at').order('created_at',{ascending:false}):{data:[],error:null};
+  if(oe)console.error(oe);orders=o||[];
+  sProducts.textContent=products.length;
+  sStock.textContent=products.reduce((a,x)=>a+Number(x.stock||0),0);
+  sOrders.textContent=orders.length;
+  sProfit.textContent=money(products.reduce((a,x)=>a+(Number(x.price||0)-Number(x.cost||0))*Number(x.stock||0),0));
+  productRows.innerHTML=products.map(p=>`<tr>
+    <td><strong>${esc(p.name)}</strong><div style="font-size:11px;color:#777">${esc(p.brand||'')}</div></td>
+    <td>${p.stock_source==='OWN'?'STOK SAYA':esc(p.supplier||'Supplier')}</td>
+    <td>${money(p.cost)}</td><td>${money(p.price)}</td>
+    <td><div class="stock-edit"><button class="mini" onclick="changeStock('${p.id}',-1)">−</button><input type="number" min="0" value="${Number(p.stock)||0}" onchange="setStock('${p.id}',this.value)"><button class="mini" onclick="changeStock('${p.id}',1)">+</button></div></td>
+    <td class="profit">${money(Number(p.price||0)-Number(p.cost||0))}</td>
+    <td><button class="mini" onclick="deleteProduct('${p.id}')">Hapus</button></td>
+  </tr>`).join('');
+  orderRows.innerHTML=orders.map(o=>`<tr><td>${esc(o.order_number||o.id)}</td><td>${esc(o.customer_name||'-')}</td><td>${money(o.total)}</td><td>${esc(o.payment_method||'-')} / ${esc(o.payment_status||'-')}</td><td><span class="pill">${esc(o.status||'-')}</span></td></tr>`).join('');
+}
+
+async function getSupplierId(name){
+  if(!name)return null;
+  const {data:found}=await sb.from('suppliers').select('id').eq('name',name).limit(1);
+  if(found?.[0])return found[0].id;
+  const {data,error}=await sb.from('suppliers').insert({name}).select('id').single();
+  if(error)throw error;return data.id;
+}
+
+async function uploadProductImage(file){
+  if(!file)return '';
+  if(file.size>5*1024*1024)throw new Error('Foto maksimal 5 MB.');
+  const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+  const path=`${crypto.randomUUID()}.${ext}`;
+  const {error}=await sb.storage.from('balivo-product-images').upload(path,file,{contentType:file.type,upsert:false});
+  if(error)throw error;
+  return sb.storage.from('balivo-product-images').getPublicUrl(path).data.publicUrl;
+}
+
+async function saveOwnProduct(){
+  if(!requireAdmin())return;
+  const name=ownName.value.trim(),cost=Number(ownCost.value),price=Number(ownPrice.value),stock=Number(ownStock.value);
+  if(!name||!Number.isFinite(cost)||!Number.isFinite(price)||!Number.isInteger(stock)||stock<0){ownMessage.textContent='Nama, modal, harga jual, dan stok wajib valid.';return}
+  ownMessage.textContent='Menyimpan produk...';
+  try{
+    let image=ownImageUrl.value.trim();
+    if(ownImageFile.files[0])image=await uploadProductImage(ownImageFile.files[0]);
+    const supplierId=ownSource.value==='SUPPLIER'?await getSupplierId(ownSupplier.value.trim()):null;
+    const {error}=await sb.from('products').insert({
+      name,brand:ownBrand.value.trim()||'BALIVO',category:ownCategory.value.trim()||'Lainnya',
+      supplier_id:supplierId,cost,price,stock,stock_source:ownSource.value,
+      image,images:image?[image]:[],description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE'
+    });
+    if(error)throw error;
+    ownMessage.textContent='Produk berhasil disimpan ke Supabase.';
+    ['ownName','ownBrand','ownCategory','ownSupplier','ownCost','ownPrice','ownDescription','ownDetails','ownImageUrl'].forEach(id=>document.getElementById(id).value='');
+    ownStock.value='0';ownImageFile.value='';
+    await refresh();
+  }catch(e){ownMessage.textContent='Gagal: '+e.message}
+}
+
+async function setStock(id,value){
+  if(!requireAdmin())return;
+  const stock=Math.max(0,parseInt(value,10)||0);
+  const {error}=await sb.from('products').update({stock}).eq('id',id);
+  if(error)alert('Gagal mengubah stok: '+error.message);else await refresh();
+}
+async function changeStock(id,delta){
+  if(!requireAdmin())return;
+  const p=products.find(x=>x.id===id);if(!p)return;
+  await setStock(id,Math.max(0,Number(p.stock||0)+delta));
+}
+async function deleteProduct(id){
+  if(!requireAdmin())return;
+  const p=products.find(x=>x.id===id);if(!p||!confirm('Hapus '+p.name+'?'))return;
+  const {error}=await sb.from('products').delete().eq('id',id);
+  if(error)alert('Gagal menghapus: '+error.message);else await refresh();
+}
+
+function parseCSV(t){
+  const lines=t.trim().split(/\r?\n/),head=lines.shift().split(',').map(x=>x.trim());
+  return lines.map(l=>{const v=l.split(','),o={};head.forEach((h,i)=>o[h]=v[i]?.trim()||'');return o});
+}
+async function importFile(){
+  if(!requireAdmin())return;
+  const f=file.files[0];if(!f)return alert('Pilih file JSON atau CSV.');
+  try{
+    const text=await f.text(),raw=f.name.toLowerCase().endsWith('.json')?JSON.parse(text):parseCSV(text);
+    const rows=Array.isArray(raw)?raw:(raw.products||[]),m=Number(markup.value||0)/100;
+    const imported=rows.map(r=>{
+      const cost=Number(r.cost??r.modal??r.price_supplier??r.price??0),stock=Math.max(0,parseInt(r.stock??0,10)||0);
+      return {name:r.name||r.title||'Produk Import',brand:r.brand||'Supplier',category:r.category||'Lainnya',
+        cost,price:Math.round(cost*(1+m)),stock,stock_source:r.stock_source==='OWN'?'OWN':'SUPPLIER',
+        image:r.image||r.image_url||'',images:r.image||r.image_url?[r.image||r.image_url]:[],
+        status:mode.value==='draft'?'DRAFT':'ACTIVE',description:r.description||'',details:r.details||''};
+    });
+    if(!imported.length)return alert('Tidak ada produk.');
+    const {error}=await sb.from('products').insert(imported);if(error)throw error;
+    importPreview.textContent=`Berhasil menyimpan ${imported.length} produk ke Supabase.\nMarkup: ${markup.value}%\nMode: ${mode.value==='draft'?'DRAFT':'PUBLISH'}`;
+    await refresh();
+  }catch(e){alert('Import gagal: '+e.message)}
+}
+
+ownSource.addEventListener('change',()=>{ownSupplierWrap.style.display=ownSource.value==='SUPPLIER'?'block':'none'});
+
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));document.getElementById(b.dataset.tab).classList.remove('hidden');
+});
+sb.auth.onAuthStateChange(()=>setTimeout(async()=>{await updateAuthUI();await refresh()},0));
+(async()=>{await updateAuthUI();await refresh()})();
 </script>
+
+<div id="loginModal" class="modal hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div class="login-box">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h2>Login Admin BALIVO</h2><button class="btn" onclick="closeLogin()">✕</button></div>
+    <p style="color:#777">Login diperlukan untuk menambah produk, mengubah stok, import katalog, dan mengelola order.</p>
+    <div class="form" style="grid-template-columns:1fr">
+      <input id="loginEmail" type="email" autocomplete="username" placeholder="Email admin">
+      <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password">
+    </div>
+    <br><button class="primary" style="width:100%" onclick="loginAdmin()">LOGIN</button>
+    <div id="loginMessage" class="preview" style="margin-top:12px">Gunakan akun Auth Supabase Admin.</div>
+  </div>
+</div>
 </body>
 </html>
