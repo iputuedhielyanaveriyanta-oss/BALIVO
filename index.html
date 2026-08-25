@@ -33,6 +33,23 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 .action-stack{display:flex;flex-direction:column;gap:14px;margin-top:16px}
 .action-stack button{width:100%;min-height:54px;margin:0!important;border-radius:14px}
 </style>
+
+<style id="balivo-final-ui">
+/* Separate review and cart actions so they never touch */
+.review-btn{display:block;width:100%;min-height:54px;margin-top:12px!important;margin-bottom:16px!important;border-radius:14px!important}
+#viewAdd{display:block;width:100%;min-height:54px;margin-top:0!important;border-radius:14px!important}
+#viewReviews{margin-bottom:4px}
+.size-box{display:block!important;padding:14px 0 2px}
+.size-options{min-height:44px}
+.size-btn{min-width:56px;min-height:44px}
+.size-empty{padding:10px 12px;border:1px dashed #ccc;border-radius:10px;color:#777;font-size:13px}
+@media(max-width:600px){
+  .product-view{grid-template-columns:1fr;height:94vh}
+  .viewer{min-height:42vh}
+  .view-info{overflow:auto;padding:16px}
+  .review-btn,#viewAdd{min-height:56px}
+}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -149,7 +166,7 @@ function render(){
         <div class="price">${money(p.price)}</div>
         <div class="stock">${Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'}</div>
         <button class="add" ${Number(p.stock)<=0?'disabled':''}
-          onclick="event.stopPropagation();openProduct('${p.id}')">Pilih Size</button>
+          onclick="event.stopPropagation();openProduct('${p.id}')">${sizeData(p).length?'Pilih Size':'Lihat Produk'}</button>
       </div>
     </article>
   `).join('');
@@ -195,7 +212,11 @@ function renderSizes(p){
   const box=document.getElementById('viewSizes');
   const data=sizeData(p);
   selectedSize=null;
-  if(!data.length){ box.innerHTML=''; box.parentElement.style.display='none'; return; }
+  if(!data.length){
+  box.innerHTML='<div class="size-empty">Ukuran belum diatur untuk produk ini. Atur stok S / M / L / XL / XXL dari Admin.</div>';
+  box.parentElement.style.display='block';
+  return;
+}
   box.parentElement.style.display='block';
   box.innerHTML=data.map(x=>
     `<button type="button" class="size-btn" ${x.stock<=0?'disabled':''}
@@ -211,7 +232,7 @@ function selectSize(size){
   if(!item || item.stock<=0)return;
   selectedSize=size;
   document.querySelectorAll('#viewSizes .size-btn').forEach(b=>{
-    b.classList.toggle('active', b.textContent.trim().startsWith(size+' ') || b.textContent.trim()===size);
+    b.classList.toggle('active', b.dataset.size===size);
   });
 }
 
