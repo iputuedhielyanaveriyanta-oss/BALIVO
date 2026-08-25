@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111"><title>BALIVO ADMIN — Dropship</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--text:#111;--muted:#737373;--line:#e5e7eb;--dark:#111;--ok:#15803d;--red:#dc2626}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif}.top{background:#111;color:#fff;padding:14px 20px}.top b{letter-spacing:2px}.wrap{max-width:1200px;margin:auto;padding:20px}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:18px}.tabs button{padding:11px 14px;border:1px solid var(--line);background:#fff;border-radius:10px;white-space:nowrap}.tabs button.active{background:#111;color:#fff}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{padding:15px;border:1px solid var(--line);border-radius:12px}.stat small{color:var(--muted)}.stat b{display:block;font-size:24px;margin-top:5px}.form{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.form input,.form textarea,.form select{padding:11px;border:1px solid var(--line);border-radius:9px;width:100%}.wide{grid-column:1/-1}button.primary{background:#111;color:#fff;padding:11px 15px;border-radius:9px;font-weight:700}.btn{padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:#fff}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line);font-size:13px}.pill{padding:4px 7px;border-radius:999px;background:#f0f0f0;font-size:11px}.profit{color:var(--ok);font-weight:800}.danger{color:var(--red)}.preview{background:#fafafa;border:1px dashed #ccc;padding:12px;border-radius:10px;white-space:pre-wrap;font-size:12px}.hidden{display:none!important}@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.table{display:block;overflow:auto;white-space:nowrap}}
+</style>
+</head>
+<body>
+<div class="top"><b>BALIVO ADMIN</b> <span style="opacity:.7">— Dropship & Marketplace</span></div>
+<div class="wrap">
+<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="import">Dropship Import</button><button data-tab="products">Produk</button><button data-tab="orders">Order</button></div>
+
+<section id="dashboard" class="tab"><div class="grid">
+<div class="stat"><small>Total Produk</small><b id="sProducts">0</b></div><div class="stat"><small>Stok</small><b id="sStock">0</b></div><div class="stat"><small>Order</small><b id="sOrders">0</b></div><div class="stat"><small>Profit Kotor</small><b id="sProfit">Rp0</b></div>
+</div></section>
+
+<section id="import" class="tab hidden"><div class="panel"><h2>Dropship Import</h2><p style="color:#777">Import katalog supplier dari JSON atau CSV. Harga jual dihitung dari harga modal + markup.</p>
+<div class="form"><input id="file" class="wide" type="file" accept=".json,.csv,text/csv,application/json"><input id="markup" type="number" value="25" min="0" step="0.1" placeholder="Markup %"><select id="mode"><option value="publish">Publish langsung</option><option value="draft">Simpan sebagai draft</option></select></div><br><button class="primary" onclick="importFile()">IMPORT PRODUK</button><div id="importPreview" class="preview" style="margin-top:12px">Belum ada file.</div></div>
+<div class="panel"><h3>Format JSON contoh</h3><div class="preview">[
+  {"name":"Produk Supplier","brand":"Supplier A","category":"T-Shirt","cost":100000,"stock":10,"image":"https://...jpg"}
+]</div></div></section>
+
+<section id="products" class="tab hidden"><div class="panel"><h2>Produk BALIVO</h2><table class="table"><thead><tr><th>Produk</th><th>Supplier</th><th>Modal</th><th>Harga Jual</th><th>Stok</th><th>Profit</th></tr></thead><tbody id="productRows"></tbody></table></div></section>
+
+<section id="orders" class="tab hidden"><div class="panel"><h2>Order BALIVO</h2><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Pembayaran</th><th>Status</th></tr></thead><tbody id="orderRows"></tbody></table></div></section>
+</div>
+<script>
+const demo=[{id:'demo-1',name:'Bali Sunset Tee',brand:'BALIVO',category:'T-Shirt',cost:100000,price:149000,stock:12,image:'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80',supplier:'Demo Supplier'},{id:'demo-2',name:'Island Everyday Cap',brand:'BALIVO',category:'Accessories',cost:70000,price:99000,stock:8,image:'https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=700&q=80',supplier:'Demo Supplier'}];
+let products=JSON.parse(localStorage.getItem('balivo_products')||'null')||demo;localStorage.setItem('balivo_products',JSON.stringify(products));
+const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n);
+function refresh(){products=JSON.parse(localStorage.getItem('balivo_products')||'[]');let orders=JSON.parse(localStorage.getItem('balivo_orders')||'[]');sProducts.textContent=products.length;sStock.textContent=products.reduce((a,p)=>a+Number(p.stock||0),0);sOrders.textContent=orders.length;sProfit.textContent=money(products.reduce((a,p)=>a+(Number(p.price||0)-Number(p.cost||0))*Number(p.stock||0),0));productRows.innerHTML=products.map(p=>`<tr><td>${p.name}</td><td>${p.supplier||p.brand||'-'}</td><td>${money(p.cost||0)}</td><td>${money(p.price||0)}</td><td>${p.stock||0}</td><td class="profit">${money((p.price-p.cost)||0)}</td></tr>`).join('');orderRows.innerHTML=orders.map(o=>`<tr><td>${o.id}</td><td>${o.customer?.name||'-'}</td><td>${money(o.total||0)}</td><td>${o.payment||'-'}</td><td><span class="pill">${o.status}</span></td></tr>`).join('')}
+function parseCSV(t){let lines=t.trim().split(/\r?\n/),head=lines.shift().split(',').map(x=>x.trim());return lines.map(l=>{let v=l.split(',');let o={};head.forEach((h,i)=>o[h]=v[i]?.trim()||'');return o})}
+async function importFile(){let f=file.files[0];if(!f)return alert('Pilih file JSON atau CSV.');let text=await f.text(),raw=f.name.toLowerCase().endsWith('.json')?JSON.parse(text):parseCSV(text),rows=Array.isArray(raw)?raw:(raw.products||[]);let m=Number(markup.value||0)/100;let imported=rows.map((r,i)=>{let cost=Number(r.cost??r.modal??r.price_supplier??r.price??0),stock=Number(r.stock??0);return {id:'imp-'+Date.now()+'-'+i,name:r.name||r.title||'Produk Import',brand:r.brand||'Supplier',category:r.category||'Lainnya',cost,price:Math.round(cost*(1+m)),stock,image:r.image||r.image_url||'',supplier:r.supplier||r.store||'Supplier',status:mode.value==='draft'?'DRAFT':'ACTIVE'}});products=[...products,...imported];localStorage.setItem('balivo_products',JSON.stringify(products));importPreview.textContent=`Berhasil membaca ${imported.length} produk.\nMarkup: ${markup.value}%\nHarga jual sudah dihitung.\nMode: ${mode.value==='draft'?'DRAFT':'PUBLISH'}`;refresh()}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));document.getElementById(b.dataset.tab).classList.remove('hidden')});refresh();
+</script>
+</body>
+</html>

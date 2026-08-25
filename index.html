@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="description" content="BALIVO — Bali's Online Marketplace">
+<link rel="manifest" href="balivo-manifest.webmanifest">
+<title>BALIVO — Bali's Online Marketplace</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--text:#111;--muted:#777;--line:#e7e7e7;--accent:#111;--sale:#d92d20}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}button{cursor:pointer;border:0}.top{background:#111;color:#fff;text-align:center;padding:9px;font-size:12px;letter-spacing:.5px}
+header{background:#fff;position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line)}.nav{max-width:1180px;margin:auto;display:flex;align-items:center;gap:24px;padding:16px 20px}.logo{font-weight:900;font-size:25px;letter-spacing:2px}.tag{font-size:11px;color:#777;margin-left:-16px}.search{flex:1;position:relative}.search input{width:100%;padding:13px 16px;border:1px solid var(--line);border-radius:12px;background:#fafafa;outline:none}.cart{background:#111;color:#fff;border-radius:12px;padding:12px 15px;font-weight:700}.count{display:inline-flex;min-width:20px;height:20px;border-radius:20px;background:#fff;color:#111;align-items:center;justify-content:center;font-size:11px;margin-left:5px}
+main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:#fff;border-radius:22px;padding:38px 30px;margin-bottom:25px}.hero small{letter-spacing:3px;color:#bbb;font-weight:700}.hero h1{font-size:clamp(38px,7vw,72px);line-height:.95;margin:14px 0}.hero p{color:#ccc;max-width:600px}.hero button{background:#fff;color:#111;padding:13px 18px;border-radius:10px;font-weight:800}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:26px 0 14px}.section-head h2{margin:0}.categories{display:flex;gap:10px;overflow:auto;padding-bottom:5px}.categories button{white-space:nowrap;padding:10px 14px;border:1px solid var(--line);background:#fff;border-radius:999px}.categories button.active{background:#111;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:13px}.product{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden}.photo{aspect-ratio:1/1;background:#eee;position:relative}.photo img{width:100%;height:100%;object-fit:cover}.badge{position:absolute;left:9px;top:9px;background:#111;color:#fff;border-radius:7px;padding:5px 7px;font-size:11px;font-weight:700}.info{padding:13px}.brand{font-size:11px;color:#888;text-transform:uppercase}.name{font-weight:700;margin:4px 0 8px;min-height:40px}.price{font-weight:900}.stock{font-size:11px;color:#777;margin-top:5px}.add{width:100%;margin-top:10px;padding:10px;background:#111;color:#fff;border-radius:9px;font-weight:700}.add:disabled{background:#ccc;cursor:not-allowed}
+.empty{text-align:center;padding:50px;color:#777}.drawer{position:fixed;right:0;top:0;height:100%;width:min(430px,100%);background:#fff;z-index:50;transform:translateX(100%);transition:.25s;box-shadow:-8px 0 30px #0002;display:flex;flex-direction:column}.drawer.open{transform:none}.drawer-head{display:flex;justify-content:space-between;padding:18px;border-bottom:1px solid var(--line)}.drawer-body{padding:18px;overflow:auto;flex:1}.cart-row{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}.cart-row img{width:70px;height:70px;object-fit:cover;border-radius:9px}.cart-row strong{display:block}.qty{display:flex;align-items:center;gap:8px;margin-top:7px}.qty button{width:28px;height:28px;border:1px solid var(--line);background:#fff;border-radius:7px}.drawer-foot{padding:18px;border-top:1px solid var(--line)}.checkout{width:100%;padding:14px;background:#111;color:#fff;border-radius:10px;font-weight:800}
+.modal{position:fixed;inset:0;background:#0008;z-index:60;display:none;align-items:flex-end;justify-content:center}.modal.open{display:flex}.sheet{background:#fff;width:min(700px,100%);max-height:90vh;overflow:auto;border-radius:22px 22px 0 0;padding:22px}.form{display:grid;gap:10px}.form input,.form select,.form textarea{padding:12px;border:1px solid var(--line);border-radius:9px}.order-note{font-size:12px;color:#777}.detail-img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;background:#eee}.detail-price{font-size:28px;font-weight:900;margin:10px 0}.detail-desc{color:#555;line-height:1.6;white-space:pre-line}.detail-box{border-top:1px solid var(--line);margin-top:18px;padding-top:18px}.stars{letter-spacing:2px;color:#f59e0b}.review{padding:12px 0;border-bottom:1px solid var(--line)}.review-head{display:flex;justify-content:space-between;gap:10px}.review-form{display:grid;gap:9px;margin-top:14px}.review-form input,.review-form textarea,.review-form select{padding:11px;border:1px solid var(--line);border-radius:9px}.review-btn{padding:11px 14px;border-radius:9px;background:#111;color:#fff;font-weight:700}..footer{margin-top:50px;background:#111;color:#fff;padding:35px 20px}.footer-inner{max-width:1180px;margin:auto}.product-modal{position:fixed;inset:0;background:#000d;z-index:100;display:none;align-items:center;justify-content:center;padding:18px}.product-modal.open{display:flex}.product-view{width:min(1100px,100%);height:min(90vh,760px);background:#fff;border-radius:20px;overflow:hidden;display:grid;grid-template-columns:1.1fr .9fr;position:relative}.viewer{background:#f1f1f1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:pan-y}.viewer img{width:100%;height:100%;object-fit:contain}.view-arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:0 3px 14px #0003;font-size:22px;z-index:2}.view-prev{left:14px}.view-next{right:14px}.view-close{position:absolute;right:14px;top:14px;width:40px;height:40px;border-radius:50%;background:#fff;z-index:3;font-size:20px}.view-info{padding:28px;overflow:auto}.view-info h2{margin:8px 0}.review{border-top:1px solid var(--line);padding:12px 0}.thumbs{display:flex;gap:7px;margin-top:10px;overflow:auto}.thumbs img{width:58px;height:58px;object-fit:cover;border-radius:7px;border:2px solid transparent}.thumbs img.active{border-color:#111}@media(max-width:700px){.product-view{height:94vh;grid-template-columns:1fr;grid-template-rows:52% 48%}.view-info{padding:18px}.viewer img{object-fit:contain}}.hidden{display:none!important}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}.tag{display:none}.nav{gap:10px}.logo{font-size:21px}.search{order:3;flex-basis:100%}.nav{flex-wrap:wrap}}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:420px){main{padding:15px 12px}.hero{padding:28px 22px}.grid{gap:10px}.info{padding:10px}.name{font-size:14px}}
+</style>
+</head>
+<body>
+<div class="top">BALIVO • Bali's Online Marketplace</div>
+<header><div class="nav">
+<div><div class="logo">BALIVO</div><div class="tag">Bali's Online Marketplace</div></div>
+<div class="search"><input id="search" placeholder="Cari produk..." autocomplete="off"></div>
+<button class="cart" onclick="openCart()">🛒 Cart <span id="cartCount" class="count">0</span></button>
+</div></header>
+<main>
+<section class="hero"><small>DISCOVER • SHOP • BALI</small><h1>Belanja lebih mudah.<br>Temukan pilihan terbaik.</h1><p>Fashion, lifestyle, surf, dan produk pilihan dari berbagai supplier dalam satu marketplace.</p><button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">BELANJA SEKARANG</button></section>
+<div class="section-head"><h2>Kategori</h2></div><div id="categories" class="categories"></div>
+<div class="section-head"><h2 id="productTitle">Produk Pilihan</h2><span id="resultCount" style="font-size:12px;color:#777"></span></div>
+<div id="products" class="grid"></div>
+<div id="empty" class="empty hidden">Produk tidak ditemukan.</div>
+</main>
+<footer class="footer"><div class="footer-inner"><b>BALIVO</b><p>Bali's Online Marketplace</p><small>Marketplace dengan katalog supplier, stok, checkout, dan pembayaran terintegrasi.</small></div></footer>
+
+<aside id="drawer" class="drawer"><div class="drawer-head"><b>Keranjang</b><button onclick="closeCart()">✕</button></div><div id="cartBody" class="drawer-body"></div><div class="drawer-foot"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><b>Total</b><b id="cartTotal">Rp0</b></div><button class="checkout" onclick="openCheckout()">Lanjut Checkout</button></div></aside>
+
+<div id="productModal" class="modal"><div class="sheet">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2 id="detailName" style="margin-top:0">Detail Produk</h2><button onclick="closeProduct()">✕</button></div>
+<div id="detailContent"></div>
+</div></div>
+
+<div id="productModal" class="product-modal"><div class="product-view"><button class="view-close" onclick="closeProduct()">✕</button><div id="viewer" class="viewer"><button class="view-arrow view-prev" onclick="productPrev()">‹</button><img id="viewImage" alt=""><button class="view-arrow view-next" onclick="productNext()">›</button></div><div class="view-info"><div id="viewBrand" class="brand"></div><h2 id="viewName"></h2><div id="viewPrice" class="price"></div><div id="viewStock" class="stock"></div><p id="viewDescription"></p><div id="viewDetails"></div><div class="thumbs" id="viewThumbs"></div><h3>⭐ Ulasan Customer</h3><div id="viewReviews"></div><button id="viewAdd" class="checkout">Tambah ke Cart</button></div></div></div>
+<div id="checkoutModal" class="modal"><div class="sheet">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin-top:0">Checkout</h2><button onclick="closeCheckout()">✕</button></div>
+<form id="checkoutForm" class="form">
+<input id="customerName" required placeholder="Nama lengkap">
+<input id="customerPhone" required placeholder="Nomor WhatsApp">
+<textarea id="customerAddress" required rows="3" placeholder="Alamat lengkap"></textarea>
+<select id="payment" required><option value="">Pilih pembayaran</option><option>QRIS</option><option>Virtual Account</option><option>E-Wallet</option><option>Transfer Bank</option></select>
+<div id="checkoutSummary"></div><p class="order-note">Pembayaran nyata membutuhkan payment gateway merchant. Demo ini belum memproses uang secara otomatis.</p>
+<button class="checkout" type="submit">Buat Pesanan</button>
+</form></div></div>
+
+<script>
+const DEMO_PRODUCTS=[
+{id:'demo-1',name:'Bali Sunset Tee',brand:'BALIVO',category:'T-Shirt',price:149000,stock:12,description:'T-shirt casual dengan desain Bali untuk aktivitas sehari-hari dan liburan.',details:'Material: Cotton\nFit: Regular\nGender: Unisex',image:'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80'},
+{id:'demo-2',name:'Island Everyday Cap',brand:'BALIVO',category:'Accessories',price:99000,stock:8,description:'Topi ringan untuk aktivitas outdoor dan suasana pantai.',details:'Material: Cotton\nStyle: Adjustable\nGender: Unisex',image:'https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=700&q=80'},
+{id:'demo-3',name:'Bali Coast Shirt',brand:'BALIVO',category:'Shirts',price:199000,stock:6,description:'Kemeja santai dengan gaya coastal yang cocok untuk liburan di Bali.',details:'Material: Cotton Blend\nFit: Regular\nGender: Unisex',image:'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=700&q=80'},
+{id:'demo-4',name:'Daily Beach Tote',brand:'BALIVO',category:'Accessories',price:119000,stock:0,description:'Tas tote praktis untuk kebutuhan harian dan ke pantai.',details:'Material: Canvas\nSize: Daily\nHandle: Long',image:'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=700&q=80'}
+];
+let products=JSON.parse(localStorage.getItem('balivo_products')||'null')||DEMO_PRODUCTS;
+let cart=JSON.parse(localStorage.getItem('balivo_cart')||'[]'), category='Semua';
+const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n);
+function save(){localStorage.setItem('balivo_cart',JSON.stringify(cart));document.getElementById('cartCount').textContent=cart.reduce((a,x)=>a+x.qty,0)}
+function renderCategories(){let cats=['Semua',...new Set(products.map(p=>p.category||'Lainnya'))];document.getElementById('categories').innerHTML=cats.map(c=>`<button class="${c===category?'active':''}" onclick="category='${String(c).replaceAll("'","&#39;")}';render()">${c}</button>`).join('')}
+let currentProductIndex=0,galleryIndex=0;
+function productList(){let q=document.getElementById('search').value.toLowerCase();return products.filter(p=>(category==='Semua'||p.category===category)&&(!q||`${p.name} ${p.brand} ${p.category}`.toLowerCase().includes(q)))}
+function openProduct(id){let list=productList(),i=list.findIndex(p=>p.id===id);if(i<0)return;currentProductIndex=i;galleryIndex=0;showProduct(list[i]);document.getElementById('productModal').classList.add('open')}
+function showProduct(p){let images=[p.image,...(p.images||[])].filter(Boolean);if(!images.length)images=[''];document.getElementById('viewImage').src=images[galleryIndex%images.length];document.getElementById('viewBrand').textContent=p.brand||'BALIVO';document.getElementById('viewName').textContent=p.name;document.getElementById('viewPrice').textContent=money(Number(p.price)||0);document.getElementById('viewStock').textContent=p.stock>0?'Stok '+p.stock:'Stok habis';document.getElementById('viewDescription').textContent=p.description||'Deskripsi produk akan ditampilkan di sini.';document.getElementById('viewDetails').innerHTML='<p><b>Detail Produk</b></p><p>• Kategori: '+(p.category||'Lainnya')+'<br>• Brand: '+(p.brand||'BALIVO')+'</p>';document.getElementById('viewThumbs').innerHTML=images.map((im,i)=>`<img class="${i===galleryIndex?'active':''}" src="${im}" onclick="galleryIndex=${i};showProduct(currentProduct())">`).join('');let reviews=p.reviews||[];document.getElementById('viewReviews').innerHTML=reviews.length?reviews.map(r=>`<div class="review"><b>${'★'.repeat(r.rating||5)}</b><br><strong>${r.name||'Customer'}</strong><br>${r.comment||''}</div>`).join(''):'<p style="color:#777">Belum ada ulasan.</p>';let b=document.getElementById('viewAdd');b.disabled=p.stock<=0;b.textContent=p.stock>0?'Tambah ke Cart':'Stok Habis';b.onclick=()=>{if(p.stock>0)add(p.id)}}
+function currentProduct(){return productList()[currentProductIndex]}
+function productNext(){let l=productList();if(!l.length)return;currentProductIndex=(currentProductIndex+1)%l.length;galleryIndex=0;showProduct(l[currentProductIndex])}
+function productPrev(){let l=productList();if(!l.length)return;currentProductIndex=(currentProductIndex-1+l.length)%l.length;galleryIndex=0;showProduct(l[currentProductIndex])}
+function closeProduct(){document.getElementById('productModal').classList.remove('open')}
+let touchStartY=0;
+document.addEventListener('touchstart',e=>{if(document.getElementById('productModal').classList.contains('open'))touchStartY=e.changedTouches[0].screenY},{passive:true});
+document.addEventListener('touchend',e=>{if(!document.getElementById('productModal').classList.contains('open'))return;let dy=e.changedTouches[0].screenY-touchStartY;if(Math.abs(dy)>60)(dy<0?productNext:productPrev)()},{passive:true});
+document.addEventListener('keydown',e=>{if(!document.getElementById('productModal').classList.contains('open'))return;if(e.key==='ArrowDown'||e.key==='ArrowRight')productNext();if(e.key==='ArrowUp'||e.key==='ArrowLeft')productPrev();if(e.key==='Escape')closeProduct()});
+function render(){let q=document.getElementById('search').value.toLowerCase(), list=products.filter(p=>(category==='Semua'||p.category===category)&&(!q||`${p.name} ${p.brand} ${p.category}`.toLowerCase().includes(q)));document.getElementById('resultCount').textContent=list.length+' produk';document.getElementById('empty').classList.toggle('hidden',!!list.length);document.getElementById('products').innerHTML=list.map(p=>`<article class="product" onclick="openProduct('${p.id}')"><div class="photo"><img src="${p.image||''}" alt="" loading="lazy">${p.stock<=0?'<span class="badge">HABIS</span>':''}</div><div class="info" onclick="openProduct('${p.id}')"><div class="brand">${p.brand||'Supplier'}</div><div class="name">${p.name}</div><div class="price">${money(Number(p.price)||0)}</div><div class="stock">${p.stock>0?'Stok '+p.stock:'Stok habis'}</div><button class="add" ${p.stock<=0?'disabled':''} onclick="event.stopPropagation();add('${p.id}')">Tambah ke Cart</button></div></article>`).join('');renderCategories();renderCart()}
+function add(id){let p=products.find(x=>x.id===id);if(!p||p.stock<1)return;let x=cart.find(x=>x.id===id);if(x){if(x.qty<p.stock)x.qty++;else return}else cart.push({id,qty:1});save();renderCart();openCart()}
+function change(id,d){let x=cart.find(x=>x.id===id),p=products.find(x=>x.id===id);if(!x)return;x.qty+=d;if(x.qty<=0)cart=cart.filter(y=>y.id!==id);if(p&&x.qty>p.stock)x.qty=p.stock;save();renderCart()}
+function renderCart(){let body=document.getElementById('cartBody');if(!cart.length){body.innerHTML='<div class="empty">Keranjang masih kosong.</div>';document.getElementById('cartTotal').textContent=money(0);return}let total=0;body.innerHTML=cart.map(x=>{let p=products.find(y=>y.id===x.id);if(!p)return '';total+=p.price*x.qty;return `<div class="cart-row"><img src="${p.image||''}"><div style="flex:1"><strong>${p.name}</strong><div>${money(p.price)}</div><div class="qty"><button onclick="change('${p.id}',-1)">−</button><span>${x.qty}</span><button onclick="change('${p.id}',1)">+</button></div></div></div>`}).join('');document.getElementById('cartTotal').textContent=money(total)}
+
+function getReviews(id){return JSON.parse(localStorage.getItem('balivo_reviews_'+id)||'[]')}
+function stars(n){return '★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n)}
+function renderReviews(p){
+  let rs=getReviews(p.id), avg=rs.length?rs.reduce((a,r)=>a+r.rating,0)/rs.length:0;
+  let seeded=p.rating||4.8, count=p.reviewCount||126;
+  let shown=rs.length?rs:[{name:'Customer BALIVO',rating:5,text:'Produk sesuai foto dan deskripsi.',date:'Contoh ulasan'}];
+  let total=count+rs.length;
+  return `<div class="detail-box"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">⭐ Ulasan Produk</h3><b>${(rs.length?avg:seeded).toFixed(1)} <span class="stars">${stars(Math.round(rs.length?avg:seeded))}</span></b></div><div style="font-size:12px;color:#777;margin:5px 0 10px">${total} ulasan</div>${shown.map(r=>`<div class="review"><div class="review-head"><b>${r.name||'Customer'}</b><span class="stars">${stars(Number(r.rating)||5)}</span></div><div style="margin-top:5px">${r.text||''}</div><small style="color:#888">${r.date||''}</small></div>`).join('')}<h4>Tulis Ulasan</h4><form class="review-form" onsubmit="submitReview(event,'${p.id}')"><input id="reviewName" required placeholder="Nama"><select id="reviewRating" required><option value="5">★★★★★ 5</option><option value="4">★★★★ 4</option><option value="3">★★★ 3</option><option value="2">★★ 2</option><option value="1">★ 1</option></select><textarea id="reviewText" required rows="3" placeholder="Ceritakan pengalaman kamu"></textarea><button class="review-btn">Kirim Ulasan</button></form></div>`
+}
+function openProduct(id){
+  let p=products.find(x=>x.id===id); if(!p)return;
+  document.getElementById('detailName').textContent=p.name;
+  document.getElementById('detailContent').innerHTML=`<img class="detail-img" src="${p.image||''}" alt=""><div class="brand" style="margin-top:14px">${p.brand||'Supplier'}</div><div class="detail-price">${money(Number(p.price)||0)}</div><div class="stock">${p.stock>0?'Stok '+p.stock+' tersedia':'Stok habis'}</div><p class="detail-desc">${p.description||'Deskripsi produk akan ditampilkan di sini.'}</p><div class="detail-box"><h3>Detail Produk</h3><div class="detail-desc">${p.details||'Informasi detail produk belum tersedia.'}</div></div><button class="add" ${p.stock<=0?'disabled':''} onclick="add('${p.id}');closeProduct()">🛒 Tambah ke Cart</button>${renderReviews(p)}`;
+  document.getElementById('productModal').classList.add('open');
+}
+function closeProduct(){document.getElementById('productModal').classList.remove('open')}
+function submitReview(e,id){
+ e.preventDefault();
+ let rs=getReviews(id);rs.unshift({name:reviewName.value,rating:Number(reviewRating.value),text:reviewText.value,date:new Date().toLocaleDateString('id-ID')});
+ localStorage.setItem('balivo_reviews_'+id,JSON.stringify(rs));let p=products.find(x=>x.id===id);openProduct(id);
+}
+
+function openCart(){document.getElementById('drawer').classList.add('open');renderCart()}function closeCart(){document.getElementById('drawer').classList.remove('open')}
+function openCheckout(){if(!cart.length)return;document.getElementById('checkoutSummary').innerHTML='<b>Total: '+document.getElementById('cartTotal').textContent+'</b>';document.getElementById('checkoutModal').classList.add('open')}function closeCheckout(){document.getElementById('checkoutModal').classList.remove('open')}
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('checkoutForm').addEventListener('submit',e=>{e.preventDefault();let order={id:'BAL-'+Date.now(),created_at:new Date().toISOString(),customer:{name:customerName.value,phone:customerPhone.value,address:customerAddress.value},payment:payment.value,status:'PENDING_PAYMENT',items:cart.map(x=>({id:x.id,qty:x.qty})),total:cart.reduce((s,x)=>{let p=products.find(y=>y.id===x.id);return s+(p?p.price*x.qty:0)},0)};let orders=JSON.parse(localStorage.getItem('balivo_orders')||'[]');orders.push(order);localStorage.setItem('balivo_orders',JSON.stringify(orders));cart=[];save();closeCheckout();closeCart();alert('Pesanan '+order.id+' berhasil dibuat. Status: MENUNGGU PEMBAYARAN.');});
+render();save();
+</script>
+</body>
+</html>
