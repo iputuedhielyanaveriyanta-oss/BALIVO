@@ -178,39 +178,57 @@ async function importShopeeProduct(){
   const url=document.getElementById('shopeeUrl').value.trim();
   const msg=document.getElementById('shopeeImportMsg');
   if(!url){msg.textContent='Masukkan link produk dulu.';return}
+
   msg.textContent='Mengambil data produk dari supplier...';
   const {data,error}=await sb.functions.invoke('import-product-universal',{body:{url}});
-  if(error || data?.error){msg.textContent='Gagal mengambil produk: '+(data?.error||error.message);return}
+  if(error || data?.error){
+    msg.textContent='Gagal mengambil produk: '+(data?.error||error.message);
+    return;
+  }
 
-  const price=Number(data.price)||0;
-  const models=Array.isArray(data.models)?data.models:[];
-  const totalStock=models.reduce((n,m)=>n+(Number(m.stock)||0),0);
+  // Normalize possible backend field names.
+  const product=data.product||data.item||data.data||data;
+  const title=product.title||product.name||data.title||data.name||'';
+  const image=product.image||product.thumbnail||data.image||'';
+  const description=product.description||data.description||'';
+  const brand=product.brand||data.brand||data.source||'Supplier';
+  const supplierUrl=product.url||data.url||url;
+
+  const rawPrice=product.price??product.min_price??product.minPrice??data.price??0;
+  const price=Number(String(rawPrice).replace(/[^0-9]/g,''))||0;
+
+  const rawModels=product.models||product.variations||product.variants||data.models||data.variations||[];
+  const models=Array.isArray(rawModels)?rawModels.map(m=>({
+    name:m.name||m.label||m.size||m.model_name||'',
+    price:Number(String(m.price??m.model_price??price).replace(/[^0-9]/g,''))||price,
+    stock:Number(m.stock??m.quantity??m.qty??0)||0
+  })):[];
 
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??''};
-  set('ownName',data.title||'');
-  set('ownBrand',data.brand||data.source||'Supplier');
+  set('ownName',title);
+  set('ownBrand',brand);
   set('ownSource','SUPPLIER');
   set('ownCost',price||'');
   set('supplierCost',price||'');
   set('supplierMarkup',0);
   set('ownPrice',price||'');
-  set('supplierProductUrl',data.url||url);
-  set('ownDescription',data.description||'');
-  set('ownDetails',[
-    data.availability?('Ketersediaan supplier: '+data.availability):'',
-    models.length?('Variasi: '+models.map(m=>`${m.name} — Rp${Number(m.price||price).toLocaleString('id-ID')} — stok ${Number(m.stock)||0}`).join(' | ')):''
-  ].filter(Boolean).join('\n'));
-  set('ownImageUrl',data.image||'');
-  set('ownSupplier',data.source||'Supplier');
-  set('ownCategory','Tshirt');
-  if(totalStock) set('ownStock',totalStock);
+  set('supplierProductUrl',supplierUrl);
+  set('ownDescription',description);
+  set('ownImageUrl',image);
+  set('ownSupplier',data.source||new URL(supplierUrl).hostname);
+  set('ownCategory',product.category||data.category||'Tshirt');
 
-  // Map common S/M/L/XL/XXL variation names into the existing size-stock fields.
+  const totalStock=models.reduce((n,m)=>n+m.stock,0);
+  set('ownStock',totalStock||product.stock||data.stock||'');
+
   const sizes={S:0,M:0,L:0,XL:0,XXL:0};
   for(const m of models){
-    const n=String(m.name||'').toUpperCase().replace(/[^A-Z0-9]/g,' ');
-    for(const size of Object.keys(sizes)){
-      if(new RegExp(`(?:^|\\s)${size}(?:\\s|$)`).test(n)){sizes[size]+=Number(m.stock)||0;break}
+    const n=String(m.name).toUpperCase().replace(/[^A-Z0-9]+/g,' ');
+    for(const z of Object.keys(sizes)){
+      if(new RegExp('(?:^|\\s)'+z+'(?:\\s|$)').test(n)){
+        sizes[z]+=m.stock;
+        break;
+      }
     }
   }
   set('sizeS',sizes.S||'');
@@ -219,17 +237,26 @@ async function importShopeeProduct(){
   set('sizeXL',sizes.XL||'');
   set('sizeXXL',sizes.XXL||'');
 
+  const details=[
+    data.availability?('Ketersediaan supplier: '+data.availability):'',
+    models.length?('Variasi: '+models.map(m=>m.name+' — Rp'+m.price.toLocaleString('id-ID')+' — stok '+m.stock).join(' | ')):''
+  ].filter(Boolean).join('\n');
+  set('ownDetails',details);
+
   const missing=[];
-  if(!data.title)missing.push('nama');
+  if(!title)missing.push('nama');
   if(!price)missing.push('harga');
-  if(!data.image)missing.push('foto');
+  if(!image)missing.push('foto');
 
   if(missing.length){
-    msg.innerHTML=`Link berhasil dibuka, tetapi ${missing.join(', ')} tidak diberikan oleh supplier. <b>Bagian yang tersedia sudah dimasukkan ke form Produk.</b>`;
+    msg.innerHTML='Link berhasil dibuka, tetapi <b>'+missing.join(', ')+'</b> tidak diberikan supplier. Data yang tersedia sudah dimasukkan ke Form Produk.';
   }else{
-    msg.innerHTML=`<b>Produk berhasil diambil.</b> ${models.length?models.length+' variasi ditemukan. ':''}Periksa harga jual, stok, dan size lalu tekan <b>SIMPAN PRODUK & STOK</b>.`;
+    msg.innerHTML='<b>Produk berhasil diambil.</b> '+(models.length?models.length+' variasi ditemukan. ':'')+'Periksa harga jual, stok, dan size lalu tekan <b>SIMPAN PRODUK & STOK</b>.';
   }
+
   document.getElementById('ownName').scrollIntoView({behavior:'smooth',block:'center'});
+  const go=document.getElementById('goToProductForm');
+  if(go) go.style.display='inline-flex';
 }
 
 function renderDropship(){
