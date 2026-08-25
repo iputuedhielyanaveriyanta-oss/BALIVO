@@ -143,6 +143,18 @@ function readSizeStock(){
 }
 
 
+
+async function confirmCustomerPaid(id){
+  if(!requireAdmin())return;
+  const {error}=await sb.from('orders').update({
+    payment_status:'PAID',
+    fulfillment_status:'READY_TO_PROCESS',
+    supplier_payment_status:'WAITING'
+  }).eq('id',id);
+  if(error)alert('Gagal konfirmasi pembayaran: '+error.message);
+  else await refresh();
+}
+
 function renderDropship(){
   const el=document.getElementById('dropshipRows');
   if(!el)return;
@@ -159,7 +171,8 @@ function renderDropship(){
       <div style="margin-top:8px">Customer bayar: <b>${money(o.total)}</b> · Supplier: <b>${money(o.supplier_cost)}</b> · Profit: <b>${money(o.markup_profit)}</b></div>
       <div style="font-size:12px;color:#777;margin-top:5px">Pembayaran customer: <b>${esc(o.payment_status||'PENDING')}</b> · Supplier: <b>${esc(o.supplier_payment_status||'WAITING')}</b></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        <button class="primary" onclick="prepareSupplierOrder('${o.id}')">PROSES KE SUPPLIER</button>
+        ${o.payment_status!=='PAID'?`<button class="primary" onclick="confirmCustomerPaid('${o.id}')">KONFIRMASI PEMBAYARAN</button>`:''}
+        ${o.payment_status==='PAID'?`<button class="primary" onclick="prepareSupplierOrder('${o.id}')">PROSES KE SUPPLIER</button>`:''}
         <button class="btn" onclick="copyCustomerData('${o.id}')">COPY DATA CUSTOMER</button>
         ${o.supplier_payment_status==='WAITING'?`<button class="btn" onclick="markSupplierPaid('${o.id}')">SUDAH DIBAYAR SUPPLIER</button>`:''}
         <button class="btn" onclick="markSupplierShipped('${o.id}')">SUDAH DIKIRIM</button>
