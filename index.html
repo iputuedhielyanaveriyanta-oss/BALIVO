@@ -22,6 +22,17 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:420px){main{padding:15px 12px}.hero{padding:28px 22px}.grid{gap:10px}.info{padding:10px}.name{font-size:14px}}
 </style>
+
+<style id="balivo-size-ui">
+.size-box{margin:14px 0 10px}
+.size-title{font-weight:700;margin-bottom:8px}
+.size-options{display:flex;flex-wrap:wrap;gap:9px}
+.size-btn{min-width:52px;padding:10px 13px;border:1px solid #d7d7d7;border-radius:10px;background:#fff;font-weight:700}
+.size-btn.active{background:#111;color:#fff;border-color:#111}
+.size-btn:disabled{opacity:.35;text-decoration:line-through}
+.action-stack{display:flex;flex-direction:column;gap:14px;margin-top:16px}
+.action-stack button{width:100%;min-height:54px;margin:0!important;border-radius:14px}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -43,7 +54,12 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 
 
 
-<div id="productModal" class="product-modal"><div class="product-view"><button class="view-close" onclick="closeProduct()">✕</button><div id="viewer" class="viewer"><button class="view-arrow view-prev" onclick="productPrev()">‹</button><img id="viewImage" alt=""><button class="view-arrow view-next" onclick="productNext()">›</button></div><div class="view-info"><div id="viewBrand" class="brand"></div><h2 id="viewName"></h2><div id="viewPrice" class="price"></div><div id="viewStock" class="stock"></div><p id="viewDescription"></p><div id="viewDetails"></div><div class="thumbs" id="viewThumbs"></div><h3>⭐ Ulasan Customer</h3><div id="viewReviews"></div><button id="viewAdd" class="checkout">Tambah ke Cart</button></div></div></div>
+<div id="productModal" class="product-modal"><div class="product-view"><button class="view-close" onclick="closeProduct()">✕</button><div id="viewer" class="viewer"><button class="view-arrow view-prev" onclick="productPrev()">‹</button><img id="viewImage" alt=""><button class="view-arrow view-next" onclick="productNext()">›</button></div><div class="view-info"><div id="viewBrand" class="brand"></div><h2 id="viewName"></h2><div id="viewPrice" class="price"></div><div id="viewStock" class="stock"></div><p id="viewDescription"></p><div id="viewDetails"></div><div class="thumbs" id="viewThumbs"></div><h3>⭐ Ulasan Customer</h3><div id="viewReviews"></div>
+<div class="size-box">
+  <div class="size-title">Pilih Size</div>
+  <div id="viewSizes" class="size-options"></div>
+</div>
+<button id="viewAdd" class="checkout">Tambah ke Cart</button></div></div></div>
 <div id="checkoutModal" class="modal"><div class="sheet">
 <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin-top:0">Checkout</h2><button onclick="closeCheckout()">✕</button></div>
 <form id="checkoutForm" class="form">
@@ -66,6 +82,7 @@ let cart=JSON.parse(localStorage.getItem('balivo_cart')||'[]');
 let category='Semua';
 let currentProductIndex=0;
 let galleryIndex=0;
+let selectedSize=null;
 let touchStartY=0;
 
 const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
@@ -132,7 +149,7 @@ function render(){
         <div class="price">${money(p.price)}</div>
         <div class="stock">${Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'}</div>
         <button class="add" ${Number(p.stock)<=0?'disabled':''}
-          onclick="event.stopPropagation();add('${p.id}')">Tambah ke Cart</button>
+          onclick="event.stopPropagation();openProduct('${p.id}')">Pilih Size</button>
       </div>
     </article>
   `).join('');
@@ -157,8 +174,45 @@ async function openProduct(id){
   if(i<0)return;
   currentProductIndex=i;
   galleryIndex=0;
+  selectedSize=null;
   document.getElementById('productModal').classList.add('open');
   await showProduct(list[i]);
+}
+
+
+function sizeData(p){
+  let raw=p.sizes;
+  if(typeof raw==='string'){try{raw=JSON.parse(raw)}catch(e){raw=null}}
+  if(raw && typeof raw==='object' && !Array.isArray(raw)){
+    return Object.entries(raw).map(([size,stock])=>({size,stock:Number(stock)||0}));
+  }
+  // Backward-compatible fallback: if no per-size stock exists, no size selector is required.
+  return [];
+}
+function hasSizes(p){ return sizeData(p).length>0; }
+
+function renderSizes(p){
+  const box=document.getElementById('viewSizes');
+  const data=sizeData(p);
+  selectedSize=null;
+  if(!data.length){ box.innerHTML=''; box.parentElement.style.display='none'; return; }
+  box.parentElement.style.display='block';
+  box.innerHTML=data.map(x=>
+    `<button type="button" class="size-btn" ${x.stock<=0?'disabled':''}
+      onclick="selectSize('${String(x.size).replace(/'/g,"\\'")}')">
+      ${esc(x.size)}${x.stock<=0?' · Habis':''}
+    </button>`
+  ).join('');
+}
+function selectSize(size){
+  const p=currentProduct();
+  const data=sizeData(p);
+  const item=data.find(x=>x.size===size);
+  if(!item || item.stock<=0)return;
+  selectedSize=size;
+  document.querySelectorAll('#viewSizes .size-btn').forEach(b=>{
+    b.classList.toggle('active', b.textContent.trim().startsWith(size+' ') || b.textContent.trim()===size);
+  });
 }
 
 async function showProduct(p){
@@ -171,6 +225,7 @@ async function showProduct(p){
   document.getElementById('viewName').textContent=p.name||'';
   document.getElementById('viewPrice').textContent=money(p.price);
   document.getElementById('viewStock').textContent=Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis';
+  renderSizes(p);
   document.getElementById('viewDescription').textContent=p.description||'Deskripsi produk belum tersedia.';
   document.getElementById('viewDetails').innerHTML=
     '<div class="detail-box"><h3>Detail Produk</h3>'+
@@ -211,7 +266,7 @@ async function showProduct(p){
          <option value="1">★ 1</option>
        </select>
        <textarea id="reviewText" required rows="3" placeholder="Ceritakan pengalaman kamu"></textarea>
-       <button class="review-btn">Kirim Ulasan</button>
+       <button class="review-btn" style="margin-bottom:0">Kirim Ulasan</button>
      </form>`;
 
   const addButton=document.getElementById('viewAdd');
@@ -226,6 +281,7 @@ function productNext(){
   const list=productList();if(!list.length)return;
   currentProductIndex=(currentProductIndex+1)%list.length;
   galleryIndex=0;
+  selectedSize=null;
   showProduct(list[currentProductIndex]);
 }
 
@@ -233,6 +289,7 @@ function productPrev(){
   const list=productList();if(!list.length)return;
   currentProductIndex=(currentProductIndex-1+list.length)%list.length;
   galleryIndex=0;
+  selectedSize=null;
   showProduct(list[currentProductIndex]);
 }
 
@@ -261,9 +318,17 @@ document.addEventListener('keydown',e=>{
 function add(id){
   const p=products.find(x=>x.id===id);
   if(!p||Number(p.stock)<1)return;
-  const x=cart.find(x=>x.id===id);
-  if(x){if(x.qty<Number(p.stock))x.qty++;else return}
-  else cart.push({id,qty:1});
+  const sizes=sizeData(p);
+  if(sizes.length && !selectedSize){
+    alert('Silakan pilih size terlebih dahulu.');
+    return;
+  }
+  const size=selectedSize || null;
+  const x=cart.find(x=>x.id===id && x.size===size);
+  if(x){
+    const maxStock=size ? (sizes.find(s=>s.size===size)?.stock||0) : Number(p.stock);
+    if(x.qty<maxStock)x.qty++;else return;
+  } else cart.push({id,qty:1,size});
   saveCart();renderCart();openCart();
 }
 
@@ -292,6 +357,7 @@ function renderCart(){
       <img src="${esc(p.image||'')}">
       <div style="flex:1">
         <strong>${esc(p.name)}</strong>
+        ${x.size?`<div>Size: <b>${esc(x.size)}</b></div>`:''}
         <div>${money(p.price)}</div>
         <div class="qty">
           <button onclick="change('${p.id}',-1)">−</button>
