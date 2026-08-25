@@ -177,31 +177,58 @@ async function importShopeeProduct(){
   if(!requireAdmin())return;
   const url=document.getElementById('shopeeUrl').value.trim();
   const msg=document.getElementById('shopeeImportMsg');
-  if(!url){msg.textContent='Masukkan link Shopee dulu.';return}
-  msg.textContent='Mengambil data produk Shopee...';
+  if(!url){msg.textContent='Masukkan link produk dulu.';return}
+  msg.textContent='Mengambil data produk dari supplier...';
   const {data,error}=await sb.functions.invoke('import-product-universal',{body:{url}});
-  if(error || data?.error){msg.textContent='Gagal: '+(data?.error||error.message);return}
-  const price=Number(String(data.price||'').replace(/[^0-9]/g,''))||0;
-  document.getElementById('ownName').value=data.title||'';
-  document.getElementById('ownBrand').value=data.brand||data.source||'Supplier';
-  document.getElementById('ownSource').value='SUPPLIER';
-  document.getElementById('ownCost').value=price||'';
-  document.getElementById('supplierCost').value=price;
-  document.getElementById('supplierMarkup').value=0;
-  document.getElementById('ownPrice').value=price||'';
-  document.getElementById('supplierProductUrl').value=data.url||url;
-  document.getElementById('ownDescription').value=data.description||'';
-  document.getElementById('ownDetails').value=data.availability?('Ketersediaan supplier: '+data.availability):'';
-  document.getElementById('ownImageUrl').value=data.image||'';
-  document.getElementById('ownSupplier').value=data.source||'Supplier';
-  document.getElementById('ownCategory').value='Tshirt';
+  if(error || data?.error){msg.textContent='Gagal mengambil produk: '+(data?.error||error.message);return}
+
+  const price=Number(data.price)||0;
+  const models=Array.isArray(data.models)?data.models:[];
+  const totalStock=models.reduce((n,m)=>n+(Number(m.stock)||0),0);
+
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??''};
+  set('ownName',data.title||'');
+  set('ownBrand',data.brand||data.source||'Supplier');
+  set('ownSource','SUPPLIER');
+  set('ownCost',price||'');
+  set('supplierCost',price||'');
+  set('supplierMarkup',0);
+  set('ownPrice',price||'');
+  set('supplierProductUrl',data.url||url);
+  set('ownDescription',data.description||'');
+  set('ownDetails',[
+    data.availability?('Ketersediaan supplier: '+data.availability):'',
+    models.length?('Variasi: '+models.map(m=>`${m.name} — Rp${Number(m.price||price).toLocaleString('id-ID')} — stok ${Number(m.stock)||0}`).join(' | ')):''
+  ].filter(Boolean).join('\n'));
+  set('ownImageUrl',data.image||'');
+  set('ownSupplier',data.source||'Supplier');
+  set('ownCategory','Tshirt');
+  if(totalStock) set('ownStock',totalStock);
+
+  // Map common S/M/L/XL/XXL variation names into the existing size-stock fields.
+  const sizes={S:0,M:0,L:0,XL:0,XXL:0};
+  for(const m of models){
+    const n=String(m.name||'').toUpperCase().replace(/[^A-Z0-9]/g,' ');
+    for(const size of Object.keys(sizes)){
+      if(new RegExp(`(?:^|\\s)${size}(?:\\s|$)`).test(n)){sizes[size]+=Number(m.stock)||0;break}
+    }
+  }
+  set('sizeS',sizes.S||'');
+  set('sizeM',sizes.M||'');
+  set('sizeL',sizes.L||'');
+  set('sizeXL',sizes.XL||'');
+  set('sizeXXL',sizes.XXL||'');
+
   const missing=[];
   if(!data.title)missing.push('nama');
   if(!price)missing.push('harga');
   if(!data.image)missing.push('foto');
-  msg.innerHTML=missing.length
-    ? `Link berhasil dibuka, tetapi data ${missing.join(', ')} tidak tersedia dari supplier. <b>Data yang berhasil ditemukan tetap sudah dimasukkan ke form.</b>`
-    : 'Produk berhasil dibaca. <b>Periksa harga/markup/stok lalu tekan SIMPAN PRODUK & STOK.</b>';
+
+  if(missing.length){
+    msg.innerHTML=`Link berhasil dibuka, tetapi ${missing.join(', ')} tidak diberikan oleh supplier. <b>Bagian yang tersedia sudah dimasukkan ke form Produk.</b>`;
+  }else{
+    msg.innerHTML=`<b>Produk berhasil diambil.</b> ${models.length?models.length+' variasi ditemukan. ':''}Periksa harga jual, stok, dan size lalu tekan <b>SIMPAN PRODUK & STOK</b>.`;
+  }
   document.getElementById('ownName').scrollIntoView({behavior:'smooth',block:'center'});
 }
 
