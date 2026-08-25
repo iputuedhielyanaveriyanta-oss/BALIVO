@@ -22,9 +22,8 @@
 .login-box{max-width:420px;margin:70px auto;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:22px}
 .login-box h2{margin-top:0}
 
-<style>
 .size-mini{display:flex;flex-wrap:wrap;gap:4px;max-width:220px}
-.size-mini span{border:1px solid #ddd;border-radius:7px;padding:3px 6px;font-size:11px}
+.size-mini span{border:1px solid #ddd;border-radius:7px;padding:3px 6px;font-size:11px}.tabs button,.btn,.mini,.primary{cursor:pointer;touch-action:manipulation}
 </style>
 </head>
 <body>
@@ -174,7 +173,9 @@ async function uploadProductImage(file){
 
 async function saveOwnProduct(){
   if(!requireAdmin())return;
-  const name=ownName.value.trim(),cost=Number(ownCost.value),price=Number(ownPrice.value);\n  const sizes=readSizeStock();\n  const stock=sizes?Object.values(sizes).reduce((a,b)=>a+b,0):Number(ownStock.value);
+  const name=ownName.value.trim(),cost=Number(ownCost.value),price=Number(ownPrice.value);
+  const sizes=readSizeStock();
+  const stock=sizes?Object.values(sizes).reduce((a,b)=>a+b,0):Number(ownStock.value);
   if(!name||!Number.isFinite(cost)||!Number.isFinite(price)||!Number.isInteger(stock)||stock<0){ownMessage.textContent='Nama, modal, harga jual, dan stok wajib valid.';return}
   ownMessage.textContent='Menyimpan produk...';
   try{
@@ -253,7 +254,9 @@ async function importFile(){
     });
     if(!imported.length)return alert('Tidak ada produk.');
     const {error}=await sb.from('products').insert(imported);if(error)throw error;
-    importPreview.textContent=`Berhasil menyimpan ${imported.length} produk ke Supabase.\nMarkup: ${markup.value}%\nMode: ${mode.value==='draft'?'DRAFT':'PUBLISH'}`;
+    importPreview.textContent=`Berhasil menyimpan ${imported.length} produk ke Supabase.
+Markup: ${markup.value}%
+Mode: ${mode.value==='draft'?'DRAFT':'PUBLISH'}`;
     await refresh();
   }catch(e){alert('Import gagal: '+e.message)}
 }
