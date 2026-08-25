@@ -49,9 +49,9 @@
 
 <section id="import" class="tab hidden"><section class="panel" id="shopeeImportPanel">
   <h2>🔗 Import Produk dari Link</h2>
-  <p style="color:#777">Tempel link produk dari Shopee, Tokopedia, Lazada, TikTok Shop, website supplier, atau marketplace lain. BALIVO akan mencoba mengambil nama, foto, deskripsi, dan harga supplier. Kamu tetap bisa mengoreksi sebelum menyimpan.</p>
+  <p style="color:#777">Tempel <b>link produk Shopee</b>. BALIVO akan mengambil nama, foto, deskripsi, harga, variasi/size, dan stok dari produk Shopee. Data wajib diverifikasi sebelum disimpan.</p>
   <div class="form" style="grid-template-columns:1fr">
-    <input id="shopeeUrl" type="url" placeholder="https://link-produk-supplier..." />
+    <input id="shopeeUrl" type="url" placeholder="https://shopee.co.id/... atau https://s.shopee.co.id/..." />
     <button class="primary" onclick="importShopeeProduct()">AMBIL PRODUK DARI LINK</button>
   </div>
   <div id="shopeeImportMsg" class="preview" style="margin-top:10px">Belum mengambil produk.</div>
@@ -177,21 +177,35 @@ async function importShopeeProduct(){
   if(!requireAdmin())return;
   const url=document.getElementById('shopeeUrl').value.trim();
   const msg=document.getElementById('shopeeImportMsg');
-  if(!url){msg.textContent='Masukkan link produk dulu.';return}
+  if(!url){msg.textContent='Masukkan link produk Shopee dulu.';return}
 
-  msg.textContent='Mengambil data produk dari supplier...';
-  const {data,error}=await sb.functions.invoke('import-product-universal',{body:{url}});
-  if(error || data?.error){
-    msg.textContent='Gagal mengambil produk: '+(data?.error||error.message);
+  // Accept normal Shopee product URLs and Shopee short links only.
+  let u;
+  try{u=new URL(url)}catch(e){
+    msg.textContent='Link tidak valid.';
+    return;
+  }
+  const host=u.hostname.toLowerCase();
+  const isShopee=host==='shopee.co.id'||host.endsWith('.shopee.co.id')||
+                 host==='s.shopee.co.id'||host.endsWith('.shopee.co.id')||
+                 host==='shopee.com'||host.endsWith('.shopee.com');
+  if(!isShopee){
+    msg.textContent='BALIVO Import saat ini khusus Shopee. Gunakan link produk Shopee.';
     return;
   }
 
-  // Normalize possible backend field names.
+  msg.textContent='Mengambil data produk Shopee...';
+  const {data,error}=await sb.functions.invoke('import-product-universal',{body:{url,marketplace:'shopee'}});
+  if(error || data?.error){
+    msg.textContent='Gagal mengambil produk Shopee: '+(data?.error||error.message);
+    return;
+  }
+
   const product=data.product||data.item||data.data||data;
   const title=product.title||product.name||data.title||data.name||'';
   const image=product.image||product.thumbnail||data.image||'';
   const description=product.description||data.description||'';
-  const brand=product.brand||data.brand||data.source||'Supplier';
+  const brand=product.brand||data.brand||'';
   const supplierUrl=product.url||data.url||url;
 
   const rawPrice=product.price??product.min_price??product.minPrice??data.price??0;
@@ -204,30 +218,43 @@ async function importShopeeProduct(){
     stock:Number(m.stock??m.quantity??m.qty??0)||0
   })):[];
 
+  // Never present an incomplete product as successfully imported.
+  const totalStock=models.length
+    ? models.reduce((n,m)=>n+m.stock,0)
+    : Number(product.stock??data.stock??0)||0;
+
+  const missing=[];
+  if(!title)missing.push('nama');
+  if(!image)missing.push('foto');
+  if(!price)missing.push('harga');
+  if(!models.length && !('stock' in product) && !('stock' in data))missing.push('stok/variasi');
+
+  if(missing.length){
+    msg.innerHTML='<b>Import dibatalkan.</b> Data Shopee belum lengkap: '+missing.join(', ')+'. Produk tidak dimasukkan ke katalog.';
+    return;
+  }
+
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??''};
   set('ownName',title);
   set('ownBrand',brand);
   set('ownSource','SUPPLIER');
-  set('ownCost',price||'');
-  set('supplierCost',price||'');
+  set('ownCost',price);
+  set('supplierCost',price);
   set('supplierMarkup',0);
-  set('ownPrice',price||'');
+  set('ownPrice',price);
   set('supplierProductUrl',supplierUrl);
   set('ownDescription',description);
   set('ownImageUrl',image);
-  set('ownSupplier',data.source||new URL(supplierUrl).hostname);
+  set('ownSupplier','Shopee');
   set('ownCategory',product.category||data.category||'Tshirt');
-
-  const totalStock=models.reduce((n,m)=>n+m.stock,0);
-  set('ownStock',totalStock||product.stock||data.stock||'');
+  set('ownStock',totalStock);
 
   const sizes={S:0,M:0,L:0,XL:0,XXL:0};
   for(const m of models){
     const n=String(m.name).toUpperCase().replace(/[^A-Z0-9]+/g,' ');
     for(const z of Object.keys(sizes)){
       if(new RegExp('(?:^|\\s)'+z+'(?:\\s|$)').test(n)){
-        sizes[z]+=m.stock;
-        break;
+        sizes[z]+=m.stock; break;
       }
     }
   }
@@ -237,26 +264,12 @@ async function importShopeeProduct(){
   set('sizeXL',sizes.XL||'');
   set('sizeXXL',sizes.XXL||'');
 
-  const details=[
-    data.availability?('Ketersediaan supplier: '+data.availability):'',
-    models.length?('Variasi: '+models.map(m=>m.name+' — Rp'+m.price.toLocaleString('id-ID')+' — stok '+m.stock).join(' | ')):''
-  ].filter(Boolean).join('\n');
-  set('ownDetails',details);
+  set('ownDetails',models.length
+    ? models.map(m=>`${m.name} — Rp${m.price.toLocaleString('id-ID')} — stok ${m.stock}`).join('\n')
+    : '');
 
-  const missing=[];
-  if(!title)missing.push('nama');
-  if(!price)missing.push('harga');
-  if(!image)missing.push('foto');
-
-  if(missing.length){
-    msg.innerHTML='Link berhasil dibuka, tetapi <b>'+missing.join(', ')+'</b> tidak diberikan supplier. Data yang tersedia sudah dimasukkan ke Form Produk.';
-  }else{
-    msg.innerHTML='<b>Produk berhasil diambil.</b> '+(models.length?models.length+' variasi ditemukan. ':'')+'Periksa harga jual, stok, dan size lalu tekan <b>SIMPAN PRODUK & STOK</b>.';
-  }
-
+  msg.innerHTML='<b>Produk Shopee berhasil diambil.</b> Periksa harga jual, stok, dan size lalu tekan <b>SIMPAN PRODUK & STOK</b>.';
   document.getElementById('ownName').scrollIntoView({behavior:'smooth',block:'center'});
-  const go=document.getElementById('goToProductForm');
-  if(go) go.style.display='inline-flex';
 }
 
 function renderDropship(){
