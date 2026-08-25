@@ -21,6 +21,10 @@
 .mini{padding:6px 8px;border:1px solid #ddd;border-radius:7px;background:#fff}
 .login-box{max-width:420px;margin:70px auto;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:22px}
 .login-box h2{margin-top:0}
+
+<style>
+.size-mini{display:flex;flex-wrap:wrap;gap:4px;max-width:220px}
+.size-mini span{border:1px solid #ddd;border-radius:7px;padding:3px 6px;font-size:11px}
 </style>
 </head>
 <body>
@@ -57,6 +61,17 @@
     <div><label>Harga Modal *</label><input id="ownCost" type="number" min="0" step="1000" placeholder="100000"></div>
     <div><label>Harga Jual *</label><input id="ownPrice" type="number" min="0" step="1000" placeholder="149000"></div>
     <div><label>Stok *</label><input id="ownStock" type="number" min="0" step="1" value="0"></div>
+    <div class="wide">
+      <label>Stok per Size (opsional untuk pakaian)</label>
+      <div id="sizeStockInputs" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+        <input id="sizeS" type="number" min="0" value="0" placeholder="S">
+        <input id="sizeM" type="number" min="0" value="0" placeholder="M">
+        <input id="sizeL" type="number" min="0" value="0" placeholder="L">
+        <input id="sizeXL" type="number" min="0" value="0" placeholder="XL">
+        <input id="sizeXXL" type="number" min="0" value="0" placeholder="XXL">
+      </div>
+      <div class="file-note">Isi stok per size jika produk punya ukuran. Total stok otomatis dihitung dari S+M+L+XL+XXL.</div>
+    </div>
     <div><label>Foto Produk (upload)</label><input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp"><div class="file-note">Maks. 5 MB. Foto disimpan di Supabase Storage.</div></div>
     <div><label>Atau URL Foto</label><input id="ownImageUrl" type="url" placeholder="https://...jpg"></div>
     <div class="wide"><label>Deskripsi</label><textarea id="ownDescription" rows="3" placeholder="Deskripsi produk"></textarea></div>
@@ -68,7 +83,7 @@
 <div class="panel">
   <h2>Produk BALIVO</h2>
   <p style="color:#777">Stok bisa langsung diubah di sini. Perubahan tersimpan ke database.</p>
-  <table class="table"><thead><tr><th>Produk</th><th>Sumber</th><th>Modal</th><th>Harga Jual</th><th>Stok</th><th>Profit</th><th>Aksi</th></tr></thead><tbody id="productRows"></tbody></table>
+  <table class="table"><thead><tr><th>Produk</th><th>Sumber</th><th>Modal</th><th>Harga Jual</th><th>Size / Stok</th><th>Stok</th><th>Profit</th><th>Aksi</th></tr></thead><tbody id="productRows"></tbody></table>
 </div>
 </section>
 
@@ -100,8 +115,26 @@ async function updateAuthUI(){
 }
 function requireAdmin(){if(!session){openLogin();return false}return true}
 
+
+function parseSizes(value){
+  if(!value) return {};
+  if(typeof value==='object' && !Array.isArray(value)) return value;
+  try{return JSON.parse(value)}catch(e){return {}}
+}
+function renderAdminSizes(p){
+  const s=parseSizes(p.sizes);
+  const keys=['S','M','L','XL','XXL'];
+  if(!keys.some(k=>Object.prototype.hasOwnProperty.call(s,k))) return '<span>—</span>';
+  return keys.map(k=>`<span>${k}: ${Number(s[k]||0)}</span>`).join('');
+}
+function readSizeStock(){
+  const s={S:Number(sizeS.value)||0,M:Number(sizeM.value)||0,L:Number(sizeL.value)||0,XL:Number(sizeXL.value)||0,XXL:Number(sizeXXL.value)||0};
+  const any=Object.values(s).some(v=>v>0);
+  return any?s:null;
+}
+
 async function refresh(){
-  const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,stock,status,stock_source,image,supplier_id,suppliers(name)').order('created_at',{ascending:false});
+  const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,stock,status,stock_source,image,sizes,supplier_id,suppliers(name)').order('created_at',{ascending:false});
   if(pe){console.error(pe);return}
   products=(p||[]).map(x=>({...x,supplier:x.suppliers?.name||'-'}));
   const {data:o,error:oe}=session?await sb.from('orders').select('id,order_number,customer_name,total,payment_method,payment_status,status,created_at').order('created_at',{ascending:false}):{data:[],error:null};
@@ -116,7 +149,7 @@ async function refresh(){
     <td>${money(p.cost)}</td><td>${money(p.price)}</td>
     <td><div class="stock-edit"><button class="mini" onclick="changeStock('${p.id}',-1)">−</button><input type="number" min="0" value="${Number(p.stock)||0}" onchange="setStock('${p.id}',this.value)"><button class="mini" onclick="changeStock('${p.id}',1)">+</button></div></td>
     <td class="profit">${money(Number(p.price||0)-Number(p.cost||0))}</td>
-    <td><button class="mini" onclick="deleteProduct('${p.id}')">Hapus</button></td>
+    <td><button class="mini" onclick="editSizes('${p.id}')">Edit Size</button> <button class="mini" onclick="deleteProduct('${p.id}')">Hapus</button></td>
   </tr>`).join('');
   orderRows.innerHTML=orders.map(o=>`<tr><td>${esc(o.order_number||o.id)}</td><td>${esc(o.customer_name||'-')}</td><td>${money(o.total)}</td><td>${esc(o.payment_method||'-')} / ${esc(o.payment_status||'-')}</td><td><span class="pill">${esc(o.status||'-')}</span></td></tr>`).join('');
 }
@@ -141,7 +174,7 @@ async function uploadProductImage(file){
 
 async function saveOwnProduct(){
   if(!requireAdmin())return;
-  const name=ownName.value.trim(),cost=Number(ownCost.value),price=Number(ownPrice.value),stock=Number(ownStock.value);
+  const name=ownName.value.trim(),cost=Number(ownCost.value),price=Number(ownPrice.value);\n  const sizes=readSizeStock();\n  const stock=sizes?Object.values(sizes).reduce((a,b)=>a+b,0):Number(ownStock.value);
   if(!name||!Number.isFinite(cost)||!Number.isFinite(price)||!Number.isInteger(stock)||stock<0){ownMessage.textContent='Nama, modal, harga jual, dan stok wajib valid.';return}
   ownMessage.textContent='Menyimpan produk...';
   try{
@@ -151,16 +184,38 @@ async function saveOwnProduct(){
     const {error}=await sb.from('products').insert({
       name,brand:ownBrand.value.trim()||'BALIVO',category:ownCategory.value.trim()||'Lainnya',
       supplier_id:supplierId,cost,price,stock,stock_source:ownSource.value,
-      image,images:image?[image]:[],description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE'
+      image,images:image?[image]:[],sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE'
     });
     if(error)throw error;
     ownMessage.textContent='Produk berhasil disimpan ke Supabase.';
     ['ownName','ownBrand','ownCategory','ownSupplier','ownCost','ownPrice','ownDescription','ownDetails','ownImageUrl'].forEach(id=>document.getElementById(id).value='');
-    ownStock.value='0';ownImageFile.value='';
+    ownStock.value='0';['sizeS','sizeM','sizeL','sizeXL','sizeXXL'].forEach(id=>document.getElementById(id).value='0');ownImageFile.value='';
     await refresh();
   }catch(e){ownMessage.textContent='Gagal: '+e.message}
 }
 
+async function setSizeStock(id,size,value){
+  if(!requireAdmin())return;
+  const p=products.find(x=>x.id===id); if(!p)return;
+  const sizes=parseSizes(p.sizes);
+  sizes[size]=Math.max(0,parseInt(value,10)||0);
+  const stock=Object.values(sizes).reduce((a,b)=>a+Number(b||0),0);
+  const {error}=await sb.from('products').update({sizes,stock}).eq('id',id);
+  if(error)alert('Gagal mengubah stok size: '+error.message);else await refresh();
+}
+async function editSizes(id){
+  if(!requireAdmin())return;
+  const p=products.find(x=>x.id===id); if(!p)return;
+  const sizes=parseSizes(p.sizes);
+  for(const size of ['S','M','L','XL','XXL']){
+    const v=prompt('Stok size '+size, String(Number(sizes[size]||0)));
+    if(v===null)return;
+    sizes[size]=Math.max(0,parseInt(v,10)||0);
+  }
+  const stock=Object.values(sizes).reduce((a,b)=>a+Number(b||0),0);
+  const {error}=await sb.from('products').update({sizes,stock}).eq('id',id);
+  if(error)alert('Gagal menyimpan size: '+error.message);else await refresh();
+}
 async function setStock(id,value){
   if(!requireAdmin())return;
   const stock=Math.max(0,parseInt(value,10)||0);

@@ -406,7 +406,7 @@ document.getElementById('checkoutForm').addEventListener('submit',async e=>{
 
   const items=cart.map(x=>{
     const p=products.find(y=>y.id===x.id);
-    return p?{product_id:p.id,product_name:p.name,unit_price:Number(p.price),quantity:x.qty,subtotal:Number(p.price)*x.qty}:null;
+    return p?{product_id:p.id,product_name:p.name,size:x.size||null,unit_price:Number(p.price),quantity:x.qty,subtotal:Number(p.price)*x.qty}:null;
   }).filter(Boolean);
 
   const total=items.reduce((s,x)=>s+x.subtotal,0);
