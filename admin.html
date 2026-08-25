@@ -48,11 +48,11 @@
 </div></section>
 
 <section id="import" class="tab hidden"><section class="panel" id="shopeeImportPanel">
-  <h2>🛒 Import Produk Shopee</h2>
-  <p style="color:#777">Tempel link produk Shopee. BALIVO akan mencoba mengambil nama, foto, deskripsi, dan harga supplier. Kamu tetap bisa mengoreksi sebelum menyimpan.</p>
+  <h2>🔗 Import Produk dari Link</h2>
+  <p style="color:#777">Tempel link produk dari Shopee, Tokopedia, Lazada, TikTok Shop, website supplier, atau marketplace lain. BALIVO akan mencoba mengambil nama, foto, deskripsi, dan harga supplier. Kamu tetap bisa mengoreksi sebelum menyimpan.</p>
   <div class="form" style="grid-template-columns:1fr">
-    <input id="shopeeUrl" type="url" placeholder="https://shopee.co.id/..." />
-    <button class="primary" onclick="importShopeeProduct()">AMBIL PRODUK SHOPEE</button>
+    <input id="shopeeUrl" type="url" placeholder="https://link-produk-supplier..." />
+    <button class="primary" onclick="importShopeeProduct()">AMBIL PRODUK DARI LINK</button>
   </div>
   <div id="shopeeImportMsg" class="preview" style="margin-top:10px">Belum mengambil produk.</div>
 </section>
@@ -179,10 +179,10 @@ async function importShopeeProduct(){
   const msg=document.getElementById('shopeeImportMsg');
   if(!url){msg.textContent='Masukkan link Shopee dulu.';return}
   msg.textContent='Mengambil data produk Shopee...';
-  const {data,error}=await sb.functions.invoke('import-product-url',{body:{url}});
+  const {data,error}=await sb.functions.invoke('import-product-universal',{body:{url}});
   if(error || data?.error){msg.textContent='Gagal: '+(data?.error||error.message);return}
   document.getElementById('ownName').value=data.title||'';
-  document.getElementById('ownBrand').value='Shopee Supplier';
+  document.getElementById('ownBrand').value=data.source||'Supplier';
   document.getElementById('ownSource').value='SUPPLIER';
   document.getElementById('supplierCost').value=Number(data.price||0);
   document.getElementById('supplierMarkup').value=0;
@@ -190,7 +190,7 @@ async function importShopeeProduct(){
   document.getElementById('supplierProductUrl').value=data.url||url;
   document.getElementById('ownDescription').value=data.description||'';
   document.getElementById('ownImageUrl').value=data.image||'';
-  document.getElementById('ownSupplier').value='Shopee Supplier';
+  document.getElementById('ownSupplier').value=data.source||'Supplier';
   document.getElementById('ownCategory').value='Tshirt';
   msg.innerHTML='Produk berhasil dibaca. <b>Periksa harga/markup/stok lalu tekan SIMPAN PRODUK & STOK.</b>';
   document.getElementById('ownName').scrollIntoView({behavior:'smooth',block:'center'});
