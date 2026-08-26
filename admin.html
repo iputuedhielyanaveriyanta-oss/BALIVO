@@ -120,6 +120,7 @@ const SUPABASE_URL='https://hftgmssnzvrlwlslcaet.supabase.co';
 const SUPABASE_KEY='sb_publishable_xOadp1YRBil2PZ9RHeeWIQ_Z3LqMF-D';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let products=[],orders=[],session=null;
+let importedShopeeImages=[];
 const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -240,8 +241,10 @@ async function importShopeeProduct(){
   set('ownSource','SUPPLIER');
   set('ownCost',price);
   set('supplierCost',price);
-  set('supplierMarkup',0);
-  set('ownPrice',price);
+  const defaultMarkup=25;
+  const sellPrice=Math.round(price*(1+defaultMarkup/100));
+  set('supplierMarkup',defaultMarkup);
+  set('ownPrice',sellPrice);
   set('supplierProductUrl',supplierUrl);
   set('ownDescription',description);
   set('ownImageUrl',image);
@@ -390,7 +393,7 @@ async function saveOwnProduct(){
     const {error}=await sb.from('products').insert({
       name,brand:ownBrand.value.trim()||'BALIVO',category:ownCategory.value.trim()||'Lainnya',
       supplier_id:supplierId,cost,price,stock,stock_source:ownSource.value,
-      image,images:image?[image]:[],sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',supplier_cost:supCost,markup:mk,supplier_product_url:supplierProductUrl
+      image,images:(importedShopeeImages.length?importedShopeeImages:(image?[image]:[])),sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',supplier_cost:supCost,markup:mk,supplier_product_url:supplierProductUrl
     });
     if(error)throw error;
     ownMessage.textContent='Produk berhasil disimpan ke Supabase.';
