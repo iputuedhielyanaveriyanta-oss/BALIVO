@@ -56,7 +56,19 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 #categories button{padding:9px 13px}
 #categories button.active{font-weight:800}
 @media(max-width:600px){#categories{flex-wrap:nowrap;overflow:auto;scrollbar-width:none}#categories button{flex:0 0 auto}}
-</style></head>
+</style>
+<style id="balivo-category-catalog">
+#categories{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#categories .category-break{flex-basis:100%;height:0}
+#categories button{white-space:nowrap;padding:9px 13px;border:1px solid var(--line);background:#fff;border-radius:999px}
+#categories button.active{background:#111!important;color:#fff!important;border-color:#111!important}
+@media(max-width:600px){
+  #categories{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:6px}
+  #categories .category-break{display:none}
+  #categories button{flex:0 0 auto}
+}
+</style>
+</head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
 <header><div class="nav">
@@ -151,12 +163,22 @@ function productList(){
 }
 
 function renderCategories(){
-  const values=[...new Set(products.map(p=>String(p.category||'Lainnya')))];
-  const top=['Semua',...new Set(values.map(v=>v.split(' / ')[0]))];
-  const html=top.map(c=>{
-    const active=category===c || (c!=='Semua' && category.startsWith(c+' / '));
+  const catalog=[{name:'Fashion',subs:['Mens', 'Ladies']},{name:'Alat Rumah Tangga',subs:['Peralatan Dapur', 'Alat Masak', 'Makan & Minum', 'Penyimpanan', 'Kebersihan', 'Kamar Mandi', 'Kamar Tidur', 'Dekorasi', 'Perkakas', 'Lampu & Penerangan', 'Outdoor & Taman']},{name:'Surf & Outdoor',subs:['Surfboard', 'Surf Accessories', 'Camping', 'Hiking']},{name:'Tas & Travel',subs:['Backpack', 'Travel Bag', 'Luggage']},{name:'Beauty & Personal Care',subs:['Skincare', 'Body Care', 'Hair Care', 'Parfum']},{name:'Elektronik & Gadget',subs:['Handphone', 'Aksesoris HP', 'Audio', 'Gaming']},{name:'Sports & Fitness',subs:['Fitness', 'Running', 'Football', 'Cycling']},{name:'Anak & Bayi',subs:['Pakaian Anak', 'Mainan', 'Perlengkapan Bayi']},{name:'Otomotif',subs:['Motor', 'Mobil', 'Aksesoris']},{name:'Hewan Peliharaan',subs:['Makanan Hewan', 'Aksesoris Hewan']},{name:'Souvenir & Gift',subs:['Souvenir Bali', 'Gift', 'Kerajinan']},{name:'Makanan & Minuman',subs:['Snack', 'Minuman', 'Kopi']}];
+  const top=['Semua',...catalog.map(x=>x.name)];
+  let html=top.map(c=>{
+    const active=category===c;
     return `<button type="button" class="${active?'active':''}" onclick="setCategory(${JSON.stringify(c)})">${esc(c)}</button>`;
   }).join('');
+
+  if(category!=='Semua'){
+    const group=catalog.find(x=>x.name===category);
+    if(group){
+      html += `<span class="category-break"></span>`;
+      html += group.subs.map(s=>
+        `<button type="button" class="${category===category+' / '+s?'active':''}" onclick="setCategory(${JSON.stringify(category+' / '+s)})">${esc(s)}</button>`
+      ).join('');
+    }
+  }
   document.getElementById('categories').innerHTML=html;
 }
 
