@@ -264,7 +264,7 @@
     </p>
 
     <div class="form" style="grid-template-columns:1fr">
-      <input id="affiliateUrl" type="url"
+      <input id="affiliatePreviewUrl" type="url"
         placeholder="Paste link Shopee Affiliate di sini...">
       <button class="primary" onclick="previewAffiliateProduct()">TAMPILKAN PRODUK</button>
     </div>
@@ -620,7 +620,7 @@ async function saveOwnProduct(){
       image,images:(importedShopeeImages.length?importedShopeeImages:(image?[image]:[])),sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',supplier_cost:supCost,markup:mk,supplier_product_url:supplierProductUrl,affiliate_url:document.getElementById('affiliateUrl').value.trim()
     });
     if(error)throw error;
-    ownMessage.textContent='Produk berhasil disimpan ke Supabase.';
+    ownMessage.textContent='Produk berhasil disimpan ke Supabase. Foto, harga, stok, kategori, dan link pembelian sudah tersimpan.';
     ['ownName','ownBrand','ownCategory','ownSupplier','ownCost','ownPrice','ownDescription','ownDetails','ownImageUrl','affiliateUrl'].forEach(id=>document.getElementById(id).value='');
     ownStock.value='0';['sizeS','sizeM','sizeL','sizeXL','sizeXXL'].forEach(id=>document.getElementById(id).value='0');ownImageFile.value='';
     await refresh();
