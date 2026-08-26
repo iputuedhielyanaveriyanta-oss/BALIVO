@@ -31,11 +31,68 @@
 #shopeeImportPanel input{width:100%;box-sizing:border-box}
 #shopeeImportPanel .primary{min-height:52px;margin-top:10px}
 </style>
+
+<style id="shopee-link-preview-style">
+.shopee-link-card{
+  display:grid;grid-template-columns:minmax(180px,320px) 1fr;gap:18px;
+  border:1px solid #e2e5e9;border-radius:16px;background:#fff;overflow:hidden;
+  box-shadow:0 6px 22px rgba(0,0,0,.06);
+}
+.shopee-link-image{display:block;background:#f7f7f7;min-height:240px}
+.shopee-link-image img{width:100%;height:100%;min-height:240px;object-fit:cover;display:block}
+.shopee-no-image{min-height:240px;display:flex;align-items:center;justify-content:center;color:#777;padding:20px;text-align:center}
+.shopee-link-body{padding:18px}
+.shopee-link-brand{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#777}
+.shopee-link-body h3{margin:6px 0 10px;font-size:20px;line-height:1.25}
+.shopee-link-price{font-size:21px;font-weight:800;margin-bottom:7px}
+.shopee-link-meta{font-size:12px;color:#666;margin-bottom:10px}
+.shopee-link-body p{font-size:13px;color:#555;line-height:1.5}
+.shopee-open-btn{display:inline-block;text-decoration:none;margin-top:8px}
+@media(max-width:700px){
+  .shopee-link-card{grid-template-columns:1fr}
+  .shopee-link-image img,.shopee-no-image{min-height:280px}
+}
+</style>
+
+
+<style id="affiliate-style">
+.affiliate-panel{border:2px solid #111}
+.affiliate-card{
+  display:grid;
+  grid-template-columns:minmax(180px,320px) 1fr;
+  gap:18px;
+  border:1px solid #e2e5e9;
+  border-radius:16px;
+  background:#fff;
+  overflow:hidden;
+  box-shadow:0 6px 22px rgba(0,0,0,.06);
+}
+.affiliate-image{display:block;background:#f7f7f7;min-height:240px}
+.affiliate-image img{width:100%;height:100%;min-height:240px;object-fit:cover;display:block}
+.affiliate-no-image{
+  min-height:240px;display:flex;align-items:center;justify-content:center;
+  color:#777;padding:20px;text-align:center
+}
+.affiliate-body{padding:18px}
+.affiliate-label{
+  font-size:11px;font-weight:800;letter-spacing:.08em;color:#777
+}
+.affiliate-body h3{margin:7px 0 10px;font-size:20px;line-height:1.25}
+.affiliate-price{font-size:21px;font-weight:800;margin-bottom:7px}
+.affiliate-meta{font-size:12px;color:#666;margin-bottom:14px}
+.affiliate-actions{display:flex;gap:8px;flex-wrap:wrap}
+.affiliate-open{text-decoration:none;display:inline-block}
+@media(max-width:700px){
+  .affiliate-card{grid-template-columns:1fr}
+  .affiliate-image img,.affiliate-no-image{min-height:280px}
+}
+</style>
+
 </head>
 <body>
 <div class="top"><b>BALIVO ADMIN</b> <span style="opacity:.7">— Dropship & Marketplace</span></div>
 <div class="wrap">
-<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="import">Dropship Import</button><button data-tab="products">Produk</button><button data-tab="orders">Order</button></div>
+<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="affiliate">Affiliate</button><button data-tab="import">Dropship Import</button><button data-tab="products">Produk</button><button data-tab="orders">Order</button></div>
 <div class="authbar">
   <span id="authStatus" class="authdot">Belum login admin</span>
   <button id="loginBtn" class="btn" onclick="openLogin()">Login Admin</button>
@@ -48,13 +105,17 @@
 </div></section>
 
 <section id="import" class="tab hidden"><section class="panel" id="shopeeImportPanel">
-  <h2>🔗 Import Produk dari Link</h2>
-  <p style="color:#777">Tempel <b>link produk Shopee</b>. BALIVO akan mengambil nama, foto, deskripsi, harga, variasi/size, dan stok dari produk Shopee. Data wajib diverifikasi sebelum disimpan.</p>
+  <h2>🔗 Preview Produk Shopee</h2>
+  <p style="color:#777">
+    Tempel <b>link Shopee atau link Shopee Affiliate</b>. BALIVO hanya menampilkan preview produk.
+    Produk tidak di-import dan tidak disimpan ke katalog.
+  </p>
   <div class="form" style="grid-template-columns:1fr">
-    <input id="shopeeUrl" type="url" placeholder="https://shopee.co.id/... atau https://s.shopee.co.id/..." />
-    <button class="primary" onclick="importShopeeProduct()">AMBIL PRODUK DARI LINK</button>
+    <input id="shopeeUrl" type="url" placeholder="Paste link Shopee / Affiliate di sini..." />
+    <button class="primary" onclick="previewShopeeProduct()">TAMPILKAN PRODUK</button>
   </div>
-  <div id="shopeeImportMsg" class="preview" style="margin-top:10px">Belum mengambil produk.</div>
+  <div id="shopeeImportMsg" class="preview" style="margin-top:10px">Belum ada link.</div>
+  <div id="shopeePreview" style="margin-top:14px"></div>
 </section>
 <div class="panel"><h2>Dropship Import</h2><p style="color:#777">Import katalog supplier dari JSON atau CSV. Harga jual dihitung dari harga modal + markup.</p>
 <div class="form"><input id="file" class="wide" type="file" accept=".json,.csv,text/csv,application/json"><input id="markup" type="number" value="25" min="0" step="0.1" placeholder="Markup %"><select id="mode"><option value="publish">Publish langsung</option><option value="draft">Simpan sebagai draft</option></select></div><br><button class="primary" onclick="importFile()">IMPORT PRODUK</button><div id="importPreview" class="preview" style="margin-top:12px">Belum ada file.</div></div>
@@ -105,6 +166,28 @@
 </div>
 </section>
 
+
+<section id="affiliate" class="tab hidden">
+  <div class="panel affiliate-panel">
+    <h2>🔗 Shopee Affiliate</h2>
+    <p style="color:#777">
+      Tempel link Shopee Affiliate di sini. BALIVO akan menampilkan preview produk
+      dan menyediakan tombol untuk membuka link affiliate tersebut.
+    </p>
+
+    <div class="form" style="grid-template-columns:1fr">
+      <input id="affiliateUrl" type="url"
+        placeholder="Paste link Shopee Affiliate di sini...">
+      <button class="primary" onclick="previewAffiliateProduct()">TAMPILKAN PRODUK</button>
+    </div>
+
+    <div id="affiliateMsg" class="preview" style="margin-top:12px">
+      Belum ada link affiliate.
+    </div>
+
+    <div id="affiliatePreview" style="margin-top:14px"></div>
+  </div>
+</section>
 <section id="orders" class="tab hidden">
 
 
@@ -174,105 +257,177 @@ async function confirmCustomerPaid(id){
 }
 
 
-async function importShopeeProduct(){
+async function previewShopeeProduct(){
   if(!requireAdmin())return;
-  const url=document.getElementById('shopeeUrl').value.trim();
+  const input=document.getElementById('shopeeUrl');
   const msg=document.getElementById('shopeeImportMsg');
-  if(!url){msg.textContent='Masukkan link produk Shopee dulu.';return}
+  const box=document.getElementById('shopeePreview');
+  const url=input.value.trim();
+  box.innerHTML='';
+  if(!url){msg.textContent='Paste link Shopee terlebih dahulu.';return}
 
-  // Accept normal Shopee product URLs and Shopee short links only.
   let u;
   try{u=new URL(url)}catch(e){
     msg.textContent='Link tidak valid.';
     return;
   }
+
   const host=u.hostname.toLowerCase();
   const isShopee=host==='shopee.co.id'||host.endsWith('.shopee.co.id')||
-                 host==='s.shopee.co.id'||host.endsWith('.shopee.co.id')||
+                 host==='s.shopee.co.id'||host.endsWith('.s.shopee.co.id')||
                  host==='shopee.com'||host.endsWith('.shopee.com');
   if(!isShopee){
-    msg.textContent='BALIVO Import saat ini khusus Shopee. Gunakan link produk Shopee.';
+    msg.textContent='Gunakan link Shopee atau Shopee Affiliate.';
     return;
   }
 
-  msg.textContent='Mengambil data produk Shopee...';
-  const {data,error}=await sb.functions.invoke('import-product-universal',{body:{url,marketplace:'shopee'}});
-  if(error || data?.error){
-    msg.textContent='Gagal mengambil produk Shopee: '+(data?.error||error.message);
+  msg.textContent='Menampilkan produk Shopee...';
+
+  try{
+    const {data,error}=await sb.functions.invoke('import-product-universal',{
+      body:{url,marketplace:'shopee',preview:true}
+    });
+    if(error || data?.error)throw new Error(data?.error||error.message);
+
+    const product=data.product||data.item||data.data||data;
+    const title=product.title||product.name||data.title||data.name||'Produk Shopee';
+    const image=product.image||product.thumbnail||data.image||'';
+    const images=[image,...(Array.isArray(product.images)?product.images:[]),
+                  ...(Array.isArray(data.images)?data.images:[])].filter(Boolean);
+    const description=product.description||data.description||'';
+    const brand=product.brand||data.brand||'';
+    const price=Number(product.price??product.min_price??data.price??0)||0;
+    const rating=product.rating??data.rating??null;
+    const sold=product.sold??data.sold??null;
+
+    const targetUrl=product.url||data.url||url;
+    const img=images[0]||'';
+
+    box.innerHTML=`
+      <div class="shopee-link-card">
+        <a class="shopee-link-image" href="${esc(targetUrl)}" target="_blank" rel="noopener noreferrer">
+          ${img?`<img src="${esc(img)}" alt="${esc(title)}">`:'<div class="shopee-no-image">Foto produk tidak tersedia</div>'}
+        </a>
+        <div class="shopee-link-body">
+          <div class="shopee-link-brand">${esc(brand||'Shopee')}</div>
+          <h3>${esc(title)}</h3>
+          ${price?`<div class="shopee-link-price">${money(price)}</div>`:''}
+          ${(rating!==null||sold!==null)?`<div class="shopee-link-meta">${rating!==null?'⭐ '+esc(rating):''}${rating!==null&&sold!==null?' · ':''}${sold!==null?'Terjual '+esc(sold):''}</div>`:''}
+          ${description?`<p>${esc(description.slice(0,220))}${description.length>220?'…':''}</p>`:''}
+          <a class="primary shopee-open-btn" href="${esc(targetUrl)}" target="_blank" rel="noopener noreferrer">BUKA DI SHOPEE</a>
+        </div>
+      </div>
+    `;
+    msg.innerHTML='<b>Produk tampil.</b> Tidak ada data yang disimpan atau diubah di katalog BALIVO.';
+  }catch(e){
+    msg.textContent='Produk tidak dapat ditampilkan: '+e.message;
+  }
+}
+
+
+async function previewAffiliateProduct(){
+  if(!requireAdmin())return;
+
+  const input=document.getElementById('affiliateUrl');
+  const msg=document.getElementById('affiliateMsg');
+  const box=document.getElementById('affiliatePreview');
+  const url=input.value.trim();
+
+  box.innerHTML='';
+  if(!url){
+    msg.textContent='Paste link Shopee Affiliate terlebih dahulu.';
     return;
   }
 
-  const product=data.product||data.item||data.data||data;
-  const title=product.title||product.name||data.title||data.name||'';
-  const image=product.image||product.thumbnail||data.image||'';
-  const description=product.description||data.description||'';
-  const brand=product.brand||data.brand||'';
-  const supplierUrl=product.url||data.url||url;
-
-  const rawPrice=product.price??product.min_price??product.minPrice??data.price??0;
-  const price=Number(String(rawPrice).replace(/[^0-9]/g,''))||0;
-
-  const rawModels=product.models||product.variations||product.variants||data.models||data.variations||[];
-  const models=Array.isArray(rawModels)?rawModels.map(m=>({
-    name:m.name||m.label||m.size||m.model_name||'',
-    price:Number(String(m.price??m.model_price??price).replace(/[^0-9]/g,''))||price,
-    stock:Number(m.stock??m.quantity??m.qty??0)||0
-  })):[];
-
-  // Never present an incomplete product as successfully imported.
-  const totalStock=models.length
-    ? models.reduce((n,m)=>n+m.stock,0)
-    : Number(product.stock??data.stock??0)||0;
-
-  const missing=[];
-  if(!title)missing.push('nama');
-  if(!image)missing.push('foto');
-  if(!price)missing.push('harga');
-  if(!models.length && !('stock' in product) && !('stock' in data))missing.push('stok/variasi');
-
-  if(missing.length){
-    msg.innerHTML='<b>Import dibatalkan.</b> Data Shopee belum lengkap: '+missing.join(', ')+'. Produk tidak dimasukkan ke katalog.';
+  let u;
+  try{u=new URL(url)}catch(e){
+    msg.textContent='Link tidak valid.';
     return;
   }
 
-  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??''};
-  set('ownName',title);
-  set('ownBrand',brand);
-  set('ownSource','SUPPLIER');
-  set('ownCost',price);
-  set('supplierCost',price);
-  const defaultMarkup=25;
-  const sellPrice=Math.round(price*(1+defaultMarkup/100));
-  set('supplierMarkup',defaultMarkup);
-  set('ownPrice',sellPrice);
-  set('supplierProductUrl',supplierUrl);
-  set('ownDescription',description);
-  set('ownImageUrl',image);
-  set('ownSupplier','Shopee');
-  set('ownCategory',product.category||data.category||'Tshirt');
-  set('ownStock',totalStock);
+  const host=u.hostname.toLowerCase();
+  const isShopeeAffiliate=
+    host==='shopee.co.id' || host.endsWith('.shopee.co.id') ||
+    host==='s.shopee.co.id' || host==='shopee.com' ||
+    host.endsWith('.shopee.com');
 
-  const sizes={S:0,M:0,L:0,XL:0,XXL:0};
-  for(const m of models){
-    const n=String(m.name).toUpperCase().replace(/[^A-Z0-9]+/g,' ');
-    for(const z of Object.keys(sizes)){
-      if(new RegExp('(?:^|\\s)'+z+'(?:\\s|$)').test(n)){
-        sizes[z]+=m.stock; break;
-      }
-    }
+  if(!isShopeeAffiliate){
+    msg.textContent='Gunakan link Shopee Affiliate yang valid.';
+    return;
   }
-  set('sizeS',sizes.S||'');
-  set('sizeM',sizes.M||'');
-  set('sizeL',sizes.L||'');
-  set('sizeXL',sizes.XL||'');
-  set('sizeXXL',sizes.XXL||'');
 
-  set('ownDetails',models.length
-    ? models.map(m=>`${m.name} — Rp${m.price.toLocaleString('id-ID')} — stok ${m.stock}`).join('\n')
-    : '');
+  msg.textContent='Mengambil preview produk...';
 
-  msg.innerHTML='<b>Produk Shopee berhasil diambil.</b> Periksa harga jual, stok, dan size lalu tekan <b>SIMPAN PRODUK & STOK</b>.';
-  document.getElementById('ownName').scrollIntoView({behavior:'smooth',block:'center'});
+  try{
+    const {data,error}=await sb.functions.invoke('import-product-universal',{
+      body:{url,marketplace:'shopee',preview:true}
+    });
+
+    if(error || data?.error)
+      throw new Error(data?.error||error.message);
+
+    const product=data.product||data.item||data.data||data;
+    const title=product.title||product.name||data.title||data.name||'Produk Shopee';
+    const image=product.image||product.thumbnail||data.image||'';
+    const images=[
+      image,
+      ...(Array.isArray(product.images)?product.images:[]),
+      ...(Array.isArray(data.images)?data.images:[])
+    ].filter(Boolean);
+    const price=Number(product.price??product.min_price??data.price??0)||0;
+    const rating=product.rating??data.rating??null;
+    const sold=product.sold??data.sold??null;
+    const targetUrl=product.url||data.url||url;
+
+    box.innerHTML=`
+      <div class="affiliate-card">
+        <a class="affiliate-image" href="${esc(targetUrl)}"
+           target="_blank" rel="noopener noreferrer">
+          ${images[0]
+            ? `<img src="${esc(images[0])}" alt="${esc(title)}">`
+            : '<div class="affiliate-no-image">Foto tidak tersedia</div>'}
+        </a>
+
+        <div class="affiliate-body">
+          <div class="affiliate-label">SHOPEE AFFILIATE</div>
+          <h3>${esc(title)}</h3>
+          ${price?`<div class="affiliate-price">${money(price)}</div>`:''}
+          ${(rating!==null||sold!==null)
+            ? `<div class="affiliate-meta">
+                ${rating!==null?'⭐ '+esc(rating):''}
+                ${rating!==null&&sold!==null?' · ':''}
+                ${sold!==null?'Terjual '+esc(sold):''}
+               </div>`:''}
+
+          <div class="affiliate-actions">
+            <a class="primary affiliate-open"
+               href="${esc(targetUrl)}"
+               target="_blank" rel="noopener noreferrer">
+              BUKA DI SHOPEE
+            </a>
+
+            <button class="btn" type="button"
+              onclick="copyAffiliateLink('${esc(targetUrl)}')">
+              COPY LINK AFFILIATE
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    msg.innerHTML='<b>Produk berhasil ditampilkan.</b> Link tujuan tetap menggunakan link affiliate yang kamu paste.';
+  }catch(e){
+    msg.textContent='Produk tidak dapat ditampilkan: '+e.message;
+  }
+}
+
+async function copyAffiliateLink(url){
+  try{
+    await navigator.clipboard.writeText(url);
+    alert('Link affiliate berhasil disalin.');
+  }catch(e){
+    prompt('Copy link affiliate ini:',url);
+  }
 }
 
 function renderDropship(){
