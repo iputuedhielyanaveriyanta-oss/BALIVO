@@ -68,6 +68,12 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   #categories button{flex:0 0 auto}
 }
 </style>
+
+<style id="category-selected-state">
+#categories button{transition:background .15s,color .15s,border-color .15s,transform .1s}
+#categories button.active{background:#111!important;color:#fff!important;border-color:#111!important}
+#categories button:active{transform:scale(.97)}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -156,9 +162,11 @@ function saveCart(){
 function productList(){
   const q=document.getElementById('search').value.trim().toLowerCase();
   return products.filter(p=>{
-    const c=String(p.category||'Lainnya');
-    const categoryOK=category==='Semua'||c===category||c.startsWith(category+' / ');
-    return categoryOK && (!q||`${p.name||''} ${p.brand||''} ${c}`.toLowerCase().includes(q));
+    const catValues=Array.isArray(p.categories)?p.categories:
+      (p.categories?String(p.categories).split(' | ').filter(Boolean):
+      String(p.category||'Lainnya').split(' | ').filter(Boolean));
+    const categoryOK=category==='Semua'||catValues.some(c=>c===category||c.startsWith(category+' / '));
+    return categoryOK && (!q||`${p.name||''} ${p.brand||''} ${catValues.join(' ')}`.toLowerCase().includes(q));
   });
 }
 

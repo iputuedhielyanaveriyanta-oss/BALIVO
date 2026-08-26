@@ -94,7 +94,14 @@
 .cat-menu.hidden{display:none!important}.cat-col{border:1px solid #eee;border-radius:9px;padding:7px}.cat-col>button{font-weight:800;width:100%;background:#f7f7f7;border:0;border-radius:7px;padding:8px;text-align:left}.cat-sub{display:grid;gap:3px;margin-top:5px}.cat-sub button{border:0;background:#fff;padding:6px 5px;text-align:left;border-radius:6px;font-size:12px}.cat-sub button:hover,.cat-col>button:hover{background:#f0f0f0}
 @media(max-width:700px){.cat-menu{grid-template-columns:1fr 1fr;max-height:65vh}}
 @media(max-width:430px){.cat-menu{grid-template-columns:1fr}}
-</style></head>
+</style>
+<style id="multi-category-style">
+.selected-cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.selected-cat{display:inline-flex;align-items:center;gap:5px;background:#111;color:#fff;border-radius:999px;padding:5px 9px;font-size:11px}
+.selected-cat button{background:transparent;color:#fff;border:0;padding:0;font-weight:900;cursor:pointer}
+.cat-sub button.selected,.cat-col>button.selected{background:#111!important;color:#fff!important}
+</style>
+</head>
 <body>
 <div class="top"><b>BALIVO ADMIN</b> <span style="opacity:.7">— Dropship & Marketplace</span></div>
 <div class="wrap">
@@ -211,8 +218,8 @@
       <div class="cat-sub"><button type="button" data-cat="Makanan & Minuman / Snack">Snack</button><button type="button" data-cat="Makanan & Minuman / Minuman">Minuman</button><button type="button" data-cat="Makanan & Minuman / Kopi">Kopi</button></div>
     </div>
   </div>
-  <input id="ownCategory" type="hidden" value="">
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div id="selectedCategory" class="file-note">Belum dipilih</div><button type="button" id="clearCategory" class="mini">Hapus</button></div><input id="categoryPath" type="hidden" value="">
+  <input id="ownCategory" type="hidden" value=""><input id="ownCategories" type="hidden" value="[]">
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div id="selectedCategory" class="file-note">Belum dipilih</div><button type="button" id="clearCategory" class="mini">Hapus Semua</button></div><div id="selectedCategories" class="selected-cats"></div><input id="categoryPath" type="hidden" value="">
 </div>
 </div>
     <div><label>Sumber Stok</label><select id="ownSource"><option value="OWN">STOK SAYA</option><option value="SUPPLIER">SUPPLIER</option></select></div>
@@ -319,6 +326,13 @@ function parseSizes(value){
   if(!value) return {};
   if(typeof value==='object' && !Array.isArray(value)) return value;
   try{return JSON.parse(value)}catch(e){return {}}
+}
+function renderAdminCategories(p){
+  let cats=[];
+  if(Array.isArray(p.categories)) cats=p.categories;
+  else if(typeof p.categories==='string'){try{cats=JSON.parse(p.categories)}catch(e){cats=p.categories.split(' | ').filter(Boolean)}}
+  if(!cats.length && p.category) cats=String(p.category).split(' | ').filter(Boolean);
+  return cats.length?cats.map(c=>`<span class="pill">${esc(c.split(' / ').slice(-1)[0])}</span>`).join(' '):'<span>—</span>';
 }
 function renderAdminSizes(p){
   const s=parseSizes(p.sizes);
@@ -598,9 +612,9 @@ async function uploadProductImage(file){
 }
 
 async function saveOwnProduct(){
-  const ownCategoryValue=document.getElementById('ownCategory').value.trim();
+  const ownCategoryValue=document.getElementById('ownCategory').value.trim(); const ownCategoryList=JSON.parse(document.getElementById('ownCategories').value||'[]');
   if(!requireAdmin())return;
-  if(!ownCategoryValue){alert('Pilih kategori terlebih dahulu.');return;}
+  if(!ownCategoryList.length){alert('Pilih minimal satu kategori.');return;}
   if(!validOptionalUrl(document.getElementById('affiliateUrl').value.trim())){alert('Link affiliate tidak valid.');return;}
   const name=ownName.value.trim(),cost=Number(ownCost.value),price=Number(ownPrice.value);
   const sizes=readSizeStock();
@@ -679,7 +693,7 @@ async function importFile(){
     const rows=Array.isArray(raw)?raw:(raw.products||[]),m=Number(markup.value||0)/100;
     const imported=rows.map(r=>{
       const cost=Number(r.cost??r.modal??r.price_supplier??r.price??0),stock=Math.max(0,parseInt(r.stock??0,10)||0);
-      return {name:r.name||r.title||'Produk Import',brand:r.brand||'Supplier',category:r.category||'Lainnya',
+      return {name:r.name||r.title||'Produk Import',brand:r.brand||'Supplier',category:Array.isArray(r.categories)?r.categories.join(' | '):(r.category||'Lainnya'),categories:Array.isArray(r.categories)?r.categories:(r.category?[r.category]:[]),
         cost,price:Math.round(cost*(1+m)),stock,stock_source:r.stock_source==='OWN'?'OWN':'SUPPLIER',
         image:r.image||r.image_url||'',images:r.image||r.image_url?[r.image||r.image_url]:[],
         status:mode.value==='draft'?'DRAFT':'ACTIVE',description:r.description||'',details:r.details||'',affiliate_url:r.affiliate_url||r.affiliateUrl||''};
@@ -726,23 +740,41 @@ sb.auth.onAuthStateChange(()=>setTimeout(async()=>{await updateAuthUI();await re
 const categoryTrigger=document.getElementById('categoryTrigger');
 const categoryMenu=document.getElementById('categoryMenu');
 const categoryInput=document.getElementById('ownCategory');
+const categoryListInput=document.getElementById('ownCategories');
 const selectedCategory=document.getElementById('selectedCategory');
+const selectedCategories=document.getElementById('selectedCategories');
+let selectedCats=[];
+try{selectedCats=JSON.parse(categoryListInput.value||'[]')}catch(e){selectedCats=[]}
+
+function syncCategories(){
+  categoryInput.value=selectedCats.join(' | ');
+  categoryListInput.value=JSON.stringify(selectedCats);
+  selectedCategory.textContent=selectedCats.length?selectedCats.length+' kategori dipilih':'Belum dipilih';
+  selectedCategories.innerHTML=selectedCats.map((c,n)=>
+    `<span class="selected-cat">${esc(c)} <button type="button" onclick="removeCategory(${n})">×</button></span>`
+  ).join('');
+  categoryMenu?.querySelectorAll('button[data-cat]').forEach(b=>{
+    b.classList.toggle('selected',selectedCats.includes(b.dataset.cat));
+  });
+}
+function toggleCategory(cat){
+  const idx=selectedCats.indexOf(cat);
+  if(idx>=0) selectedCats.splice(idx,1); else selectedCats.push(cat);
+  syncCategories();
+}
+function removeCategory(n){selectedCats.splice(n,1);syncCategories()}
 if(categoryTrigger){
   categoryTrigger.addEventListener('click',()=>categoryMenu.classList.toggle('hidden'));
   categoryMenu.querySelectorAll('button[data-cat]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      categoryInput.value=btn.dataset.cat; categoryPath.value=btn.dataset.cat;
-      selectedCategory.textContent=btn.dataset.cat;
-      categoryTrigger.firstChild.textContent=btn.dataset.cat+' ';
-      categoryMenu.classList.add('hidden');
-    });
-  });
-  document.getElementById('clearCategory')?.addEventListener('click',()=>{
-    categoryInput.value=''; categoryPath.value=''; selectedCategory.textContent='Belum dipilih'; categoryTrigger.firstChild.textContent='Pilih kategori '; 
+    btn.addEventListener('click',e=>{e.preventDefault();toggleCategory(btn.dataset.cat)});
   });
   document.addEventListener('click',e=>{
     if(!e.target.closest('.cat-picker')) categoryMenu.classList.add('hidden');
   });
 }
+document.getElementById('clearCategory')?.addEventListener('click',()=>{
+  selectedCats=[];syncCategories();
+});
+syncCategories();
 </script></body>
 </html>
