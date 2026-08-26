@@ -88,7 +88,13 @@
 }
 </style>
 
-</head>
+<style id="category-filter-style">
+.cat-picker{position:relative}.cat-trigger{width:100%;padding:11px;border:1px solid #e5e7eb;border-radius:9px;background:#fff;text-align:left;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.cat-menu{position:absolute;z-index:30;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:12px;padding:10px;box-shadow:0 12px 30px #0002;max-height:360px;overflow:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cat-menu.hidden{display:none!important}.cat-col{border:1px solid #eee;border-radius:9px;padding:7px}.cat-col>button{font-weight:800;width:100%;background:#f7f7f7;border:0;border-radius:7px;padding:8px;text-align:left}.cat-sub{display:grid;gap:3px;margin-top:5px}.cat-sub button{border:0;background:#fff;padding:6px 5px;text-align:left;border-radius:6px;font-size:12px}.cat-sub button:hover,.cat-col>button:hover{background:#f0f0f0}
+@media(max-width:700px){.cat-menu{grid-template-columns:1fr 1fr;max-height:65vh}}
+@media(max-width:430px){.cat-menu{grid-template-columns:1fr}}
+</style></head>
 <body>
 <div class="top"><b>BALIVO ADMIN</b> <span style="opacity:.7">— Dropship & Marketplace</span></div>
 <div class="wrap">
@@ -130,7 +136,85 @@
   <div class="form product-form">
     <div><label>Nama Produk *</label><input id="ownName" required placeholder="Contoh: Kaos Bali Premium"></div>
     <div><label>Brand</label><input id="ownBrand" placeholder="BALIVO / Brand sendiri"></div>
-    <div><label>Kategori</label><input id="ownCategory" placeholder="T-Shirt"></div>
+    <div class="wide">
+<label>Kategori</label>
+<div class="cat-picker">
+  <button type="button" class="cat-trigger" id="categoryTrigger">Pilih kategori <span>⌄</span></button>
+  <div id="categoryMenu" class="cat-menu hidden">
+    <div class="cat-col"><button type="button" data-cat="Fashion">Fashion</button>
+      <div class="cat-sub">
+        <button type="button" data-cat="Fashion / Mens / T-Shirt">Mens · T-Shirt</button>
+        <button type="button" data-cat="Fashion / Mens / Celana">Mens · Celana</button>
+        <button type="button" data-cat="Fashion / Mens / Sepatu">Mens · Sepatu</button>
+        <button type="button" data-cat="Fashion / Mens / Sandal">Mens · Sandal</button>
+        <button type="button" data-cat="Fashion / Mens / Jacket">Mens · Jacket</button>
+        <button type="button" data-cat="Fashion / Mens / Topi">Mens · Topi</button>
+        <button type="button" data-cat="Fashion / Mens / Tas">Mens · Tas</button>
+        <button type="button" data-cat="Fashion / Mens / Kompek">Mens · Kompek</button>
+        <button type="button" data-cat="Fashion / Mens / Ikat Pinggang">Mens · Ikat Pinggang</button>
+        <button type="button" data-cat="Fashion / Mens / Aksesoris">Mens · Aksesoris</button>
+        <button type="button" data-cat="Fashion / Ladies / Top">Ladies · Top</button>
+        <button type="button" data-cat="Fashion / Ladies / Dress">Ladies · Dress</button>
+        <button type="button" data-cat="Fashion / Ladies / Celana">Ladies · Celana</button>
+        <button type="button" data-cat="Fashion / Ladies / Rok">Ladies · Rok</button>
+        <button type="button" data-cat="Fashion / Ladies / Jeans">Ladies · Jeans</button>
+        <button type="button" data-cat="Fashion / Ladies / Jacket">Ladies · Jacket</button>
+        <button type="button" data-cat="Fashion / Ladies / Sepatu">Ladies · Sepatu</button>
+        <button type="button" data-cat="Fashion / Ladies / Sandal">Ladies · Sandal</button>
+        <button type="button" data-cat="Fashion / Ladies / Tas">Ladies · Tas</button>
+        <button type="button" data-cat="Fashion / Ladies / Aksesoris">Ladies · Aksesoris</button>
+      </div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Alat Rumah Tangga">Alat Rumah Tangga</button>
+      <div class="cat-sub">
+        <button type="button" data-cat="Alat Rumah Tangga / Peralatan Dapur">Peralatan Dapur</button>
+        <button type="button" data-cat="Alat Rumah Tangga / Alat Masak">Alat Masak</button>
+        <button type="button" data-cat="Alat Rumah Tangga / Makan & Minum">Makan & Minum</button>
+        <button type="button" data-cat="Alat Rumah Tangga / Penyimpanan">Penyimpanan</button>
+        <button type="button" data-cat="Alat Rumah Tangga / Kebersihan">Kebersihan</button>
+        <button type="button" data-cat="Alat Rumah Tangga / Kamar Mandi">Kamar Mandi</button>
+        <button type="button" data-cat="Alat Rumah Tangga / Kamar Tidur">Kamar Tidur</button>
+        <button type="button" data-cat="Alat Rumah Tangga / Dekorasi">Dekorasi</button>
+        <button type="button" data-cat="Alat Rumah Tangga / Perkakas">Perkakas</button>
+        <button type="button" data-cat="Alat Rumah Tangga / Lampu">Lampu & Penerangan</button>
+        <button type="button" data-cat="Alat Rumah Tangga / Outdoor">Outdoor & Taman</button>
+      </div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Surf & Outdoor">Surf & Outdoor</button>
+      <div class="cat-sub"><button type="button" data-cat="Surf & Outdoor / Surfboard">Surfboard</button><button type="button" data-cat="Surf & Outdoor / Accessories">Surf Accessories</button><button type="button" data-cat="Surf & Outdoor / Camping">Camping</button><button type="button" data-cat="Surf & Outdoor / Hiking">Hiking</button></div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Tas & Travel">Tas & Travel</button>
+      <div class="cat-sub"><button type="button" data-cat="Tas & Travel / Backpack">Backpack</button><button type="button" data-cat="Tas & Travel / Travel Bag">Travel Bag</button><button type="button" data-cat="Tas & Travel / Luggage">Luggage</button></div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Beauty & Personal Care">Beauty & Personal Care</button>
+      <div class="cat-sub"><button type="button" data-cat="Beauty & Personal Care / Skincare">Skincare</button><button type="button" data-cat="Beauty & Personal Care / Body Care">Body Care</button><button type="button" data-cat="Beauty & Personal Care / Hair Care">Hair Care</button><button type="button" data-cat="Beauty & Personal Care / Parfum">Parfum</button></div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Elektronik & Gadget">Elektronik & Gadget</button>
+      <div class="cat-sub"><button type="button" data-cat="Elektronik & Gadget / Handphone">Handphone</button><button type="button" data-cat="Elektronik & Gadget / Aksesoris HP">Aksesoris HP</button><button type="button" data-cat="Elektronik & Gadget / Audio">Audio</button><button type="button" data-cat="Elektronik & Gadget / Gaming">Gaming</button></div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Sports & Fitness">Sports & Fitness</button>
+      <div class="cat-sub"><button type="button" data-cat="Sports & Fitness / Fitness">Fitness</button><button type="button" data-cat="Sports & Fitness / Running">Running</button><button type="button" data-cat="Sports & Fitness / Football">Football</button><button type="button" data-cat="Sports & Fitness / Cycling">Cycling</button></div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Anak & Bayi">Anak & Bayi</button>
+      <div class="cat-sub"><button type="button" data-cat="Anak & Bayi / Pakaian Anak">Pakaian Anak</button><button type="button" data-cat="Anak & Bayi / Mainan">Mainan</button><button type="button" data-cat="Anak & Bayi / Bayi">Perlengkapan Bayi</button></div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Otomotif">Otomotif</button>
+      <div class="cat-sub"><button type="button" data-cat="Otomotif / Motor">Motor</button><button type="button" data-cat="Otomotif / Mobil">Mobil</button><button type="button" data-cat="Otomotif / Aksesoris">Aksesoris</button></div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Hewan Peliharaan">Hewan Peliharaan</button>
+      <div class="cat-sub"><button type="button" data-cat="Hewan Peliharaan / Makanan">Makanan Hewan</button><button type="button" data-cat="Hewan Peliharaan / Aksesoris">Aksesoris Hewan</button></div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Souvenir & Gift">Souvenir & Gift</button>
+      <div class="cat-sub"><button type="button" data-cat="Souvenir & Gift / Souvenir Bali">Souvenir Bali</button><button type="button" data-cat="Souvenir & Gift / Gift">Gift</button><button type="button" data-cat="Souvenir & Gift / Kerajinan">Kerajinan</button></div>
+    </div>
+    <div class="cat-col"><button type="button" data-cat="Makanan & Minuman">Makanan & Minuman</button>
+      <div class="cat-sub"><button type="button" data-cat="Makanan & Minuman / Snack">Snack</button><button type="button" data-cat="Makanan & Minuman / Minuman">Minuman</button><button type="button" data-cat="Makanan & Minuman / Kopi">Kopi</button></div>
+    </div>
+  </div>
+  <input id="ownCategory" type="hidden" value="">
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div id="selectedCategory" class="file-note">Belum dipilih</div><button type="button" id="clearCategory" class="mini">Hapus</button></div><input id="categoryPath" type="hidden" value="">
+</div>
+</div>
     <div><label>Sumber Stok</label><select id="ownSource"><option value="OWN">STOK SAYA</option><option value="SUPPLIER">SUPPLIER</option></select></div>
     <div id="ownSupplierWrap"><label>Supplier (opsional)</label><input id="ownSupplier" placeholder="Nama supplier"></div>
     <div><label>Harga Modal *</label><input id="ownCost" type="number" min="0" step="1000" placeholder="100000"></div>
@@ -138,6 +222,7 @@
     <div><label>Harga Supplier</label><input id="supplierCost" type="number" min="0" step="1000" value="0" placeholder="100000"></div>
     <div><label>Markup</label><input id="supplierMarkup" type="number" min="0" step="1000" value="0" placeholder="39000"></div>
     <div class="wide"><label>Link Produk Supplier</label><input id="supplierProductUrl" type="url" placeholder="https://shopee.co.id/..."></div>
+    <div class="wide"><label>Link Affiliate (Shopee/Toko)</label><input id="affiliateUrl" type="url" placeholder="Paste link affiliate di sini..."></div>
 
     <div><label>Stok *</label><input id="ownStock" type="number" min="0" step="1" value="0"></div>
     <div class="wide">
@@ -151,7 +236,10 @@
       </div>
       <div class="file-note">Isi stok per size jika produk punya ukuran. Total stok otomatis dihitung dari S+M+L+XL+XXL.</div>
     </div>
-    <div><label>Foto Produk (upload)</label><input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp"><div class="file-note">Maks. 5 MB. Foto disimpan di Supabase Storage.</div></div>
+    <div><label>Foto Produk (upload)</label>
+<input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp">
+<div id="ownImagePreview" style="display:none;margin-top:8px"><img id="ownImagePreviewImg" alt="Preview foto" style="width:96px;height:96px;object-fit:cover;border-radius:10px;border:1px solid #ddd"></div>
+<div class="file-note">Maks. 5 MB. Foto disimpan di Supabase Storage.</div></div>
     <div><label>Atau URL Foto</label><input id="ownImageUrl" type="url" placeholder="https://...jpg"></div>
     <div class="wide"><label>Deskripsi</label><textarea id="ownDescription" rows="3" placeholder="Deskripsi produk"></textarea></div>
     <div class="wide"><label>Detail</label><textarea id="ownDetails" rows="3" placeholder="Material, ukuran, warna, dll."></textarea></div>
@@ -162,7 +250,7 @@
 <div class="panel">
   <h2>Produk BALIVO</h2>
   <p style="color:#777">Stok bisa langsung diubah di sini. Perubahan tersimpan ke database.</p>
-  <table class="table"><thead><tr><th>Produk</th><th>Sumber</th><th>Modal</th><th>Harga Jual</th><th>Size / Stok</th><th>Stok</th><th>Profit</th><th>Supplier</th><th>Aksi</th></tr></thead><tbody id="productRows"></tbody></table>
+  <table class="table"><thead><tr><th>Produk</th><th>Sumber</th><th>Modal</th><th>Harga Jual</th><th>Size / Stok</th><th>Stok</th><th>Profit</th><th>Supplier</th><th>Affiliate</th><th>Aksi</th></tr></thead><tbody id="productRows"></tbody></table>
 </div>
 </section>
 
@@ -224,6 +312,7 @@ async function updateAuthUI(){
   loginBtn.classList.toggle('hidden',!!session);logoutBtn.classList.toggle('hidden',!session);
 }
 function requireAdmin(){if(!session){openLogin();return false}return true}
+function validOptionalUrl(v){if(!v)return true;try{const u=new URL(v);return u.protocol==='http:'||u.protocol==='https:'}catch(e){return false}}
 
 
 function parseSizes(value){
@@ -469,7 +558,7 @@ async function markSupplierShipped(id){
 }
 
 async function refresh(){
-  const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,stock,status,stock_source,image,sizes,supplier_id,supplier_cost,markup,supplier_product_url,suppliers(name)').order('created_at',{ascending:false});
+  const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,stock,status,stock_source,image,sizes,supplier_id,supplier_cost,markup,supplier_product_url,affiliate_url,suppliers(name)').order('created_at',{ascending:false});
   if(pe){console.error(pe);return}
   products=(p||[]).map(x=>({...x,supplier:x.suppliers?.name||'-'}));
   const {data:o,error:oe}=session?await sb.from('orders').select('id,order_number,customer_name,customer_phone,customer_address,total,subtotal,payment_method,payment_status,status,fulfillment_type,supplier_cost,markup_profit,supplier_payment_status,fulfillment_status,supplier_order_note,supplier_tracking_number,created_at').order('created_at',{ascending:false}):{data:[],error:null};
@@ -509,7 +598,10 @@ async function uploadProductImage(file){
 }
 
 async function saveOwnProduct(){
+  const ownCategoryValue=document.getElementById('ownCategory').value.trim();
   if(!requireAdmin())return;
+  if(!ownCategoryValue){alert('Pilih kategori terlebih dahulu.');return;}
+  if(!validOptionalUrl(document.getElementById('affiliateUrl').value.trim())){alert('Link affiliate tidak valid.');return;}
   const name=ownName.value.trim(),cost=Number(ownCost.value),price=Number(ownPrice.value);
   const sizes=readSizeStock();
   const stock=sizes?Object.values(sizes).reduce((a,b)=>a+b,0):Number(ownStock.value);
@@ -525,11 +617,11 @@ async function saveOwnProduct(){
     const {error}=await sb.from('products').insert({
       name,brand:ownBrand.value.trim()||'BALIVO',category:ownCategory.value.trim()||'Lainnya',
       supplier_id:supplierId,cost,price,stock,stock_source:ownSource.value,
-      image,images:(importedShopeeImages.length?importedShopeeImages:(image?[image]:[])),sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',supplier_cost:supCost,markup:mk,supplier_product_url:supplierProductUrl
+      image,images:(importedShopeeImages.length?importedShopeeImages:(image?[image]:[])),sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',supplier_cost:supCost,markup:mk,supplier_product_url:supplierProductUrl,affiliate_url:document.getElementById('affiliateUrl').value.trim()
     });
     if(error)throw error;
     ownMessage.textContent='Produk berhasil disimpan ke Supabase.';
-    ['ownName','ownBrand','ownCategory','ownSupplier','ownCost','ownPrice','ownDescription','ownDetails','ownImageUrl'].forEach(id=>document.getElementById(id).value='');
+    ['ownName','ownBrand','ownCategory','ownSupplier','ownCost','ownPrice','ownDescription','ownDetails','ownImageUrl','affiliateUrl'].forEach(id=>document.getElementById(id).value='');
     ownStock.value='0';['sizeS','sizeM','sizeL','sizeXL','sizeXXL'].forEach(id=>document.getElementById(id).value='0');ownImageFile.value='';
     await refresh();
   }catch(e){ownMessage.textContent='Gagal: '+e.message}
@@ -590,7 +682,7 @@ async function importFile(){
       return {name:r.name||r.title||'Produk Import',brand:r.brand||'Supplier',category:r.category||'Lainnya',
         cost,price:Math.round(cost*(1+m)),stock,stock_source:r.stock_source==='OWN'?'OWN':'SUPPLIER',
         image:r.image||r.image_url||'',images:r.image||r.image_url?[r.image||r.image_url]:[],
-        status:mode.value==='draft'?'DRAFT':'ACTIVE',description:r.description||'',details:r.details||''};
+        status:mode.value==='draft'?'DRAFT':'ACTIVE',description:r.description||'',details:r.details||'',affiliate_url:r.affiliate_url||r.affiliateUrl||''};
     });
     if(!imported.length)return alert('Tidak ada produk.');
     const {error}=await sb.from('products').insert(imported);if(error)throw error;
@@ -602,6 +694,13 @@ Mode: ${mode.value==='draft'?'DRAFT':'PUBLISH'}`;
 }
 
 ownSource.addEventListener('change',()=>{ownSupplierWrap.style.display=ownSource.value==='SUPPLIER'?'block':'none'});
+ownImageFile?.addEventListener('change',()=>{
+  const f=ownImageFile.files?.[0], box=document.getElementById('ownImagePreview'), img=document.getElementById('ownImagePreviewImg');
+  if(!f){box.style.display='none';return}
+  if(f.size>5*1024*1024){alert('Foto maksimal 5 MB.');ownImageFile.value='';box.style.display='none';return}
+  if(!/^image\/(jpeg|png|webp)$/.test(f.type)){alert('Gunakan JPG, PNG, atau WEBP.');ownImageFile.value='';box.style.display='none';return}
+  img.src=URL.createObjectURL(f);box.style.display='block';
+});
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
@@ -623,5 +722,27 @@ sb.auth.onAuthStateChange(()=>setTimeout(async()=>{await updateAuthUI();await re
     <div id="loginMessage" class="preview" style="margin-top:12px">Gunakan akun Auth Supabase Admin.</div>
   </div>
 </div>
-</body>
+<script id="category-filter-script">
+const categoryTrigger=document.getElementById('categoryTrigger');
+const categoryMenu=document.getElementById('categoryMenu');
+const categoryInput=document.getElementById('ownCategory');
+const selectedCategory=document.getElementById('selectedCategory');
+if(categoryTrigger){
+  categoryTrigger.addEventListener('click',()=>categoryMenu.classList.toggle('hidden'));
+  categoryMenu.querySelectorAll('button[data-cat]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      categoryInput.value=btn.dataset.cat; categoryPath.value=btn.dataset.cat;
+      selectedCategory.textContent=btn.dataset.cat;
+      categoryTrigger.firstChild.textContent=btn.dataset.cat+' ';
+      categoryMenu.classList.add('hidden');
+    });
+  });
+  document.getElementById('clearCategory')?.addEventListener('click',()=>{
+    categoryInput.value=''; categoryPath.value=''; selectedCategory.textContent='Belum dipilih'; categoryTrigger.firstChild.textContent='Pilih kategori '; 
+  });
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('.cat-picker')) categoryMenu.classList.add('hidden');
+  });
+}
+</script></body>
 </html>

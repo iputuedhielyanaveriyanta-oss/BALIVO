@@ -51,7 +51,12 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   .review-btn,#viewAdd{min-height:56px}
 }
 </style>
-</head>
+<style id="balivo-category-final">
+#categories{display:flex;flex-wrap:wrap;gap:8px}
+#categories button{padding:9px 13px}
+#categories button.active{font-weight:800}
+@media(max-width:600px){#categories{flex-wrap:nowrap;overflow:auto;scrollbar-width:none}#categories button{flex:0 0 auto}}
+</style></head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
 <header><div class="nav">
@@ -78,6 +83,7 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   <div id="viewSizes" class="size-options"></div>
 </div>
 <button id="viewAdd" class="checkout">Tambah ke Cart</button>
+<div id="viewAffiliate" style="margin-top:10px"></div>
 <div id="reviewBottom" class="detail-box"></div>
 </div></div></div>
 <div id="checkoutModal" class="modal"><div class="sheet">
@@ -110,7 +116,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 async function loadProducts(){
   const {data,error}=await sb.from('products')
-    .select('id,name,brand,category,description,details,image,images,price,stock,status,stock_source,supplier_cost,markup,supplier_product_url')
+    .select('id,name,brand,category,description,details,image,images,price,stock,status,stock_source,supplier_cost,markup,supplier_product_url,affiliate_url')
     .eq('status','ACTIVE')
     .order('created_at',{ascending:false});
 
@@ -137,17 +143,21 @@ function saveCart(){
 
 function productList(){
   const q=document.getElementById('search').value.trim().toLowerCase();
-  return products.filter(p=>
-    (category==='Semua'||p.category===category) &&
-    (!q||`${p.name||''} ${p.brand||''} ${p.category||''}`.toLowerCase().includes(q))
-  );
+  return products.filter(p=>{
+    const c=String(p.category||'Lainnya');
+    const categoryOK=category==='Semua'||c===category||c.startsWith(category+' / ');
+    return categoryOK && (!q||`${p.name||''} ${p.brand||''} ${c}`.toLowerCase().includes(q));
+  });
 }
 
 function renderCategories(){
-  const cats=['Semua',...new Set(products.map(p=>p.category||'Lainnya'))];
-  document.getElementById('categories').innerHTML=cats.map(c=>
-    `<button type="button" class="${c===category?'active':''}" aria-pressed="${c===category?'true':'false'}" onclick="setCategory(${JSON.stringify(c)})">${esc(c)}</button>`
-  ).join('');
+  const values=[...new Set(products.map(p=>String(p.category||'Lainnya')))];
+  const top=['Semua',...new Set(values.map(v=>v.split(' / ')[0]))];
+  const html=top.map(c=>{
+    const active=category===c || (c!=='Semua' && category.startsWith(c+' / '));
+    return `<button type="button" class="${active?'active':''}" onclick="setCategory(${JSON.stringify(c)})">${esc(c)}</button>`;
+  }).join('');
+  document.getElementById('categories').innerHTML=html;
 }
 
 function setCategory(c){category=c;render();requestAnimationFrame(()=>{const b=[...document.querySelectorAll('#categories button')].find(x=>x.textContent.trim()===c);if(b)b.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});})}
@@ -249,6 +259,9 @@ async function showProduct(p){
   document.getElementById('viewName').textContent=p.name||'';
   document.getElementById('viewPrice').textContent=money(p.price);
   document.getElementById('viewStock').textContent=Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis';
+  document.getElementById('viewAffiliate').innerHTML=p.affiliate_url
+    ? `<button type="button" onclick="event.stopPropagation();openAffiliate('${p.id}')" style="display:block;width:100%;padding:14px;background:#111;color:#fff;border:0;border-radius:10px;font-weight:800;cursor:pointer">BELI SEKARANG</button>`
+    : '';
   renderSizes(p);
   document.getElementById('viewDescription').textContent=p.description||'Deskripsi produk belum tersedia.';
   document.getElementById('viewDetails').innerHTML=
@@ -302,6 +315,11 @@ async function showProduct(p){
   addButton.onclick=()=>{if(Number(p.stock)>0)add(p.id)};
 }
 
+function openAffiliate(id){
+  const p=products.find(x=>x.id===id);
+  if(!p||!p.affiliate_url)return;
+  window.open(p.affiliate_url,'_blank','noopener,noreferrer');
+}
 function currentProduct(){return productList()[currentProductIndex]}
 
 function productNext(){
