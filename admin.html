@@ -339,65 +339,42 @@ async function previewAffiliateProduct(){
     return;
   }
 
-  let u;
-  try{u=new URL(url)}catch(e){
+  try{ new URL(url); }catch(e){
     msg.textContent='Link tidak valid.';
     return;
   }
 
-  const host=u.hostname.toLowerCase();
-  const isShopeeAffiliate=
-    host==='shopee.co.id' || host.endsWith('.shopee.co.id') ||
-    host==='s.shopee.co.id' || host==='shopee.com' ||
-    host.endsWith('.shopee.com');
-
-  if(!isShopeeAffiliate){
-    msg.textContent='Gunakan link Shopee Affiliate yang valid.';
-    return;
-  }
-
-  msg.textContent='Mengambil preview produk...';
+  msg.textContent='Membuat preview link...';
 
   try{
     const {data,error}=await sb.functions.invoke('import-product-universal',{
-      body:{url,marketplace:'shopee',preview:true}
+      body:{url,marketplace:'shopee',preview:true,metadata_only:true}
     });
 
-    if(error || data?.error)
-      throw new Error(data?.error||error.message);
+    if(error || data?.error)throw new Error(data?.error||error.message);
 
-    const product=data.product||data.item||data.data||data;
-    const title=product.title||product.name||data.title||data.name||'Produk Shopee';
-    const image=product.image||product.thumbnail||data.image||'';
-    const images=[
-      image,
-      ...(Array.isArray(product.images)?product.images:[]),
-      ...(Array.isArray(data.images)?data.images:[])
-    ].filter(Boolean);
-    const price=Number(product.price??product.min_price??data.price??0)||0;
-    const rating=product.rating??data.rating??null;
-    const sold=product.sold??data.sold??null;
-    const targetUrl=product.url||data.url||url;
+    // IMPORTANT: this is a link preview, not a product import.
+    const title=data.title||'Produk Shopee';
+    const description=data.description||'';
+    const image=data.image||'';
+    const targetUrl=url; // preserve the exact affiliate link pasted by admin
+    const previewUrl=data.preview_url||data.resolved_url||url;
 
     box.innerHTML=`
       <div class="affiliate-card">
         <a class="affiliate-image" href="${esc(targetUrl)}"
            target="_blank" rel="noopener noreferrer">
-          ${images[0]
-            ? `<img src="${esc(images[0])}" alt="${esc(title)}">`
-            : '<div class="affiliate-no-image">Foto tidak tersedia</div>'}
+          ${image
+            ? `<img src="${esc(image)}" alt="${esc(title)}">`
+            : '<div class="affiliate-no-image">Preview foto tidak tersedia</div>'}
         </a>
 
         <div class="affiliate-body">
-          <div class="affiliate-label">SHOPEE AFFILIATE</div>
+          <div class="affiliate-label">SHOPEE AFFILIATE · LINK PREVIEW</div>
           <h3>${esc(title)}</h3>
-          ${price?`<div class="affiliate-price">${money(price)}</div>`:''}
-          ${(rating!==null||sold!==null)
-            ? `<div class="affiliate-meta">
-                ${rating!==null?'⭐ '+esc(rating):''}
-                ${rating!==null&&sold!==null?' · ':''}
-                ${sold!==null?'Terjual '+esc(sold):''}
-               </div>`:''}
+          ${description
+            ? `<p>${esc(description.slice(0,260))}${description.length>260?'…':''}</p>`
+            : '<p>Preview dari metadata halaman Shopee.</p>'}
 
           <div class="affiliate-actions">
             <a class="primary affiliate-open"
@@ -415,9 +392,9 @@ async function previewAffiliateProduct(){
       </div>
     `;
 
-    msg.innerHTML='<b>Produk berhasil ditampilkan.</b> Link tujuan tetap menggunakan link affiliate yang kamu paste.';
+    msg.innerHTML='<b>Preview berhasil.</b> Tidak ada produk yang di-import atau disimpan ke katalog BALIVO.';
   }catch(e){
-    msg.textContent='Produk tidak dapat ditampilkan: '+e.message;
+    msg.textContent='Preview tidak dapat dibuat: '+e.message;
   }
 }
 
