@@ -105,7 +105,7 @@
 <body>
 <div class="top"><b>BALIVO ADMIN</b> <span style="opacity:.7">— Dropship & Marketplace</span></div>
 <div class="wrap">
-<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="affiliate">Affiliate</button><button data-tab="import">Dropship Import</button><button data-tab="products">Produk</button><button data-tab="orders">Order</button></div>
+<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="affiliate">Affiliate</button><button data-tab="import">Dropship Import</button><button data-tab="products">Produk</button><button data-tab="orders">Order</button><button data-tab="payment-settings">Pembayaran</button></div>
 <div class="authbar">
   <span id="authStatus" class="authdot">Belum login admin</span>
   <button id="loginBtn" class="btn" onclick="openLogin()">Login Admin</button>
@@ -776,5 +776,67 @@ document.getElementById('clearCategory')?.addEventListener('click',()=>{
   selectedCats=[];syncCategories();
 });
 syncCategories();
-</script></body>
+</script></section>
+
+<section id="payment-settings" class="tab hidden">
+  <div class="panel own-panel">
+    <h2>💳 Pengaturan Pembayaran Customer</h2>
+    <p style="color:#777">Isi data pembayaran milik BALIVO. Data ini akan muncul otomatis di layar customer setelah memilih metode pembayaran.</p>
+    <div class="form">
+      <div><label>Bank</label><input id="payBankName" placeholder="BCA / Mandiri / BRI"></div>
+      <div><label>Nomor Rekening</label><input id="payBankNumber" placeholder="Nomor rekening"></div>
+      <div class="wide"><label>Nama Pemilik Rekening</label><input id="payBankOwner" placeholder="Nama pemilik rekening"></div>
+      <div><label>Bank Virtual Account</label><input id="payVABank" placeholder="Nama bank VA"></div>
+      <div><label>Nomor Virtual Account</label><input id="payVANumber" placeholder="Nomor VA"></div>
+      <div class="wide"><label>Nama Pemilik VA</label><input id="payVAOwner" placeholder="Nama pemilik VA"></div>
+      <div><label>E-Wallet</label><input id="payWalletProvider" placeholder="DANA / GoPay / OVO"></div>
+      <div><label>Nomor E-Wallet</label><input id="payWalletNumber" placeholder="Nomor e-wallet"></div>
+      <div class="wide"><label>Nama Pemilik E-Wallet</label><input id="payWalletOwner" placeholder="Nama pemilik"></div>
+      <div class="wide"><label>URL gambar QRIS</label><input id="payQrisUrl" type="url" placeholder="https://..."></div>
+    </div>
+    <br>
+    <button class="primary" id="savePaymentSettingsBtn" type="button">SIMPAN DATA PEMBAYARAN</button>
+    <div id="paymentSettingsMsg" class="preview" style="margin-top:12px">Memuat data...</div>
+  </div>
+</section>
+<script></script>
+
+<script id="balivo-payment-settings">
+(function(){
+  const q=id=>document.getElementById(id);
+  const fields={
+    qris_image_url:"payQrisUrl",bank_name:"payBankName",bank_account_number:"payBankNumber",bank_account_name:"payBankOwner",
+    va_bank_name:"payVABank",va_account_number:"payVANumber",va_account_name:"payVAOwner",
+    ewallet_provider:"payWalletProvider",ewallet_number:"payWalletNumber",ewallet_name:"payWalletOwner"
+  };
+  async function loadPaymentSettings(){
+    const msg=q("paymentSettingsMsg"); if(!msg)return;
+    msg.textContent="Memuat data pembayaran...";
+    try{
+      const {data,error}=await sb.from("balivo_payment_settings").select("*").eq("id",true).maybeSingle();
+      if(error)throw error;
+      Object.entries(fields).forEach(([col,id])=>{if(q(id))q(id).value=data?.[col]||""});
+      msg.textContent=data?"Data pembayaran berhasil dimuat.":"Belum ada data pembayaran.";
+    }catch(e){msg.textContent="Gagal memuat data pembayaran: "+e.message;}
+  }
+  async function savePaymentSettings(){
+    if(!requireAdmin())return;
+    const msg=q("paymentSettingsMsg"),btn=q("savePaymentSettingsBtn");
+    btn.disabled=true; msg.textContent="Menyimpan...";
+    try{
+      const row={id:true};
+      Object.entries(fields).forEach(([col,id])=>row[col]=(q(id)?.value||"").trim());
+      const {error}=await sb.from("balivo_payment_settings").upsert(row,{onConflict:"id"});
+      if(error)throw error;
+      msg.textContent="✓ Data pembayaran berhasil disimpan. Customer akan melihat data terbaru.";
+    }catch(e){msg.textContent="Gagal menyimpan: "+e.message;}
+    finally{btn.disabled=false;}
+  }
+  q("savePaymentSettingsBtn")?.addEventListener("click",savePaymentSettings);
+  document.querySelectorAll(".tabs button[data-tab]").forEach(btn=>{
+    btn.addEventListener("click",()=>{if(btn.dataset.tab==="payment-settings")loadPaymentSettings();});
+  });
+})();
+</script>
+</body>
 </html>
