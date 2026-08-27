@@ -629,7 +629,7 @@ async function saveOwnProduct(){
     const mk=Number(document.getElementById('supplierMarkup').value)||Math.max(0,price-supCost);
     const supplierProductUrl=document.getElementById('supplierProductUrl').value.trim();
     const {error}=await sb.from('products').insert({
-      name,brand:ownBrand.value.trim()||'BALIVO',category:ownCategory.value.trim()||'Lainnya',
+      name,brand:ownBrand.value.trim()||'BALIVO',category:ownCategory.value.trim()||'Lainnya',categories:ownCategoryList,
       supplier_id:supplierId,cost,price,stock,stock_source:ownSource.value,
       image,images:(importedShopeeImages.length?importedShopeeImages:(image?[image]:[])),sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',supplier_cost:supCost,markup:mk,supplier_product_url:supplierProductUrl,affiliate_url:document.getElementById('affiliateUrl').value.trim()
     });

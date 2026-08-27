@@ -160,7 +160,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 async function loadProducts(){
   const {data,error}=await sb.from('products')
-    .select('id,name,brand,category,description,details,image,images,price,stock,status,stock_source,supplier_cost,markup,supplier_product_url,affiliate_url')
+    .select('id,name,brand,category,categories,description,details,image,images,sizes,price,stock,status,stock_source,supplier_cost,markup,supplier_product_url,affiliate_url')
     .eq('status','ACTIVE')
     .order('created_at',{ascending:false});
 
@@ -437,7 +437,7 @@ function renderSizes(p){
 }
   box.parentElement.style.display='block';
   box.innerHTML=data.map(x=>
-    `<button type="button" class="size-btn" ${x.stock<=0?'disabled':''}
+    `<button type="button" class="size-btn" data-size="${esc(x.size)}" ${x.stock<=0?'disabled':''}
       onclick="selectSize('${String(x.size).replace(/'/g,"\\'")}')">
       ${esc(x.size)}${x.stock<=0?' · Habis':''}
     </button>`
