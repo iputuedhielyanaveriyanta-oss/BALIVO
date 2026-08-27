@@ -148,7 +148,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 async function loadProducts(){
   const {data,error}=await sb.from('products')
-    .select('id,name,brand,category,description,details,image,images,price,stock,status,stock_source,supplier_cost,markup,supplier_product_url,affiliate_url,categories')
+    .select('id,name,brand,category,description,details,image,images,price,stock,status,stock_source,supplier_cost,markup,supplier_product_url,affiliate_url')
     .eq('status','ACTIVE')
     .order('created_at',{ascending:false});
 
