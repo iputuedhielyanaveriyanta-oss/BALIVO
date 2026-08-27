@@ -125,8 +125,8 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 <input id="customerPhone" required placeholder="Nomor WhatsApp">
 <textarea id="customerAddress" required rows="3" placeholder="Alamat lengkap"></textarea>
 <select id="payment" required><option value="">Pilih pembayaran</option><option>QRIS</option><option>Virtual Account</option><option>E-Wallet</option><option>Transfer Bank</option></select>
-<div id="checkoutSummary"></div><p class="order-note">Pembayaran nyata membutuhkan payment gateway merchant. Demo ini belum memproses uang secara otomatis.</p>
-<button class="checkout" type="submit">Buat Pesanan</button>
+<div id="checkoutSummary"></div><p class="order-note">Mode uji coba: setelah pesanan dibuat, customer masuk ke halaman pembayaran demo. Tidak ada uang nyata yang ditarik.</p>
+<button class="checkout" type="submit">LANJUT KE PEMBAYARAN</button>
 </form></div></div>
 
 <script>
@@ -677,9 +677,51 @@ document.getElementById('checkoutForm').addEventListener('submit',async e=>{
   if(itemError){alert('Detail pesanan gagal disimpan: '+itemError.message);return}
 
   cart=[];saveCart();closeCheckout();closeCart();
-  alert('Pesanan '+order.order_number+' berhasil dibuat. Status: MENUNGGU PEMBAYARAN.');
+  openPaymentDemo(order.id,order.order_number,total,payment);
   await loadProducts();
 });
+
+function openPaymentDemo(orderId,orderNumber,total,payment){
+  const m=document.getElementById('orderSuccess');
+  m.style.display='flex';
+  m.className='modal open';
+  m.innerHTML=`<div class="sheet" style="padding:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Pembayaran Pesanan</h2><button type="button" onclick="closePaymentDemo()">✕</button></div>
+    <div style="margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fafafa">
+      <div style="font-size:12px;color:#777">Nomor Pesanan</div><b style="font-size:18px">${esc(orderNumber)}</b>
+      <div style="margin-top:12px;font-size:12px;color:#777">Metode</div><b>${esc(payment)}</b>
+      <div style="margin-top:12px;font-size:12px;color:#777">Total</div><b style="font-size:26px">${money(total)}</b>
+    </div>
+    <div style="margin-top:18px;padding:14px;border:1px dashed #aaa;border-radius:12px">
+      <b>DEMO PAYMENT</b><p style="margin:7px 0 0;color:#666;font-size:13px">Ini hanya untuk menguji alur pembelian BALIVO. Belum terhubung ke QRIS/VA/E-Wallet asli.</p>
+    </div>
+    <button id="demoPayBtn" class="checkout" style="margin-top:16px" onclick="completeDemoPayment('${orderId}','${esc(orderNumber)}')">BAYAR SEKARANG (DEMO)</button>
+    <button type="button" class="btn" style="width:100%;margin-top:9px;padding:13px" onclick="closePaymentDemo()">Bayar Nanti</button>
+  </div>`;
+}
+
+function closePaymentDemo(){
+  const m=document.getElementById('orderSuccess');
+  m.className='modal';m.style.display='none';m.innerHTML='';
+}
+
+async function completeDemoPayment(orderId,orderNumber){
+  const btn=document.getElementById('demoPayBtn');
+  if(btn){btn.disabled=true;btn.textContent='MEMPROSES...';}
+  const {error}=await sb.from('orders').update({payment_status:'PAID',status:'NEW',fulfillment_status:'READY_TO_PROCESS'}).eq('id',orderId);
+  if(error){
+    if(btn){btn.disabled=false;btn.textContent='BAYAR SEKARANG (DEMO)';}
+    alert('Pembayaran demo gagal: '+error.message);return;
+  }
+  const m=document.getElementById('orderSuccess');
+  m.innerHTML=`<div class="sheet" style="padding:26px;text-align:center">
+    <div style="font-size:48px">✓</div><h2>Pembayaran Berhasil</h2>
+    <p style="color:#666">Pesanan <b>${esc(orderNumber)}</b> sudah berstatus <b>PAID</b>.</p>
+    <p style="font-size:13px;color:#777">Order sekarang masuk ke Admin BALIVO untuk diproses.</p>
+    <button class="checkout" onclick="closePaymentDemo()">SELESAI</button>
+  </div>`;
+}
+
 
 saveCart();
 // Render kategori langsung agar tombol tetap muncul walaupun data produk/Supabase gagal dimuat.
