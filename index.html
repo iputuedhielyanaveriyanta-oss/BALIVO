@@ -153,6 +153,7 @@ async function loadProducts(){
   if(error){
     console.error('BALIVO products:',error);
     products=[];
+    renderCategories();
     document.getElementById('empty').classList.remove('hidden');
     document.getElementById('resultCount').textContent='Data produk gagal dimuat';
     return;
@@ -532,6 +533,8 @@ document.getElementById('checkoutForm').addEventListener('submit',async e=>{
 });
 
 saveCart();
+// Render kategori langsung agar tombol tetap muncul walaupun data produk/Supabase gagal dimuat.
+renderCategories();
 loadProducts();
 
 </script>
