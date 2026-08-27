@@ -238,13 +238,25 @@ function categoryChildren(path){
   return (node.subs||[]).map(x=>typeof x==='string'?{name:x,subs:[]}:x);
 }
 
+function selectedCategoryLabel(topName){
+  if(category==='Semua') return topName;
+  if(category===topName) return topName;
+  const prefix=topName+' / ';
+  if(category.startsWith(prefix)){
+    const parts=category.split(' / ').filter(Boolean);
+    return parts[parts.length-1] || topName;
+  }
+  return topName;
+}
+
 function renderCategories(){
   const catalog=categoryCatalog();
   const top=['Semua',...catalog.map(x=>x.name)];
   document.getElementById('categories').innerHTML=top.map(c=>{
     const group=catalog.find(x=>x.name===c);
     const active=c==='Semua' ? category==='Semua' : (category===c || category.startsWith(c+' / '));
-    return `<button type="button" class="category-btn ${active?'active':''}" data-category="${esc(c)}" data-has-subs="${group?'1':'0'}" aria-pressed="${active?'true':'false'}">${esc(c)}${group?'<span class="cat-arrow" aria-hidden="true">⌄</span>':''}</button>`;
+    const label=c==='Semua' ? 'Semua' : selectedCategoryLabel(c);
+    return `<button type="button" class="category-btn ${active?'active':''}" data-category="${esc(c)}" data-has-subs="${group?'1':'0'}" aria-pressed="${active?'true':'false'}">${esc(label)}${group?'<span class="cat-arrow" aria-hidden="true">⌄</span>':''}</button>`;
   }).join('');
 }
 
