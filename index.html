@@ -61,34 +61,24 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 .category-filter-select.has-selection{background:#111;color:#fff;border-color:#111}
 @media(max-width:600px){#categories{padding-bottom:7px}.category-filter-select{max-width:210px}}
 </style>
-<style id="balivo-category-catalog">
-#categories{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-#categories .category-break{flex-basis:100%;height:0}
-#categories button{white-space:nowrap;padding:9px 13px;border:1px solid var(--line);background:#fff;border-radius:999px}
-#categories button.active{background:#111!important;color:#fff!important;border-color:#111!important}
-@media(max-width:600px){
-  #categories{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:6px}
-  #categories .category-break{display:none}
-  #categories button{flex:0 0 auto}
-}
-</style>
 
-<style id="category-selected-state">
-#categories button{transition:background .15s,color .15s,border-color .15s,transform .1s}
-#categories button.active{background:#111!important;color:#fff!important;border-color:#111!important}
-#categories button:active{transform:scale(.97)}
-</style>
 
-<style id="balivo-category-final-fix">
-#categories{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-#categories button{position:relative;z-index:5;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:9px 13px;border:1px solid #ddd;background:#fff;color:#2563eb;border-radius:999px;white-space:nowrap;transition:background .15s,color .15s,border-color .15s,transform .1s}
-#categories button.active{background:#111!important;color:#fff!important;border-color:#111!important;font-weight:800}
-#categories .category-break{flex-basis:100%;height:0}
-@media(max-width:600px){
-  #categories{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:6px}
-  #categories .category-break{display:none}
-  #categories button{flex:0 0 auto}
-}
+
+
+
+<style id="category-button-filter-final">
+#categories{position:relative;display:flex;flex-wrap:nowrap;gap:8px;align-items:center;overflow-x:auto;overflow-y:visible;scrollbar-width:none;padding:4px 0 10px}
+#categories::-webkit-scrollbar{display:none}
+#categories .category-btn{position:relative;z-index:2;display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;padding:10px 14px;border:1px solid #ddd;background:#fff;color:#2563eb;border-radius:999px;white-space:nowrap;font-weight:600;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s,border-color .15s,transform .1s}
+#categories .category-btn.active{background:#111!important;color:#fff!important;border-color:#111!important;font-weight:800}
+#categories .category-btn:active{transform:scale(.97)}
+.cat-arrow{font-size:13px;line-height:1;opacity:.9}
+.category-popup{position:fixed;z-index:10000;min-width:210px;max-width:min(320px,calc(100vw - 16px));max-height:min(60vh,420px);overflow:auto;background:#fff;border:1px solid #ddd;border-radius:14px;box-shadow:0 12px 35px #0003;padding:6px}
+.category-option{display:block;width:100%;padding:11px 13px;border:0;background:#fff;color:#111;text-align:left;border-radius:9px;font-size:15px;cursor:pointer;touch-action:manipulation}
+.category-option:hover,.category-option:active{background:#f1f1f1}
+.category-option.parent-option{font-weight:800}
+.category-option.chosen{background:#111;color:#fff;font-weight:800}
+@media(max-width:600px){#categories{padding-bottom:7px}.category-popup{min-width:210px}.category-option{padding:13px;font-size:16px}}
 </style>
 </head>
 <body>
@@ -190,46 +180,132 @@ function productList(){
 function renderCategories(){
   const catalog=[{name:'Fashion',subs:['Mens','Ladies']},{name:'Alat Rumah Tangga',subs:['Peralatan Dapur','Alat Masak','Makan & Minum','Penyimpanan','Kebersihan','Kamar Mandi','Kamar Tidur','Dekorasi','Perkakas','Lampu & Penerangan','Outdoor & Taman']},{name:'Surf & Outdoor',subs:['Surfboard','Surf Accessories','Camping','Hiking']},{name:'Tas & Travel',subs:['Backpack','Travel Bag','Luggage']},{name:'Beauty & Personal Care',subs:['Skincare','Body Care','Hair Care','Parfum']},{name:'Elektronik & Gadget',subs:['Handphone','Aksesoris HP','Audio','Gaming']},{name:'Sports & Fitness',subs:['Fitness','Running','Football','Cycling']},{name:'Anak & Bayi',subs:['Pakaian Anak','Mainan','Perlengkapan Bayi']},{name:'Otomotif',subs:['Motor','Mobil','Aksesoris']},{name:'Hewan Peliharaan',subs:['Makanan Hewan','Aksesoris Hewan']},{name:'Souvenir & Gift',subs:['Souvenir Bali','Gift','Kerajinan']},{name:'Makanan & Minuman',subs:['Snack','Minuman','Kopi']}];
   const top=['Semua',...catalog.map(x=>x.name)];
-  let html=top.map(c=>{
+  const html=top.map(c=>{
+    const group=catalog.find(x=>x.name===c);
     const active=c==='Semua' ? category==='Semua' : (category===c || category.startsWith(c+' / '));
-    return `<button type="button" class="${active?'active':''}" data-category="${esc(c)}" aria-pressed="${active?'true':'false'}">${esc(c)}</button>`;
+    return `<button type="button" class="category-btn ${active?'active':''}" data-category="${esc(c)}" data-has-subs="${group?'1':'0'}" aria-pressed="${active?'true':'false'}">${esc(c)}${group?'<span class="cat-arrow">⌄</span>':''}</button>`;
   }).join('');
-
-  const group=catalog.find(x=>category===x.name || category.startsWith(x.name+' / '));
-  if(group){
-    const selectedSub=category.startsWith(group.name+' / ') ? category.slice(group.name.length+3) : '';
-    html+=`<select class="category-filter-select ${selectedSub?'has-selection':''}" id="categorySubFilter" aria-label="Filter subkategori ${esc(group.name)}">
-      <option value="${esc(group.name)}">Filter ${esc(group.name)}</option>
-      ${group.subs.map(sub=>{const full=group.name+' / '+sub;return `<option value="${esc(full)}" ${category===full?'selected':''}>${esc(sub)}</option>`}).join('')}
-    </select>`;
-  }
   document.getElementById('categories').innerHTML=html;
-  const sub=document.getElementById('categorySubFilter');
-  if(sub){
-    sub.addEventListener('change',function(e){
-      e.stopPropagation();
-      setCategory(this.value);
-    });
-  }
 }
 
-function updateCategoryButtons(){
-  document.querySelectorAll('#categories button').forEach(b=>{
-    const active=b.getAttribute('data-category')===category;
-    b.classList.toggle('active',active);
-    b.setAttribute('aria-pressed',active?'true':'false');
+function categoryCatalog(){
+  return [
+    {name:'Fashion',subs:['Mens','Ladies']},
+    {name:'Alat Rumah Tangga',subs:['Peralatan Dapur','Alat Masak','Makan & Minum','Penyimpanan','Kebersihan','Kamar Mandi','Kamar Tidur','Dekorasi','Perkakas','Lampu & Penerangan','Outdoor & Taman']},
+    {name:'Surf & Outdoor',subs:['Surfboard','Surf Accessories','Camping','Hiking']},
+    {name:'Tas & Travel',subs:['Backpack','Travel Bag','Luggage']},
+    {name:'Beauty & Personal Care',subs:['Skincare','Body Care','Hair Care','Parfum']},
+    {name:'Elektronik & Gadget',subs:['Handphone','Aksesoris HP','Audio','Gaming']},
+    {name:'Sports & Fitness',subs:['Fitness','Running','Football','Cycling']},
+    {name:'Anak & Bayi',subs:['Pakaian Anak','Mainan','Perlengkapan Bayi']},
+    {name:'Otomotif',subs:['Motor','Mobil','Aksesoris']},
+    {name:'Hewan Peliharaan',subs:['Makanan Hewan','Aksesoris Hewan']},
+    {name:'Souvenir & Gift',subs:['Souvenir Bali','Gift','Kerajinan']},
+    {name:'Makanan & Minuman',subs:['Snack','Minuman','Kopi']}
+  ];
+}
+
+function renderCategories(){
+  const catalog=categoryCatalog();
+  const top=['Semua',...catalog.map(x=>x.name)];
+  document.getElementById('categories').innerHTML=top.map(c=>{
+    const group=catalog.find(x=>x.name===c);
+    const active=c==='Semua' ? category==='Semua' : (category===c || category.startsWith(c+' / '));
+    return `<button type="button" class="category-btn ${active?'active':''}" data-category="${esc(c)}" data-has-subs="${group?'1':'0'}" aria-pressed="${active?'true':'false'}">${esc(c)}${group?'<span class="cat-arrow" aria-hidden="true">⌄</span>':''}</button>`;
+  }).join('');
+}
+
+function closeCategoryMenu(){
+  const old=document.getElementById('categoryPopup');
+  if(old)old.remove();
+}
+
+function openCategoryMenu(c,anchor){
+  const group=categoryCatalog().find(x=>x.name===c);
+  if(!group)return;
+  closeCategoryMenu();
+
+  const popup=document.createElement('div');
+  popup.id='categoryPopup';
+  popup.className='category-popup';
+  popup.dataset.category=c;
+  popup.innerHTML=`<button type="button" class="category-option parent-option ${category===group.name?'chosen':''}" data-popup-category="${esc(group.name)}">✓ ${esc(group.name)}</button>`+
+    group.subs.map(sub=>{
+      const full=group.name+' / '+sub;
+      return `<button type="button" class="category-option ${category===full?'chosen':''}" data-popup-category="${esc(full)}">${esc(sub)}</button>`;
+    }).join('');
+
+  document.body.appendChild(popup);
+
+  const r=anchor.getBoundingClientRect();
+  const margin=8;
+  const popupWidth=Math.min(Math.max(popup.offsetWidth,210),window.innerWidth-margin*2);
+  let left=Math.max(margin,Math.min(r.left,window.innerWidth-popupWidth-margin));
+  let top=r.bottom+6;
+  popup.style.left=left+'px';
+  popup.style.top=top+'px';
+
+  // Keep the menu attached to the button when there is little room below it.
+  const h=popup.offsetHeight;
+  if(top+h>window.innerHeight-margin){
+    const above=r.top-h-6;
+    popup.style.top=Math.max(margin,above)+'px';
+  }
+
+  popup.addEventListener('click',function(e){
+    const opt=e.target.closest('[data-popup-category]');
+    if(!opt)return;
+    e.preventDefault();
+    e.stopPropagation();
+    const value=opt.getAttribute('data-popup-category');
+    closeCategoryMenu();
+    setCategory(value);
   });
 }
 
 function setCategory(c){
   category=c;
+  closeCategoryMenu();
   renderCategories();
   renderProductsOnly();
   requestAnimationFrame(()=>{
-    const b=[...document.querySelectorAll('#categories [data-category]')].find(x=>x.getAttribute('data-category')===c);
+    const b=[...document.querySelectorAll('#categories [data-category]')]
+      .find(x=>x.getAttribute('data-category')===c || (c.startsWith(x.getAttribute('data-category')+' / ')));
     if(b)b.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   });
 }
+
+// Setiap kategori mempunyai menu filter/subkategori sendiri.
+// Tidak ada tombol "Filter" terpisah.
+document.addEventListener('click',function(e){
+  const b=e.target.closest('#categories [data-category]');
+  if(!b)return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  const c=b.getAttribute('data-category');
+  const hasSubs=b.getAttribute('data-has-subs')==='1';
+  const popup=document.getElementById('categoryPopup');
+  const sameOpen=popup && popup.dataset.category===c;
+
+  if(sameOpen){
+    closeCategoryMenu();
+    return;
+  }
+
+  category=c;
+  renderCategories();
+  renderProductsOnly();
+
+  requestAnimationFrame(()=>{
+    const fresh=[...document.querySelectorAll('#categories [data-category]')]
+      .find(x=>x.getAttribute('data-category')===c);
+    if(hasSubs && fresh)openCategoryMenu(c,fresh);
+  });
+},{capture:true});
+
+window.addEventListener('scroll',closeCategoryMenu,{passive:true});
+window.addEventListener('resize',closeCategoryMenu);
 
 function renderProductsOnly(){
   const list=productList();
@@ -251,16 +327,6 @@ function renderProductsOnly(){
     </article>
   `).join('');
 }
-
-// Event delegation: tetap berfungsi di iPhone/Safari walaupun tombol kategori dibuat ulang.
-document.addEventListener('click',function(e){
-  const b=e.target.closest('#categories [data-category]');
-  if(!b)return;
-  e.preventDefault();
-  e.stopPropagation();
-  const c=b.getAttribute('data-category');
-  if(c)setCategory(c);
-},{capture:true});
 
 function render(){
   const list=productList();
