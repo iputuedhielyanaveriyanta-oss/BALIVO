@@ -88,6 +88,9 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 .category-option.chosen{background:#111;color:#fff;font-weight:800}
 .category-option.parent-option{margin-bottom:4px}
 </style>
+<style id="real-payment-ui">
+.real-order-summary{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fafafa;display:grid;gap:11px}.real-order-summary span{display:block;font-size:12px;color:#777}.real-order-summary b{display:block;font-size:17px;margin-top:3px}.real-order-summary strong{display:block;font-size:26px;margin-top:3px}.real-pay-box{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#111;color:#fff}.real-pay-box>b{display:block;margin-bottom:10px}.real-pay-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #333;color:#bbb}.real-pay-row:last-child{border-bottom:0}.real-pay-row strong{color:#fff;text-align:right}.real-qris{display:block;width:min(280px,100%);max-height:320px;object-fit:contain;margin:10px auto;background:#fff;border-radius:10px;padding:8px}.real-pay-note{font-size:12px;color:#aaa;line-height:1.5;margin-top:8px}.real-pay-warning{margin-top:14px;padding:12px;border:1px dashed #aaa;border-radius:10px;font-size:12px;color:#666;line-height:1.5}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -125,7 +128,7 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 <input id="customerPhone" required placeholder="Nomor WhatsApp">
 <textarea id="customerAddress" required rows="3" placeholder="Alamat lengkap"></textarea>
 <select id="payment" required><option value="">Pilih pembayaran</option><option>QRIS</option><option>Virtual Account</option><option>E-Wallet</option><option>Transfer Bank</option></select>
-<div id="checkoutSummary"></div><p class="order-note">Mode uji coba: setelah pesanan dibuat, customer masuk ke halaman pembayaran demo. Tidak ada uang nyata yang ditarik.</p>
+<div id="checkoutSummary"></div><p class="order-note">Setelah pesanan dibuat, customer akan melihat QRIS / rekening pembayaran BALIVO sesuai metode yang dipilih.</p>
 <button class="checkout" type="submit">LANJUT KE PEMBAYARAN</button>
 </form></div></div>
 
@@ -658,44 +661,55 @@ document.getElementById('checkoutForm').addEventListener('submit',async e=>{
   },0);
   const profit=total-supplierCost;
 
-  const {data:order,error:orderError}=await sb.from('orders').insert({
-    customer_name:name,
-    customer_phone:phone,
-    customer_address:address,
-    payment_method:payment,
-    payment_status:'PENDING',
-    status:'NEW',
-    subtotal:total,
-    total
-  }).select('id,order_number').single();
+  const {data:order,error:orderError}=await sb.rpc('create_balivo_order',{
+    p_customer_name:name,
+    p_customer_phone:phone,
+    p_customer_address:address,
+    p_payment_method:payment,
+    p_subtotal:total,
+    p_total:total,
+    p_items:items
+  });
 
   if(orderError){alert('Pesanan gagal dibuat: '+orderError.message);return}
-
-  const orderItems=items.map(x=>({...x,order_id:order.id}));
-  const {error:itemError}=await sb.from('order_items').insert(orderItems);
-
-  if(itemError){alert('Detail pesanan gagal disimpan: '+itemError.message);return}
+  const created=Array.isArray(order)?order[0]:order;
+  if(!created?.id){alert('Pesanan gagal dibuat: data order tidak diterima.');return}
 
   cart=[];saveCart();closeCheckout();closeCart();
-  openPaymentDemo(order.id,order.order_number,total,payment);
+  openRealPayment(created.id,created.order_number,total,payment,phone);
   await loadProducts();
 });
 
-function openPaymentDemo(orderId,orderNumber,total,payment){
+async function openRealPayment(orderId,orderNumber,total,payment,phone){
   const m=document.getElementById('orderSuccess');
   m.style.display='flex';
   m.className='modal open';
+  m.innerHTML=`<div class="sheet" style="padding:24px"><div style="text-align:center;color:#777">Memuat data pembayaran...</div></div>`;
+  const {data:settings,error}=await sb.rpc('balivo_public_payment_settings');
+  if(error){
+    m.innerHTML=`<div class="sheet" style="padding:24px"><h2>Data pembayaran gagal dimuat</h2><p style="color:#666">${esc(error.message)}</p><button class="checkout" onclick="closePaymentDemo()">TUTUP</button></div>`;
+    return;
+  }
+  const s=settings||{};
+  const method=String(payment||'').toLowerCase();
+  let paymentHtml='';
+  if(method==='qris'){
+    paymentHtml=s.qris_image_url
+      ? `<div class="real-pay-box"><b>SCAN QRIS</b><img src="${esc(s.qris_image_url)}" alt="QRIS BALIVO" class="real-qris"><div class="real-pay-note">Scan QRIS di atas dan bayar tepat sesuai total pesanan.</div></div>`
+      : `<div class="real-pay-box"><b>QRIS BELUM DIATUR</b><div class="real-pay-note">Admin belum memasukkan QRIS pembayaran.</div></div>`;
+  }else if(method==='virtual account'){
+    paymentHtml=`<div class="real-pay-box"><b>VIRTUAL ACCOUNT</b><div class="real-pay-row"><span>Bank</span><strong>${esc(s.va_bank_name||'-')}</strong></div><div class="real-pay-row"><span>Nomor VA</span><strong>${esc(s.va_account_number||'-')}</strong></div><div class="real-pay-row"><span>Nama</span><strong>${esc(s.va_account_name||'-')}</strong></div></div>`;
+  }else if(method==='e-wallet'){
+    paymentHtml=`<div class="real-pay-box"><b>E-WALLET</b><div class="real-pay-row"><span>Provider</span><strong>${esc(s.ewallet_provider||'-')}</strong></div><div class="real-pay-row"><span>Nomor</span><strong>${esc(s.ewallet_number||'-')}</strong></div><div class="real-pay-row"><span>Nama</span><strong>${esc(s.ewallet_name||'-')}</strong></div></div>`;
+  }else{
+    paymentHtml=`<div class="real-pay-box"><b>TRANSFER BANK</b><div class="real-pay-row"><span>Bank</span><strong>${esc(s.bank_name||'-')}</strong></div><div class="real-pay-row"><span>No. Rekening</span><strong>${esc(s.bank_account_number||'-')}</strong></div><div class="real-pay-row"><span>Atas Nama</span><strong>${esc(s.bank_account_name||'-')}</strong></div></div>`;
+  }
   m.innerHTML=`<div class="sheet" style="padding:24px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Pembayaran Pesanan</h2><button type="button" onclick="closePaymentDemo()">✕</button></div>
-    <div style="margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fafafa">
-      <div style="font-size:12px;color:#777">Nomor Pesanan</div><b style="font-size:18px">${esc(orderNumber)}</b>
-      <div style="margin-top:12px;font-size:12px;color:#777">Metode</div><b>${esc(payment)}</b>
-      <div style="margin-top:12px;font-size:12px;color:#777">Total</div><b style="font-size:26px">${money(total)}</b>
-    </div>
-    <div style="margin-top:18px;padding:14px;border:1px dashed #aaa;border-radius:12px">
-      <b>DEMO PAYMENT</b><p style="margin:7px 0 0;color:#666;font-size:13px">Ini hanya untuk menguji alur pembelian BALIVO. Belum terhubung ke QRIS/VA/E-Wallet asli.</p>
-    </div>
-    <button id="demoPayBtn" class="checkout" style="margin-top:16px" onclick="completeDemoPayment('${orderId}','${esc(orderNumber)}')">BAYAR SEKARANG (DEMO)</button>
+    <div class="real-order-summary"><div><span>Nomor Pesanan</span><b>${esc(orderNumber)}</b></div><div><span>Metode</span><b>${esc(payment)}</b></div><div><span>Total yang harus dibayar</span><strong>${money(total)}</strong></div></div>
+    ${paymentHtml}
+    <div class="real-pay-warning">Pembayaran dilakukan langsung ke rekening / QRIS BALIVO. Tidak ada pembayaran demo.</div>
+    <button id="paymentConfirmBtn" class="checkout" style="margin-top:16px" onclick="submitRealPaymentConfirmation('${orderId}','${esc(phone)}')">SAYA SUDAH BAYAR</button>
     <button type="button" class="btn" style="width:100%;margin-top:9px;padding:13px" onclick="closePaymentDemo()">Bayar Nanti</button>
   </div>`;
 }
@@ -705,21 +719,16 @@ function closePaymentDemo(){
   m.className='modal';m.style.display='none';m.innerHTML='';
 }
 
-async function completeDemoPayment(orderId,orderNumber){
-  const btn=document.getElementById('demoPayBtn');
-  if(btn){btn.disabled=true;btn.textContent='MEMPROSES...';}
-  const {error}=await sb.from('orders').update({payment_status:'PAID',status:'NEW',fulfillment_status:'READY_TO_PROCESS'}).eq('id',orderId);
-  if(error){
-    if(btn){btn.disabled=false;btn.textContent='BAYAR SEKARANG (DEMO)';}
-    alert('Pembayaran demo gagal: '+error.message);return;
+async function submitRealPaymentConfirmation(orderId,phone){
+  const btn=document.getElementById('paymentConfirmBtn');
+  if(btn){btn.disabled=true;btn.textContent='MENGIRIM...';}
+  const {data,error}=await sb.rpc('balivo_submit_payment_confirmation',{p_order_id:orderId,p_customer_phone:phone});
+  if(error||data!==true){
+    if(btn){btn.disabled=false;btn.textContent='SAYA SUDAH BAYAR';}
+    alert('Konfirmasi pembayaran gagal: '+(error?.message||'Order tidak ditemukan.'));return;
   }
   const m=document.getElementById('orderSuccess');
-  m.innerHTML=`<div class="sheet" style="padding:26px;text-align:center">
-    <div style="font-size:48px">✓</div><h2>Pembayaran Berhasil</h2>
-    <p style="color:#666">Pesanan <b>${esc(orderNumber)}</b> sudah berstatus <b>PAID</b>.</p>
-    <p style="font-size:13px;color:#777">Order sekarang masuk ke Admin BALIVO untuk diproses.</p>
-    <button class="checkout" onclick="closePaymentDemo()">SELESAI</button>
-  </div>`;
+  m.innerHTML=`<div class="sheet" style="padding:26px;text-align:center"><div style="font-size:48px">✓</div><h2>Konfirmasi Terkirim</h2><p style="color:#666">Order <b>${esc(orderId)}</b> menunggu verifikasi admin.</p><p style="font-size:13px;color:#777">Admin akan memeriksa pembayaran sebelum order diproses.</p><button class="checkout" onclick="closePaymentDemo()">SELESAI</button></div>`;
 }
 
 
