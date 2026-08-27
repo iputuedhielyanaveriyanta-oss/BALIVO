@@ -80,6 +80,14 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 .category-option.chosen{background:#111;color:#fff;font-weight:800}
 @media(max-width:600px){#categories{padding-bottom:7px}.category-popup{min-width:210px}.category-option{padding:13px;font-size:16px}}
 </style>
+
+<style id="nested-category-filter-fix">
+.category-popup{position:fixed;z-index:9999;min-width:210px;max-width:min(300px,calc(100vw - 16px));max-height:65vh;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:16px;padding:8px;box-shadow:0 14px 40px #0003}
+.category-option{display:block;width:100%;padding:13px 14px;border:0;background:#fff;color:#111;text-align:left;border-radius:10px;font-size:16px}
+.category-option:hover,.category-option:active{background:#f2f2f2}
+.category-option.chosen{background:#111;color:#fff;font-weight:800}
+.category-option.parent-option{margin-bottom:4px}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -177,20 +185,12 @@ function productList(){
   });
 }
 
-function renderCategories(){
-  const catalog=[{name:'Fashion',subs:['Mens','Ladies']},{name:'Alat Rumah Tangga',subs:['Peralatan Dapur','Alat Masak','Makan & Minum','Penyimpanan','Kebersihan','Kamar Mandi','Kamar Tidur','Dekorasi','Perkakas','Lampu & Penerangan','Outdoor & Taman']},{name:'Surf & Outdoor',subs:['Surfboard','Surf Accessories','Camping','Hiking']},{name:'Tas & Travel',subs:['Backpack','Travel Bag','Luggage']},{name:'Beauty & Personal Care',subs:['Skincare','Body Care','Hair Care','Parfum']},{name:'Elektronik & Gadget',subs:['Handphone','Aksesoris HP','Audio','Gaming']},{name:'Sports & Fitness',subs:['Fitness','Running','Football','Cycling']},{name:'Anak & Bayi',subs:['Pakaian Anak','Mainan','Perlengkapan Bayi']},{name:'Otomotif',subs:['Motor','Mobil','Aksesoris']},{name:'Hewan Peliharaan',subs:['Makanan Hewan','Aksesoris Hewan']},{name:'Souvenir & Gift',subs:['Souvenir Bali','Gift','Kerajinan']},{name:'Makanan & Minuman',subs:['Snack','Minuman','Kopi']}];
-  const top=['Semua',...catalog.map(x=>x.name)];
-  const html=top.map(c=>{
-    const group=catalog.find(x=>x.name===c);
-    const active=c==='Semua' ? category==='Semua' : (category===c || category.startsWith(c+' / '));
-    return `<button type="button" class="category-btn ${active?'active':''}" data-category="${esc(c)}" data-has-subs="${group?'1':'0'}" aria-pressed="${active?'true':'false'}">${esc(c)}${group?'<span class="cat-arrow">⌄</span>':''}</button>`;
-  }).join('');
-  document.getElementById('categories').innerHTML=html;
-}
-
 function categoryCatalog(){
   return [
-    {name:'Fashion',subs:['Mens','Ladies']},
+    {name:'Fashion',subs:[
+      {name:'Mens',subs:['T-Shirt','Celana','Sepatu','Sandal','Jacket','Topi','Tas','Kompek','Ikat Pinggang','Aksesoris']},
+      {name:'Ladies',subs:['Top','Dress','Celana','Rok','Jeans','Jacket','Sepatu','Sandal','Tas','Aksesoris']}
+    ]},
     {name:'Alat Rumah Tangga',subs:['Peralatan Dapur','Alat Masak','Makan & Minum','Penyimpanan','Kebersihan','Kamar Mandi','Kamar Tidur','Dekorasi','Perkakas','Lampu & Penerangan','Outdoor & Taman']},
     {name:'Surf & Outdoor',subs:['Surfboard','Surf Accessories','Camping','Hiking']},
     {name:'Tas & Travel',subs:['Backpack','Travel Bag','Luggage']},
@@ -199,10 +199,31 @@ function categoryCatalog(){
     {name:'Sports & Fitness',subs:['Fitness','Running','Football','Cycling']},
     {name:'Anak & Bayi',subs:['Pakaian Anak','Mainan','Perlengkapan Bayi']},
     {name:'Otomotif',subs:['Motor','Mobil','Aksesoris']},
-    {name:'Hewan Peliharaan',subs:['Makanan Hewan','Aksesoris Hewan']},
+    {name:'Hewan Peliharaan',subs:['Makanan Hewan','Aksesoris']},
     {name:'Souvenir & Gift',subs:['Souvenir Bali','Gift','Kerajinan']},
     {name:'Makanan & Minuman',subs:['Snack','Minuman','Kopi']}
   ];
+}
+
+function categoryHasChildren(path){
+  const parts=String(path).split(' / ').filter(Boolean);
+  let node=categoryCatalog().find(x=>x.name===parts[0]);
+  for(let i=1;i<parts.length && node;i++){
+    const children=Array.isArray(node.subs)?node.subs:[];
+    node=children.find(x=>(typeof x==='string'?x:x.name)===parts[i]);
+  }
+  return !!(node && Array.isArray(node.subs) && node.subs.length);
+}
+
+function categoryChildren(path){
+  const parts=String(path).split(' / ').filter(Boolean);
+  let node=categoryCatalog().find(x=>x.name===parts[0]);
+  for(let i=1;i<parts.length && node;i++){
+    const children=Array.isArray(node.subs)?node.subs:[];
+    node=children.find(x=>(typeof x==='string'?x:x.name)===parts[i]);
+  }
+  if(!node)return [];
+  return (node.subs||[]).map(x=>typeof x==='string'?{name:x,subs:[]}:x);
 }
 
 function renderCategories(){
@@ -221,18 +242,20 @@ function closeCategoryMenu(){
 }
 
 function openCategoryMenu(c,anchor){
-  const group=categoryCatalog().find(x=>x.name===c);
-  if(!group)return;
+  const children=categoryChildren(c);
+  if(!children.length)return;
   closeCategoryMenu();
 
   const popup=document.createElement('div');
   popup.id='categoryPopup';
   popup.className='category-popup';
   popup.dataset.category=c;
-  popup.innerHTML=`<button type="button" class="category-option parent-option ${category===group.name?'chosen':''}" data-popup-category="${esc(group.name)}">✓ ${esc(group.name)}</button>`+
-    group.subs.map(sub=>{
-      const full=group.name+' / '+sub;
-      return `<button type="button" class="category-option ${category===full?'chosen':''}" data-popup-category="${esc(full)}">${esc(sub)}</button>`;
+  popup.innerHTML=`<button type="button" class="category-option parent-option ${category===c?'chosen':''}" data-popup-category="${esc(c)}">✓ ${esc(c)}</button>`+
+    children.map(item=>{
+      const full=c+' / '+item.name;
+      const chosen=category===full || category.startsWith(full+' / ');
+      const arrow=item.subs&&item.subs.length?' <span style="float:right">›</span>':'';
+      return `<button type="button" class="category-option ${chosen?'chosen':''}" data-popup-category="${esc(full)}" data-has-children="${item.subs&&item.subs.length?'1':'0'}">${chosen?'✓ ':''}${esc(item.name)}${arrow}</button>`;
     }).join('');
 
   document.body.appendChild(popup);
@@ -244,13 +267,8 @@ function openCategoryMenu(c,anchor){
   let top=r.bottom+6;
   popup.style.left=left+'px';
   popup.style.top=top+'px';
-
-  // Keep the menu attached to the button when there is little room below it.
   const h=popup.offsetHeight;
-  if(top+h>window.innerHeight-margin){
-    const above=r.top-h-6;
-    popup.style.top=Math.max(margin,above)+'px';
-  }
+  if(top+h>window.innerHeight-margin) popup.style.top=Math.max(margin,r.top-h-6)+'px';
 
   popup.addEventListener('click',function(e){
     const opt=e.target.closest('[data-popup-category]');
@@ -258,8 +276,21 @@ function openCategoryMenu(c,anchor){
     e.preventDefault();
     e.stopPropagation();
     const value=opt.getAttribute('data-popup-category');
-    closeCategoryMenu();
-    setCategory(value);
+    const hasChildren=opt.getAttribute('data-has-children')==='1';
+    const fresh=[...document.querySelectorAll('#categories [data-category]')]
+      .find(x=>x.getAttribute('data-category')===c.split(' / ')[0]);
+
+    category=value;
+    renderCategories();
+    renderProductsOnly();
+
+    if(hasChildren){
+      const newAnchor=[...document.querySelectorAll('#categories [data-category]')]
+        .find(x=>x.getAttribute('data-category')===c.split(' / ')[0]);
+      if(newAnchor)openCategoryMenu(value,newAnchor);
+    }else{
+      closeCategoryMenu();
+    }
   });
 }
 
@@ -287,11 +318,7 @@ document.addEventListener('click',function(e){
   const hasSubs=b.getAttribute('data-has-subs')==='1';
   const popup=document.getElementById('categoryPopup');
   const sameOpen=popup && popup.dataset.category===c;
-
-  if(sameOpen){
-    closeCategoryMenu();
-    return;
-  }
+  if(sameOpen){closeCategoryMenu();return;}
 
   category=c;
   renderCategories();
