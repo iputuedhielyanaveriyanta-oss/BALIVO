@@ -225,11 +225,12 @@
     <div class="wide"><label>Link Produk Supplier</label><input id="supplierProductUrl" type="url" placeholder="https://shopee.co.id/..."></div>
     <div class="wide"><label>Link Affiliate (Shopee/Toko)</label><input id="affiliateUrl" type="url" placeholder="Paste link affiliate di sini..."></div>
 
-    <div><label>Stok *</label><input id="ownStock" type="number" min="0" step="1" value="0"></div>
+    <input id="ownStock" type="hidden" value="0">
     <div class="wide">
       <label>Golongan Size</label>
       <select id="sizeGroup" onchange="renderSizeGroupInputs(this.value)">
         <option value="">— Pilih golongan size —</option>
+        <option value="one_size">ALL SIZE / ONE SIZE</option>
         <option value="alpha">S, M, L, XL, XXL</option>
         <option value="num8_12">8, 9, 10, 11, 12</option>
         <option value="eu36_40">36, 37, 38, 39, 40</option>
@@ -238,7 +239,7 @@
         <option value="kids">6, 8, 10, 12, 14</option>
       </select>
       <div id="sizeStockInputs" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px"></div>
-      <div class="file-note">Pilih satu golongan size terlebih dahulu. Setelah dipilih, hanya kolom stok untuk size tersebut yang muncul. Total stok otomatis dihitung dari size yang diisi.</div>
+      <div class="file-note">Pilih satu golongan size terlebih dahulu. Setelah dipilih, hanya kolom stok untuk size tersebut yang muncul. Total stok otomatis dihitung dari size yang diisi. Tidak perlu mengisi stok global.</div>
     </div>
     <div><label>Foto Produk (upload)</label>
 <input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp">
@@ -368,7 +369,8 @@ const SIZE_GROUPS={
   eu36_40:['36','37','38','39','40'],
   eu41_45:['41','42','43','44','45'],
   num6_10:['6','7','8','9','10'],
-  kids:['6','8','10','12','14']
+  kids:['6','8','10','12','14'],
+  one_size:['ALL SIZE / ONE SIZE']
 };
 function renderSizeGroupInputs(group,values={}){
   const box=document.getElementById('sizeStockInputs');
@@ -640,7 +642,7 @@ async function refresh(){
     <td><strong>${esc(p.name)}</strong><div style="font-size:11px;color:#777">${esc(p.brand||'')}</div></td>
     <td>${p.stock_source==='OWN'?'STOK SAYA':esc(p.supplier||'Supplier')}</td>
     <td>${money(p.cost)}</td><td>${money(p.price)}</td>
-    <td><div class="stock-edit"><button class="mini" onclick="changeStock('${p.id}',-1)">−</button><input type="number" min="0" value="${Number(p.stock)||0}" onchange="setStock('${p.id}',this.value)"><button class="mini" onclick="changeStock('${p.id}',1)">+</button></div></td>
+    <td><strong>${Number(p.stock)||0}</strong><div style="font-size:11px;color:#777;margin-top:4px">${renderAdminSizes(p)}</div></td>
     <td class="profit">${money(Number(p.price||0)-Number(p.cost||0))}</td>
     <td><button class="mini" onclick="editSizes('${p.id}')">Edit Size</button> <button class="mini" onclick="deleteProduct('${p.id}')">Hapus</button></td>
   </tr>`).join('');
@@ -673,8 +675,9 @@ async function saveOwnProduct(){
   if(!validOptionalUrl(document.getElementById('affiliateUrl').value.trim())){alert('Link affiliate tidak valid.');return;}
   const name=ownName.value.trim(),cost=Number(ownCost.value),price=Number(ownPrice.value);
   const sizes=readSizeStock();
-  const stock=sizes?Object.values(sizes).reduce((a,b)=>a+b,0):Number(ownStock.value);
-  if(!name||!Number.isFinite(cost)||!Number.isFinite(price)||!Number.isInteger(stock)||stock<0){ownMessage.textContent='Nama, modal, harga jual, dan stok wajib valid.';return}
+  if(!sizes){ownMessage.textContent='Pilih golongan size lalu isi stoknya.';return}
+  const stock=Object.values(sizes).reduce((a,b)=>a+b,0);
+  if(!name||!Number.isFinite(cost)||!Number.isFinite(price)||!Number.isInteger(stock)||stock<0){ownMessage.textContent='Nama, modal, dan harga jual wajib valid.';return}
   ownMessage.textContent='Menyimpan produk...';
   try{
     let image=ownImageUrl.value.trim();
