@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <meta name="theme-color" content="#111"><link rel="manifest" href="balivo-admin-manifest.webmanifest"><title>BALIVO ADMIN — Dropship</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#111;--muted:#737373;--line:#e5e7eb;--dark:#111;--ok:#15803d;--red:#dc2626}
@@ -107,7 +107,7 @@
 <body>
 <div class="top"><b>BALIVO ADMIN</b> <span style="opacity:.7">— Dropship & Marketplace</span></div>
 <div class="wrap">
-<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="products">Produk</button><button data-tab="orders">Order</button><button data-tab="payment-settings">Pembayaran</button></div>
+<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="products">Produk</button><button data-tab="bulkImport">Import Massal</button><button data-tab="orders">Order</button><button data-tab="payment-settings">Pembayaran</button></div>
 <div class="authbar">
   <span id="authStatus" class="authdot">Belum login admin</span>
   <button id="loginBtn" class="btn" onclick="openLogin()">Login Admin</button>
@@ -251,9 +251,9 @@
       <div class="file-note">Pilih golongan size terlebih dahulu. Hanya size dalam golongan tersebut yang muncul.</div>
     </div>
     <div><label>Foto Produk (upload)</label>
-      <input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp" multiple>
-      <div id="ownImagePreview" style="display:none;margin-top:10px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px"></div>
-      <div class="file-note">Maks. 10 foto. Maks. 5 MB per foto. Foto pertama menjadi foto utama.</div>
+      <input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp">
+      <div id="ownImagePreview" style="display:none;margin-top:8px"><img id="ownImagePreviewImg" alt="Preview foto" style="width:96px;height:96px;object-fit:cover;border-radius:10px;border:1px solid #ddd"></div>
+      <div class="file-note">Maks. 5 MB.</div>
     </div>
     <div><label>Atau URL Foto</label><input id="ownImageUrl" type="url" placeholder="https://...jpg"></div>
     <div class="wide"><label>Deskripsi</label><textarea id="ownDescription" rows="3" placeholder="Deskripsi produk"></textarea></div>
@@ -269,6 +269,23 @@
 </div>
 </section>
 
+<section id="bulkImport" class="tab hidden">
+<div class="panel">
+  <h2>Import Produk Sekaligus</h2>
+  <p style="color:#777">Isi template Excel, lalu upload satu file untuk banyak produk sekaligus. Sistem akan menampilkan preview sebelum menyimpan.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <a class="btn" href="BALIVO_TEMPLATE_IMPORT_PRODUK.xlsx" download>DOWNLOAD TEMPLATE EXCEL</a>
+  </div>
+  <div class="form">
+    <div class="wide"><label>File Excel / CSV</label><input id="bulkFile" type="file" accept=".xlsx,.xls,.csv"></div>
+  </div>
+  <br>
+  <button class="primary" type="button" onclick="previewBulkImport()">PREVIEW DATA</button>
+  <div id="bulkImportMsg" class="preview" style="margin-top:12px">Belum ada file.</div>
+  <div id="bulkImportPreview" style="margin-top:12px"></div>
+  <button id="bulkImportSave" class="primary hidden" type="button" onclick="saveBulkImport()" style="margin-top:12px">IMPORT &amp; SIMPAN SEMUA</button>
+</div>
+</section>
 
 <section id="orders" class="tab hidden">
 
@@ -631,21 +648,12 @@ async function getSupplierId(name){
 
 async function uploadProductImage(file){
   if(!file)return '';
-  if(file.size>5*1024*1024)throw new Error(`Foto ${file.name} maksimal 5 MB.`);
+  if(file.size>5*1024*1024)throw new Error('Foto maksimal 5 MB.');
   const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
   const path=`${crypto.randomUUID()}.${ext}`;
   const {error}=await sb.storage.from('balivo-product-images').upload(path,file,{contentType:file.type,upsert:false});
   if(error)throw error;
   return sb.storage.from('balivo-product-images').getPublicUrl(path).data.publicUrl;
-}
-
-async function uploadProductImages(files){
-  const list=Array.from(files||[]);
-  if(list.length>10)throw new Error('Maksimal 10 foto per produk.');
-  if(list.some(f=>!/^image\/(jpeg|png|webp)$/.test(f.type)))throw new Error('Gunakan JPG, PNG, atau WEBP.');
-  const urls=[];
-  for(const file of list)urls.push(await uploadProductImage(file));
-  return urls;
 }
 
 async function saveUnifiedProduct(){
@@ -669,16 +677,15 @@ async function saveUnifiedProduct(){
   if(mode==='AFFILIATE'&&!validOptionalUrl(affiliateUrl)){alert('Link affiliate Shopee wajib dan harus valid.');return;}
   const msg=document.getElementById('ownMessage');msg.textContent='Menyimpan produk...';
   try{
-    const uploadedImages=await uploadProductImages(ownImageFile.files);
-    let image=uploadedImages[0]||ownImageUrl.value.trim();
-    const gallery=uploadedImages.length?uploadedImages:(image?[image]:[]);
+    let image=ownImageUrl.value.trim();
+    if(ownImageFile.files[0])image=await uploadProductImage(ownImageFile.files[0]);
     const supplierId=mode==='DROPSHIP'?await getSupplierId(ownSupplier.value.trim()):null;
     const supCost=mode==='DROPSHIP'?(Number(supplierCost.value)||cost):0;
     const mk=mode==='DROPSHIP'?(Number(supplierMarkup.value)||Math.max(0,price-supCost)):0;
     const {error}=await sb.from('products').insert({
       name,brand:ownBrand.value.trim()||'BALIVO',category:ownCategoryList[ownCategoryList.length-1]||'Lainnya',categories:ownCategoryList,
       supplier_id:supplierId,cost:mode==='AFFILIATE'?0:cost,price,stock,stock_source:mode==='DROPSHIP'?'SUPPLIER':'OWN',product_type:mode,
-      image,images:gallery,sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',
+      image,images:image?[image]:[],sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',
       supplier_cost:supCost,markup:mk,supplier_product_url:mode==='DROPSHIP'?supplierUrl:null,affiliate_url:mode==='AFFILIATE'?affiliateUrl:null,
       affiliate_commission:mode==='AFFILIATE'?(Number(affiliateCommission.value)||0):0
     });
@@ -813,18 +820,11 @@ function switchProductMode(mode){
 switchProductMode(document.getElementById('productMode')?.value||'OWN');
 
 ownImageFile?.addEventListener('change',()=>{
-  const files=Array.from(ownImageFile.files||[]), box=document.getElementById('ownImagePreview');
-  box.innerHTML='';
-  if(!files.length){box.style.display='none';return}
-  if(files.length>10){alert('Maksimal 10 foto per produk.');ownImageFile.value='';box.style.display='none';return}
-  if(files.some(f=>f.size>5*1024*1024)){alert('Setiap foto maksimal 5 MB.');ownImageFile.value='';box.style.display='none';return}
-  if(files.some(f=>!/^image\/(jpeg|png|webp)$/.test(f.type))){alert('Gunakan JPG, PNG, atau WEBP.');ownImageFile.value='';box.style.display='none';return}
-  box.style.display='grid';
-  files.forEach((f,i)=>{
-    const wrap=document.createElement('div'); wrap.style.cssText='position:relative';
-    wrap.innerHTML=`<img src="${URL.createObjectURL(f)}" alt="Foto ${i+1}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid #ddd"><small style="display:block;text-align:center;color:#777;margin-top:3px">${i===0?'Utama':'Foto '+(i+1)}</small>`;
-    box.appendChild(wrap);
-  });
+  const f=ownImageFile.files?.[0], box=document.getElementById('ownImagePreview'), img=document.getElementById('ownImagePreviewImg');
+  if(!f){box.style.display='none';return}
+  if(f.size>5*1024*1024){alert('Foto maksimal 5 MB.');ownImageFile.value='';box.style.display='none';return}
+  if(!/^image\/(jpeg|png|webp)$/.test(f.type)){alert('Gunakan JPG, PNG, atau WEBP.');ownImageFile.value='';box.style.display='none';return}
+  img.src=URL.createObjectURL(f);box.style.display='block';
 });
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
@@ -847,6 +847,105 @@ sb.auth.onAuthStateChange(()=>setTimeout(async()=>{await updateAuthUI();await re
     <div id="loginMessage" class="preview" style="margin-top:12px">Gunakan akun Auth Supabase Admin.</div>
   </div>
 </div>
+
+<script id="bulk-import-script">
+let bulkRows=[];
+const BULK_TYPES=['PRODUK SAYA','DROPSHIP / SUPPLIER','AFFILIATE'];
+function normHeader(v){return String(v??'').trim().toLowerCase().replace(/\s+/g,' ')}
+function cell(r,name){
+  const target=normHeader(name);
+  const k=Object.keys(r).find(x=>normHeader(x)===target);
+  return k==null?'':String(r[k]??'').trim();
+}
+function parseBulkSizeStock(text){
+  const out={}; if(!text)return out;
+  String(text).split(/[,;]+/).forEach(part=>{
+    const m=part.trim().match(/^(.+?)\s*[:=]\s*(\d+)$/);
+    if(m){const size=m[1].trim(); const qty=Math.max(0,parseInt(m[2],10)||0); if(size)out[size]=qty;}
+  });
+  return out;
+}
+function bulkUrls(r){return ['Foto Utama URL','Foto 2 URL','Foto 3 URL','Foto 4 URL','Foto 5 URL'].map(h=>cell(r,h)).filter(Boolean)}
+function validateBulkRow(r,i){
+  const type=cell(r,'Jenis Produk').toUpperCase();
+  const name=cell(r,'Nama Produk'); const category=cell(r,'Kategori');
+  const price=Number(cell(r,'Harga Jual').replace(/[^0-9.-]/g,''));
+  const errors=[];
+  if(!BULK_TYPES.includes(type))errors.push('Jenis Produk tidak valid');
+  if(!name)errors.push('Nama Produk kosong');
+  if(!category)errors.push('Kategori kosong');
+  if(!Number.isFinite(price)||price<0)errors.push('Harga Jual tidak valid');
+  if(type==='DROPSHIP / SUPPLIER' && !cell(r,'Link Shopee Supplier'))errors.push('Link Shopee Supplier kosong');
+  if(type==='AFFILIATE' && !cell(r,'Link Affiliate'))errors.push('Link Affiliate kosong');
+  const urls=[cell(r,'Link Shopee Supplier'),cell(r,'Link Affiliate'),...bulkUrls(r)].filter(Boolean);
+  urls.forEach(u=>{if(!/^https?:\/\//i.test(u))errors.push('Ada URL tidak valid')});
+  return {i,type,name,category,price,errors};
+}
+async function readBulkFile(file){
+  const name=file.name.toLowerCase();
+  if(name.endsWith('.csv')){
+    const text=await file.text();
+    const wb=XLSX.read(text,{type:'string'}); return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+  }
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array'}); return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+}
+async function previewBulkImport(){
+  if(!requireAdmin())return;
+  const f=document.getElementById('bulkFile')?.files?.[0];
+  if(!f)return alert('Pilih file Excel atau CSV.');
+  if(f.size>10*1024*1024)return alert('File maksimal 10 MB.');
+  try{
+    const rows=await readBulkFile(f);
+    bulkRows=rows.filter(r=>Object.values(r).some(v=>String(v??'').trim()!=='')).slice(0,500);
+    if(!bulkRows.length)throw new Error('Tidak ada data produk.');
+    const checks=bulkRows.map((r,i)=>validateBulkRow(r,i+2));
+    const bad=checks.filter(x=>x.errors.length);
+    document.getElementById('bulkImportMsg').textContent=`Terbaca ${bulkRows.length} produk. ${bad.length?bad.length+' baris perlu diperbaiki.':'Semua baris valid.'}`;
+    document.getElementById('bulkImportPreview').innerHTML=`<div class="preview"><b>Preview</b><br>${checks.slice(0,30).map(x=>`Baris ${x.i}: ${esc(x.name||'(tanpa nama)')} — ${esc(x.type)} — ${money(x.price)} ${x.errors.length?'⚠️ '+esc(x.errors.join(', ')):'✓'}`).join('<br>')}${checks.length>30?'<br>…':''}</div>`;
+    document.getElementById('bulkImportSave').classList.toggle('hidden',bad.length>0);
+  }catch(e){document.getElementById('bulkImportMsg').textContent='Import gagal: '+e.message;document.getElementById('bulkImportSave').classList.add('hidden');}
+}
+async function saveBulkImport(){
+  if(!requireAdmin()||!bulkRows.length)return;
+  const checks=bulkRows.map((r,i)=>validateBulkRow(r,i+2));
+  if(checks.some(x=>x.errors.length))return alert('Perbaiki baris yang ditandai terlebih dahulu.');
+  const msg=document.getElementById('bulkImportMsg'); msg.textContent='Menyimpan produk...';
+  try{
+    const payload=[];
+    for(let idx=0;idx<bulkRows.length;idx++){
+      const r=bulkRows[idx], type=cell(r,'Jenis Produk').toUpperCase();
+      const cats=[cell(r,'Kategori'),cell(r,'Kategori 2'),cell(r,'Kategori 3')].filter(Boolean);
+      const sizeText=cell(r,'Stok / Size'), sizes=parseBulkSizeStock(sizeText);
+      const hasSizes=Object.keys(sizes).length>0;
+      const stock=hasSizes?Object.values(sizes).reduce((a,b)=>a+b,0):Math.max(0,parseInt(cell(r,'Stok / Size'),10)||0);
+      const cost=Math.max(0,Number(cell(r,'Harga Modal').replace(/[^0-9.-]/g,''))||0);
+      const price=Math.max(0,Number(cell(r,'Harga Jual').replace(/[^0-9.-]/g,''))||0);
+      const supplierName=cell(r,'Supplier');
+      const supplierId=type==='DROPSHIP / SUPPLIER'&&supplierName?await getSupplierId(supplierName):null;
+      const supplierCost=Math.max(0,Number(cell(r,'Harga Supplier').replace(/[^0-9.-]/g,''))||0);
+      const markup=Math.max(0,Number(cell(r,'Markup').replace(/[^0-9.-]/g,''))||0);
+      const affiliateCommission=Math.max(0,Number(cell(r,'Komisi Affiliate').replace(/[^0-9.-]/g,''))||0);
+      const imgs=bulkUrls(r);
+      const typeUrl=type==='AFFILIATE'?cell(r,'Link Affiliate'):cell(r,'Link Shopee Supplier');
+      payload.push({
+        name:cell(r,'Nama Produk'),brand:cell(r,'Brand')||'BALIVO',category:cats[cats.length-1]||'Lainnya',categories:cats,
+        supplier_id:supplierId,cost:type==='AFFILIATE'?0:cost,price,stock,stock_source:type==='DROPSHIP / SUPPLIER'?'SUPPLIER':'OWN',
+        product_type:type==='PRODUK SAYA'?'OWN':(type==='DROPSHIP / SUPPLIER'?'DROPSHIP':'AFFILIATE'),sizes:hasSizes?sizes:null,
+        image:imgs[0]||'',images:imgs,status:'ACTIVE',description:cell(r,'Deskripsi'),details:cell(r,'Detail'),
+        supplier_cost:type==='DROPSHIP / SUPPLIER'?supplierCost:0,markup:type==='DROPSHIP / SUPPLIER'?markup:0,
+        supplier_product_url:type==='DROPSHIP / SUPPLIER'?typeUrl:null,affiliate_url:type==='AFFILIATE'?typeUrl:null,
+        affiliate_commission:type==='AFFILIATE'?affiliateCommission:0
+      });
+    }
+    const {error}=await sb.from('products').insert(payload); if(error)throw error;
+    msg.textContent=`Berhasil menyimpan ${payload.length} produk.`;
+    document.getElementById('bulkImportSave').classList.add('hidden');
+    document.getElementById('bulkImportPreview').innerHTML='';
+    document.getElementById('bulkFile').value=''; bulkRows=[]; await refresh();
+  }catch(e){msg.textContent='Gagal menyimpan: '+e.message;}
+}
+</script>
 <script id="category-filter-script">
 const categoryTrigger=document.getElementById('categoryTrigger');
 const categoryMenu=document.getElementById('categoryMenu');
