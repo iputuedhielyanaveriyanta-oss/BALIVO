@@ -21,6 +21,16 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 @media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}.tag{display:none}.nav{gap:10px}.logo{font-size:21px}.search{order:3;flex-basis:100%}.nav{flex-wrap:wrap}}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:420px){main{padding:15px 12px}.hero{padding:28px 22px}.grid{gap:10px}.info{padding:10px}.name{font-size:14px}}
+
+/* Affiliate / Dropship sale badge */
+.badge-affiliate{
+  position:absolute;left:9px;top:9px;
+  background:#d71920!important;color:#ffd400!important;
+  border-radius:9px;padding:8px 11px;
+  font-size:15px;font-weight:900;letter-spacing:.3px;
+  line-height:1;
+  box-shadow:0 2px 5px #0003;
+}
 </style>
 
 <style id="balivo-size-ui">
@@ -390,26 +400,34 @@ function render(){
   document.getElementById('resultCount').textContent=list.length+' produk';
   document.getElementById('empty').classList.toggle('hidden',list.length!==0);
 
-  document.getElementById('products').innerHTML=list.map(p=>`
+  document.getElementById('products').innerHTML=list.map(p=>{
+    const external=p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP';
+    const externalUrl=p.affiliate_url||p.supplier_product_url||'';
+    const saleBadge=external?'<span class="badge-affiliate">BIG SALE</span>':(Number(p.stock)<=0?'<span class="badge">HABIS</span>':'');
+    const actionLabel=external?'BELI DISINI':(sizeData(p).length?'Pilih Size':'Lihat Produk');
+    const action=external
+      ? `event.stopPropagation();openExternalProduct('${p.id}')`
+      : `event.stopPropagation();openProduct('${p.id}')`;
+
+    return `
     <article class="product" onclick="openProduct('${p.id}')">
       <div class="photo">
         <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
-        ${p.product_type==='AFFILIATE' ? '<span class="badge">BIG SALE</span>' : (p.product_type==='DROPSHIP' ? '<span class="badge">SHOPEE</span>' : (Number(p.stock)<=0?'<span class="badge">HABIS</span>':''))}
+        ${saleBadge}
       </div>
       <div class="info">
         <div class="brand">${esc(p.brand||'Supplier')}</div>
         <div class="name">${esc(p.name||'Produk')}</div>
         <div class="price">${money(p.price)}</div>
-        <div class="stock">${p.product_type==='AFFILIATE'?'Beli di Shopee':(p.product_type==='DROPSHIP'?'Beli di Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'))}</div>
-        <button class="add" ${p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP'?'':'disabled'} onclick="event.stopPropagation();${(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP')?`openExternalProduct('${p.id}')`:`openProduct('${p.id}')`}">${p.product_type==='AFFILIATE'?'BELI DISINI':(p.product_type==='DROPSHIP'?'BELI DI SHOPEE':(sizeData(p).length?'Pilih Size':'Lihat Produk'))}</button>
+        <div class="stock">${external?'Beli di Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis')}</div>
+        <button class="add" onclick="${action}">${actionLabel}</button>
       </div>
-    </article>
-  `).join('');
+    </article>`;
+  }).join('');
 
   renderCategories();
   renderCart();
 }
-
 async function getReviews(id){
   const {data,error}=await sb.from('reviews')
     .select('customer_name,rating,comment,created_at')
