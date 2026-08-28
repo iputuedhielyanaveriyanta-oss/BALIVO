@@ -37,6 +37,16 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 .product.affiliate-locked .photo{pointer-events:none}
 .product.affiliate-locked .info{pointer-events:none}
 .product.affiliate-locked .info .add{pointer-events:auto}
+.products{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+
+}
+
+@media (max-width: 900px){
+  .products{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+}
+@media (max-width: 560px){
+  .products{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+}
 </style>
 
 <style id="balivo-size-ui">
