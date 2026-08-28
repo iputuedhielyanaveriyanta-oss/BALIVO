@@ -41,65 +41,48 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 }
 
 
-/* BALIVO — product card gradient finish */
+
+
+/* BALIVO PRODUCT CARDS — vivid gradient palette */
 .grid .card{
   position:relative;
   overflow:hidden;
-  border:1px solid rgba(20,20,20,.10);
+  border:1px solid rgba(0,0,0,.10);
   border-radius:18px;
-  background:
-    linear-gradient(145deg,#ffffff 0%,
-                    #e8edf7 48%,
-                    #c7d2e5 100%);
-  box-shadow:0 8px 22px rgba(0,0,0,.08);
-  transition:transform .2s ease,box-shadow .2s ease;
+  box-shadow:0 8px 20px rgba(0,0,0,.10);
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+.grid .card:nth-child(6n+1){
+  background:linear-gradient(180deg,#5fc9f5 0%,#c9effb 48%,#f7fcff 100%) !important;
+}
+.grid .card:nth-child(6n+2){
+  background:linear-gradient(180deg,#ff9f73 0%,#ffe0b6 48%,#fff9ef 100%) !important;
+}
+.grid .card:nth-child(6n+3){
+  background:linear-gradient(180deg,#b77bea 0%,#e7cafa 48%,#fbf5ff 100%) !important;
+}
+.grid .card:nth-child(6n+4){
+  background:linear-gradient(180deg,#f58fae 0%,#ffd1dd 48%,#fff7fa 100%) !important;
+}
+.grid .card:nth-child(6n+5){
+  background:linear-gradient(180deg,#55d4d9 0%,#b9f0ef 48%,#f4ffff 100%) !important;
+}
+.grid .card:nth-child(6n+6){
+  background:linear-gradient(180deg,#ffd15a 0%,#ffe8a6 48%,#fffaf0 100%) !important;
 }
 .grid .card::before{
   content:"";
   position:absolute;
-  inset:0 0 auto 0;
-  height:5px;
-  background:linear-gradient(90deg,#111 0%,#777 48%,#d9d9d9 100%);
+  left:0;right:0;top:0;height:6px;
+  background:rgba(255,255,255,.62);
   z-index:2;
+}
+.grid .card .body{
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.72)) !important;
 }
 .grid .card:hover{
   transform:translateY(-3px);
-  box-shadow:0 13px 28px rgba(0,0,0,.13);
-}
-.grid .card .body{
-  background:linear-gradient(180deg,
-    rgba(255,255,255,.96) 0%,
-    rgba(229,236,248,.96) 55%,
-    rgba(198,210,231,.99) 100%);
-}
-
-/* BALIVO — visible product-card gradients */
-.grid .product{
-  background:linear-gradient(145deg,#ffffff 0%,#f7f3ff 42%,#e9ddff 100%) !important;
-  border:1px solid rgba(100,70,180,.18) !important;
-  border-radius:18px !important;
-  box-shadow:0 8px 22px rgba(75,45,130,.16) !important;
-  overflow:hidden;
-  transition:transform .2s ease,box-shadow .2s ease;
-}
-.grid .product:nth-child(3n+1){
-  background:linear-gradient(145deg,#ffffff 0%,#e9f7ff 42%,#bfe7ff 100%) !important;
-}
-.grid .product:nth-child(3n+2){
-  background:linear-gradient(145deg,#ffffff 0%,#fff0f5 42%,#ffd0df 100%) !important;
-}
-.grid .product:nth-child(3n){
-  background:linear-gradient(145deg,#ffffff 0%,#f3edff 42%,#d8c4ff 100%) !important;
-}
-.grid .product .info{
-  background:linear-gradient(180deg,rgba(255,255,255,.82) 0%,rgba(255,255,255,.42) 100%) !important;
-}
-.grid .product .add{
-  box-shadow:0 5px 12px rgba(0,0,0,.14);
-}
-.grid .product:hover{
-  transform:translateY(-3px);
-  box-shadow:0 13px 28px rgba(45,30,90,.22) !important;
+  box-shadow:0 13px 28px rgba(0,0,0,.15);
 }
 </style>
 
