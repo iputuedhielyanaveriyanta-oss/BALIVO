@@ -236,13 +236,31 @@
     <div class="wide">
       <label>Stok per Size (opsional untuk pakaian)</label>
       <div id="sizeStockInputs" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
-        <input id="sizeS" type="number" min="0" value="0" placeholder="S">
-        <input id="sizeM" type="number" min="0" value="0" placeholder="M">
-        <input id="sizeL" type="number" min="0" value="0" placeholder="L">
-        <input id="sizeXL" type="number" min="0" value="0" placeholder="XL">
-        <input id="sizeXXL" type="number" min="0" value="0" placeholder="XXL">
-      </div>
-      <div class="file-note">Isi stok per size jika produk punya ukuran. Total stok otomatis dihitung dari S+M+L+XL+XXL.</div>
+         <input id="sizeS" type="number" min="0" value="0" placeholder="S">
+         <input id="sizeM" type="number" min="0" value="0" placeholder="M">
+         <input id="sizeL" type="number" min="0" value="0" placeholder="L">
+         <input id="sizeXL" type="number" min="0" value="0" placeholder="XL">
+         <input id="sizeXXL" type="number" min="0" value="0" placeholder="XXL">
+         <input id="size8" type="number" min="0" value="0" placeholder="8">
+         <input id="size9" type="number" min="0" value="0" placeholder="9">
+         <input id="size10" type="number" min="0" value="0" placeholder="10">
+         <input id="size11" type="number" min="0" value="0" placeholder="11">
+         <input id="size12" type="number" min="0" value="0" placeholder="12">
+         <input id="size36" type="number" min="0" value="0" placeholder="36">
+         <input id="size37" type="number" min="0" value="0" placeholder="37">
+         <input id="size38" type="number" min="0" value="0" placeholder="38">
+         <input id="size39" type="number" min="0" value="0" placeholder="39">
+         <input id="size40" type="number" min="0" value="0" placeholder="40">
+         <input id="size41" type="number" min="0" value="0" placeholder="41">
+         <input id="size42" type="number" min="0" value="0" placeholder="42">
+         <input id="size43" type="number" min="0" value="0" placeholder="43">
+         <input id="size44" type="number" min="0" value="0" placeholder="44">
+         <input id="size45" type="number" min="0" value="0" placeholder="45">
+         <input id="size6" type="number" min="0" value="0" placeholder="6">
+         <input id="size7" type="number" min="0" value="0" placeholder="7">
+         <input id="size14" type="number" min="0" value="0" placeholder="14">
+         </div>
+      <div class="file-note">Isi stok per size jika produk punya ukuran. Size tersedia: S, M, L, XL, XXL, 8–12, 36–45, 6–10, dan 6/8/10/12/14. Total stok otomatis dihitung dari size yang diisi.</div>
     </div>
     <div><label>Foto Produk (upload)</label>
 <input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp">
@@ -337,12 +355,12 @@ function renderAdminCategories(p){
 }
 function renderAdminSizes(p){
   const s=parseSizes(p.sizes);
-  const keys=['S','M','L','XL','XXL'];
+  const keys=['S','M','L','XL','XXL','8','9','10','11','12','36','37','38','39','40','41','42','43','44','45','6','7','14'];
   if(!keys.some(k=>Object.prototype.hasOwnProperty.call(s,k))) return '<span>—</span>';
   return keys.map(k=>`<span>${k}: ${Number(s[k]||0)}</span>`).join('');
 }
 function readSizeStock(){
-  const s={S:Number(sizeS.value)||0,M:Number(sizeM.value)||0,L:Number(sizeL.value)||0,XL:Number(sizeXL.value)||0,XXL:Number(sizeXXL.value)||0};
+  const s={}; ['S','M','L','XL','XXL','8','9','10','11','12','36','37','38','39','40','41','42','43','44','45','6','7','14'].forEach(k=>{const el=document.getElementById('size'+k);if(el)s[k]=Number(el.value)||0});
   const any=Object.values(s).some(v=>v>0);
   return any?s:null;
 }
@@ -653,7 +671,7 @@ async function saveOwnProduct(){
     if(error)throw error;
     ownMessage.textContent='Produk berhasil disimpan ke Supabase. Foto, harga, stok, kategori, dan link pembelian sudah tersimpan.';
     ['ownName','ownBrand','ownCategory','ownSupplier','ownCost','ownPrice','ownDescription','ownDetails','ownImageUrl','affiliateUrl'].forEach(id=>document.getElementById(id).value='');
-    ownStock.value='0';['sizeS','sizeM','sizeL','sizeXL','sizeXXL'].forEach(id=>document.getElementById(id).value='0');ownImageFile.value='';
+    ownStock.value='0';['sizeS','sizeM','sizeL','sizeXL','sizeXXL','size8','size9','size10','size11','size12','size36','size37','size38','size39','size40','size41','size42','size43','size44','size45','size6','size7','size14'].forEach(id=>document.getElementById(id).value='0');ownImageFile.value='';
     await refresh();
   }catch(e){ownMessage.textContent='Gagal: '+e.message}
 }
