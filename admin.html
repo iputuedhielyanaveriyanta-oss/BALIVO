@@ -104,7 +104,7 @@
 #productMode{min-height:46px}
 </style>
 </head>
-<body>
+<body class="admin-locked">
 <div class="top"><b>BALIVO ADMIN</b> <span style="opacity:.7">— Dropship & Marketplace</span></div>
 <div class="wrap">
 <div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="products">Produk</button><button data-tab="bulkImport">Import Massal</button><button data-tab="orders">Order</button><button data-tab="payment-settings">Pembayaran</button></div>
@@ -324,10 +324,13 @@ async function loginAdmin(){
 }
 async function logoutAdmin(){await sb.auth.signOut();session=null;updateAuthUI();await refresh();}
 async function updateAuthUI(){
-  const {data}=await sb.auth.getSession();session=data.session;
-  authStatus.textContent=session?('Login: '+(session.user.email||'Admin')):'Belum login admin';
-  loginBtn.classList.toggle('hidden',!!session);logoutBtn.classList.toggle('hidden',!session);
+  const {data}=await sb.auth.getSession();
+  session=data.session;
   document.body.classList.toggle('admin-locked',!session);
+  authStatus.textContent=session?('Login: '+(session.user.email||'Admin')):'Belum login admin';
+  loginBtn.classList.toggle('hidden',!!session);
+  logoutBtn.classList.toggle('hidden',!session);
+  if(!session){ closeLogin(); }
 }
 function requireAdmin(){if(!session){openLogin();return false}return true}
 function validOptionalUrl(v){if(!v)return true;try{const u=new URL(v);return u.protocol==='http:'||u.protocol==='https:'}catch(e){return false}}
@@ -844,6 +847,7 @@ ownImageFile?.addEventListener('change',()=>{
 });
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  if(!requireAdmin())return;
   if(!requireAdmin()) return;
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));document.getElementById(b.dataset.tab).classList.remove('hidden');
