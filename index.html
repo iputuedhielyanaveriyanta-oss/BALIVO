@@ -73,21 +73,33 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
     rgba(198,210,231,.99) 100%);
 }
 
-/* BALIVO — premium product-card colors */
-.grid .card{
-  background:linear-gradient(135deg,#ffffff 0%,#f4e7ff 32%,#dcecff 68%,#c9f5ec 100%) !important;
-  border:1px solid rgba(99,70,160,.18) !important;
-  box-shadow:0 8px 24px rgba(67,48,120,.14) !important;
+/* BALIVO — visible product-card gradients */
+.grid .product{
+  background:linear-gradient(145deg,#ffffff 0%,#f7f3ff 42%,#e9ddff 100%) !important;
+  border:1px solid rgba(100,70,180,.18) !important;
+  border-radius:18px !important;
+  box-shadow:0 8px 22px rgba(75,45,130,.16) !important;
+  overflow:hidden;
+  transition:transform .2s ease,box-shadow .2s ease;
 }
-.grid .card::before{
-  background:linear-gradient(90deg,#7c3aed 0%,#ec4899 45%,#06b6d4 100%) !important;
-  height:6px !important;
+.grid .product:nth-child(3n+1){
+  background:linear-gradient(145deg,#ffffff 0%,#e9f7ff 42%,#bfe7ff 100%) !important;
 }
-.grid .card .body{
-  background:linear-gradient(180deg,rgba(255,255,255,.82) 0%,rgba(246,239,255,.90) 48%,rgba(225,244,249,.96) 100%) !important;
+.grid .product:nth-child(3n+2){
+  background:linear-gradient(145deg,#ffffff 0%,#fff0f5 42%,#ffd0df 100%) !important;
 }
-.grid .card:hover{
-  box-shadow:0 14px 32px rgba(67,48,120,.20) !important;
+.grid .product:nth-child(3n){
+  background:linear-gradient(145deg,#ffffff 0%,#f3edff 42%,#d8c4ff 100%) !important;
+}
+.grid .product .info{
+  background:linear-gradient(180deg,rgba(255,255,255,.82) 0%,rgba(255,255,255,.42) 100%) !important;
+}
+.grid .product .add{
+  box-shadow:0 5px 12px rgba(0,0,0,.14);
+}
+.grid .product:hover{
+  transform:translateY(-3px);
+  box-shadow:0 13px 28px rgba(45,30,90,.22) !important;
 }
 </style>
 
