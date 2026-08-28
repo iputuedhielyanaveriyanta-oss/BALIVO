@@ -10,7 +10,7 @@
 </style>
 
 <style>
-.authbar{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:-6px 0 14px}
+.admin-locked .tabs,.admin-locked .authbar{display:none!important}.admin-locked .admin-content{display:none!important}.admin-login-screen{display:none}.admin-locked .admin-login-screen{display:flex;min-height:55vh;align-items:center;justify-content:center}.authbar{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:-6px 0 14px}
 .authdot{font-size:12px;color:#737373}
 .own-panel{border:1px solid #dfe3e8;background:#fff}
 .product-form .wide{grid-column:1/-1}
@@ -113,6 +113,8 @@
   <button id="loginBtn" class="btn" onclick="openLogin()">Login Admin</button>
   <button id="logoutBtn" class="btn hidden" onclick="logoutAdmin()">Logout</button>
 </div>
+<div class="admin-login-screen"><div class="login-box"><h2>Login Admin BALIVO</h2><p>Login terlebih dahulu untuk membuka Dashboard, Produk, Import Massal, Order, dan Pembayaran.</p><button class="primary" onclick="openLogin()">LOGIN ADMIN</button></div></div>
+<div class="admin-content">
 
 
 <section id="dashboard" class="tab"><div class="grid">
@@ -300,6 +302,7 @@
 </section>
 <div class="panel"><h2>Order BALIVO</h2><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Pembayaran</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="orderRows"></tbody></table></div></section>
 </div>
+</div>
 <script>
 const SUPABASE_URL='https://hftgmssnzvrlwlslcaet.supabase.co';
 const SUPABASE_KEY='sb_publishable_xOadp1YRBil2PZ9RHeeWIQ_Z3LqMF-D';
@@ -324,6 +327,7 @@ async function updateAuthUI(){
   const {data}=await sb.auth.getSession();session=data.session;
   authStatus.textContent=session?('Login: '+(session.user.email||'Admin')):'Belum login admin';
   loginBtn.classList.toggle('hidden',!!session);logoutBtn.classList.toggle('hidden',!session);
+  document.body.classList.toggle('admin-locked',!session);
 }
 function requireAdmin(){if(!session){openLogin();return false}return true}
 function validOptionalUrl(v){if(!v)return true;try{const u=new URL(v);return u.protocol==='http:'||u.protocol==='https:'}catch(e){return false}}
@@ -620,6 +624,15 @@ async function balivoMarkDelivered(id){if(!requireAdmin())return;const courier=p
 async function balivoCancelAdmin(id){if(!requireAdmin())return;const o=orders.find(x=>x.id===id);if(!o)return;if(!confirm('Batalkan order dan kembalikan stok?'))return;const {error}=await sb.rpc('balivo_cancel_order',{p_order_number:o.order_number,p_phone:o.customer_phone,p_reason:'Dibatalkan admin'});if(error)alert(error.message);else{document.getElementById('balivoAdminDetail')?.remove();await refresh()}}
 
 async function refresh(){
+  if(!session){
+    products=[]; orders=[];
+    sProducts.textContent='0'; sStock.textContent='0'; sOrders.textContent='0'; sProfit.textContent=money(0);
+    if(document.getElementById('sProofPending'))document.getElementById('sProofPending').textContent='0';
+    if(document.getElementById('sReady'))document.getElementById('sReady').textContent='0';
+    if(document.getElementById('productRows'))document.getElementById('productRows').innerHTML='';
+    if(document.getElementById('orderRows'))document.getElementById('orderRows').innerHTML='';
+    return;
+  }
   const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,stock,status,stock_source,product_type,image,sizes,supplier_id,supplier_cost,markup,supplier_product_url,affiliate_url,affiliate_commission,suppliers(name)').order('created_at',{ascending:false});
   if(pe){console.error(pe);return}
   products=(p||[]).map(x=>({...x,supplier:x.suppliers?.name||'-'}));
@@ -831,6 +844,7 @@ ownImageFile?.addEventListener('change',()=>{
 });
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  if(!requireAdmin()) return;
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));document.getElementById(b.dataset.tab).classList.remove('hidden');
 });
