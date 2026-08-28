@@ -7,6 +7,14 @@
 :root{--bg:#f5f6f8;--card:#fff;--text:#111;--muted:#737373;--line:#e5e7eb;--dark:#111;--ok:#15803d;--red:#dc2626}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif}.top{background:#111;color:#fff;padding:14px 20px}.top b{letter-spacing:2px}.wrap{max-width:1200px;margin:auto;padding:20px}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:18px}.tabs button{padding:11px 14px;border:1px solid var(--line);background:#fff;border-radius:10px;white-space:nowrap}.tabs button.active{background:#111;color:#fff}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{padding:15px;border:1px solid var(--line);border-radius:12px}.stat small{color:var(--muted)}.stat b{display:block;font-size:24px;margin-top:5px}.form{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.form input,.form textarea,.form select{padding:11px;border:1px solid var(--line);border-radius:9px;width:100%}.wide{grid-column:1/-1}button.primary{background:#111;color:#fff;padding:11px 15px;border-radius:9px;font-weight:700}.btn{padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:#fff}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line);font-size:13px}.pill{padding:4px 7px;border-radius:999px;background:#f0f0f0;font-size:11px}.profit{color:var(--ok);font-weight:800}.danger{color:var(--red)}.preview{background:#fafafa;border:1px dashed #ccc;padding:12px;border-radius:10px;white-space:pre-wrap;font-size:12px}.hidden{display:none!important}@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.table{display:block;overflow:auto;white-space:nowrap}}
 .modal{position:fixed;inset:0;background:#0008;z-index:10000;padding:20px}.modal .panel{margin:auto}
+
+.shopee-fetch-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-left:10px;padding:8px 12px;border:1px solid #111;border-radius:8px;
+  background:#111;color:#fff;font-weight:700;font-size:13px;cursor:pointer;
+}
+.shopee-fetch-btn:disabled{opacity:.55;cursor:not-allowed}
+.shopee-fetch-status{display:inline-block;margin-left:8px;color:#666;font-size:12px}
 </style>
 
 <style>
@@ -252,10 +260,15 @@
       <div id="sizeStockInputs" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px"></div>
       <div class="file-note">Pilih golongan size terlebih dahulu. Hanya size dalam golongan tersebut yang muncul.</div>
     </div>
-    <div><label>Foto Produk (upload)</label>
+    <div><label>Foto Produk (upload)
+      <span id="shopeeFetchWrap" style="display:none">
+        <button type="button" id="fetchShopeeDataBtn" class="shopee-fetch-btn" onclick="fetchShopeeProductData()">TARIK DATA SHOPEE</button>
+        <span id="shopeeFetchStatus" class="shopee-fetch-status"></span>
+      </span>
+    </label>
       <input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp">
       <div id="ownImagePreview" style="display:none;margin-top:8px"><img id="ownImagePreviewImg" alt="Preview foto" style="width:96px;height:96px;object-fit:cover;border-radius:10px;border:1px solid #ddd"></div>
-      <div class="file-note">Maks. 5 MB.</div>
+      <div class="file-note">Maks. 5 MB. Untuk Affiliate, tombol <b>TARIK DATA SHOPEE</b> akan mengisi foto dan harga otomatis.</div>
     </div>
     <div><label>Atau URL Foto</label><input id="ownImageUrl" type="url" placeholder="https://...jpg"></div>
     <div class="wide"><label>Deskripsi</label><textarea id="ownDescription" rows="3" placeholder="Deskripsi produk"></textarea></div>
@@ -672,6 +685,55 @@ async function uploadProductImage(file){
   return sb.storage.from('balivo-product-images').getPublicUrl(path).data.publicUrl;
 }
 
+
+async function fetchShopeeProductData(){
+  if(!requireAdmin())return;
+  const mode=document.getElementById('productMode')?.value||'OWN';
+  if(mode!=='AFFILIATE'){alert('Tarik data Shopee hanya untuk produk AFFILIATE.');return;}
+
+  const url=document.getElementById('affiliateUrl')?.value.trim()||'';
+  if(!url){alert('Isi Link Affiliate Shopee terlebih dahulu.');return;}
+  if(!validOptionalUrl(url)){alert('Link Affiliate Shopee tidak valid.');return;}
+
+  const btn=document.getElementById('fetchShopeeDataBtn');
+  const status=document.getElementById('shopeeFetchStatus');
+  if(btn){btn.disabled=true;btn.textContent='MENARIK DATA...';}
+  if(status)status.textContent='Mengambil foto & harga...';
+
+  try{
+    const {data,error}=await sb.functions.invoke('import-product-universal',{
+      body:{url,preview:true,metadata_only:true}
+    });
+    if(error)throw error;
+    if(!data?.ok)throw new Error(data?.error||'Data Shopee tidak ditemukan.');
+
+    let filled=0;
+    if(data.image){
+      const imageUrl=document.getElementById('ownImageUrl');
+      if(imageUrl)imageUrl.value=data.image;
+      const preview=document.getElementById('ownImagePreview');
+      const previewImg=document.getElementById('ownImagePreviewImg');
+      if(previewImg)previewImg.src=data.image;
+      if(preview)preview.style.display='block';
+      filled++;
+    }
+    if(data.price!=null && Number.isFinite(Number(data.price))){
+      const price=document.getElementById('ownPrice');
+      if(price){price.value=Number(data.price);price.dispatchEvent(new Event('input',{bubbles:true}));}
+      filled++;
+    }
+
+    if(!filled)throw new Error('Shopee terbaca, tetapi foto/harga tidak berhasil ditemukan.');
+    if(status)status.textContent=filled===2?'Foto + harga berhasil ditarik.':(data.image?'Foto berhasil ditarik.':'Harga berhasil ditarik.');
+  }catch(e){
+    console.error('Tarik data Shopee:',e);
+    if(status)status.textContent='Gagal mengambil data.';
+    alert('Gagal menarik data Shopee: '+(e?.message||e));
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='TARIK DATA SHOPEE';}
+  }
+}
+
 async function saveUnifiedProduct(){
   if(!requireAdmin())return;
   const mode=document.getElementById('productMode')?.value||'OWN';
@@ -828,6 +890,10 @@ function switchProductMode(mode){
   af?.classList.toggle('hidden',mode!=='AFFILIATE'); if(af)af.style.display=mode==='AFFILIATE'?'block':'none';
   if(costWrap)costWrap.style.display=mode==='AFFILIATE'?'none':'block';
   if(sizeFields)sizeFields.style.display=mode==='AFFILIATE'?'none':'block';
+  const shopeeFetchWrap=document.getElementById('shopeeFetchWrap');
+  if(shopeeFetchWrap)shopeeFetchWrap.style.display=mode==='AFFILIATE'?'inline':'none';
+  const shopeeFetchStatus=document.getElementById('shopeeFetchStatus');
+  if(shopeeFetchStatus && mode!=='AFFILIATE')shopeeFetchStatus.textContent='';
   if(title)title.textContent=mode==='OWN'?'Tambah Produk Saya':mode==='DROPSHIP'?'Tambah Produk Dropship':'Tambah Produk Affiliate';
   if(help)help.textContent=mode==='OWN'?'Produk milik sendiri. Isi harga modal, harga jual, stok per size, dan foto.':mode==='DROPSHIP'?'Produk supplier. Isi data produk yang sama, lalu tambahkan link produk supplier/Shopee.':'Produk affiliate. Isi data produk yang sama, lalu tambahkan link Affiliate Shopee.';
   const btn=document.getElementById('saveUnifiedProductBtn'); if(btn)btn.textContent=mode==='OWN'?'SIMPAN PRODUK':mode==='DROPSHIP'?'SIMPAN PRODUK DROPSHIP':'SIMPAN PRODUK AFFILIATE';
