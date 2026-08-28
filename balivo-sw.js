@@ -1,12 +1,12 @@
-const CACHE_NAME = 'balivo-pwa-v1';
+const CACHE_NAME = 'balivo-pwa-v2';
 const APP_SHELL = [
   './',
   './index.html',
   './balivo-manifest.webmanifest',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-512-maskable.png',
-  './icons/icon-180.png'
+  './icons/icon-192-v2.png',
+  './icons/icon-512-v2.png',
+  './icons/icon-512-maskable-v2.png',
+  './icons/icon-180-v2.png'
 ];
 
 self.addEventListener('install', event => {
