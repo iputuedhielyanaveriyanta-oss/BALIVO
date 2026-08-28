@@ -736,7 +736,13 @@ async function openRealPayment(orderId,orderNumber,total,payment,phone){
     <div class="real-order-summary"><div><span>Nomor Pesanan</span><b>${esc(orderNumber)}</b></div><div><span>Metode</span><b>${esc(payment)}</b></div><div><span>Total yang harus dibayar</span><strong>${money(total)}</strong></div></div>
     ${paymentHtml}
     <div class="real-pay-warning">Pembayaran dilakukan langsung ke rekening / QRIS BALIVO. Tidak ada pembayaran demo.</div>
-    <button id="paymentConfirmBtn" class="checkout" style="margin-top:16px" onclick="submitRealPaymentConfirmation('${orderId}','${esc(phone)}')">SAYA SUDAH BAYAR</button>
+    <div class="real-pay-box" style="margin-top:16px">
+      <b>UPLOAD BUKTI PEMBAYARAN</b>
+      <div class="real-pay-note">Setelah transfer/QRIS berhasil, upload screenshot bukti pembayaran (JPG, PNG, atau WEBP, maksimal 5 MB).</div>
+      <input id="paymentProofFile" type="file" accept="image/jpeg,image/png,image/webp" style="width:100%;margin-top:10px">
+      <button id="paymentProofBtn" class="checkout" style="margin-top:10px" onclick="submitPaymentProof('${esc(orderNumber)}','${esc(phone)}')">KIRIM BUKTI PEMBAYARAN</button>
+      <div id="paymentProofMsg" class="real-pay-note" style="margin-top:8px"></div>
+    </div>
     <button type="button" class="btn" style="width:100%;margin-top:9px;padding:13px" onclick="closePaymentDemo()">Bayar Nanti</button>
   </div>`;
 }
@@ -746,17 +752,37 @@ function closePaymentDemo(){
   m.className='modal';m.style.display='none';m.innerHTML='';
 }
 
-async function submitRealPaymentConfirmation(orderId,phone){
-  const btn=document.getElementById('paymentConfirmBtn');
-  if(btn){btn.disabled=true;btn.textContent='MENGIRIM...';}
-  const {data,error}=await sb.rpc('balivo_submit_payment_confirmation',{p_order_id:orderId,p_customer_phone:phone});
-  if(error||data!==true){
-    if(btn){btn.disabled=false;btn.textContent='SAYA SUDAH BAYAR';}
-    alert('Konfirmasi pembayaran gagal: '+(error?.message||'Order tidak ditemukan.'));return;
+async function submitPaymentProof(orderNumber,phone){
+  const file=document.getElementById('paymentProofFile')?.files?.[0];
+  const btn=document.getElementById('paymentProofBtn');
+  const msg=document.getElementById('paymentProofMsg');
+  if(!file){if(msg)msg.textContent='Pilih bukti pembayaran terlebih dahulu.';return}
+  if(file.size>5*1024*1024){if(msg)msg.textContent='Ukuran bukti maksimal 5 MB.';return}
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)){if(msg)msg.textContent='Gunakan JPG, PNG, atau WEBP.';return}
+  if(btn){btn.disabled=true;btn.textContent='MENGUPLOAD...';}
+  if(msg)msg.textContent='Mengupload bukti pembayaran...';
+  try{
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+    const path=`${String(orderNumber).replace(/[^a-zA-Z0-9_-]/g,'_')}/${crypto.randomUUID()}.${ext}`;
+    const {error:upErr}=await sb.storage.from('balivo-payment-proofs').upload(path,file,{contentType:file.type,upsert:false});
+    if(upErr)throw upErr;
+    const proofUrl=sb.storage.from('balivo-payment-proofs').getPublicUrl(path).data.publicUrl;
+    const {data,error}=await sb.rpc('balivo_submit_payment_proof',{p_order_number:orderNumber,p_customer_phone:phone,p_proof_url:proofUrl});
+    if(error||!data?.ok)throw new Error(error?.message||data?.error||'Bukti pembayaran tidak dapat disimpan.');
+    const m=document.getElementById('orderSuccess');
+    m.innerHTML=`<div class="sheet" style="padding:26px;text-align:center"><div style="font-size:48px">✓</div><h2>Bukti Pembayaran Terkirim</h2><p style="color:#666">Order <b>${esc(orderNumber)}</b> sedang menunggu verifikasi Admin BALIVO.</p><p style="font-size:13px;color:#777">Setelah pembayaran disetujui, pesanan akan masuk ke proses berikutnya.</p><button class="checkout" onclick="closePaymentDemo()">SELESAI</button></div>`;
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='KIRIM BUKTI PEMBAYARAN';}
+    if(msg)msg.textContent='Gagal mengirim bukti: '+e.message;
   }
-  const m=document.getElementById('orderSuccess');
-  m.innerHTML=`<div class="sheet" style="padding:26px;text-align:center"><div style="font-size:48px">✓</div><h2>Konfirmasi Terkirim</h2><p style="color:#666">Order <b>${esc(orderId)}</b> menunggu verifikasi admin.</p><p style="font-size:13px;color:#777">Admin akan memeriksa pembayaran sebelum order diproses.</p><button class="checkout" onclick="closePaymentDemo()">SELESAI</button></div>`;
 }
+
+async function submitRealPaymentConfirmation(orderId,phone){
+  // Legacy compatibility: this now only marks the order as waiting for proof, without approving payment.
+  const {error}=await sb.rpc('balivo_submit_payment_confirmation',{p_order_id:orderId,p_customer_phone:phone});
+  if(error)alert('Konfirmasi gagal: '+error.message);
+}
+
 
 
 saveCart();

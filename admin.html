@@ -527,7 +527,7 @@ function renderDropship(){
       <div style="margin-top:8px">Customer bayar: <b>${money(o.total)}</b> · Supplier: <b>${money(o.supplier_cost)}</b> · Profit: <b>${money(o.markup_profit)}</b></div>
       <div style="font-size:12px;color:#777;margin-top:5px">Pembayaran customer: <b>${esc(o.payment_status||'PENDING')}</b> · Supplier: <b>${esc(o.supplier_payment_status||'WAITING')}</b></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        ${o.payment_status!=='PAID'?`<button class="primary" onclick="confirmCustomerPaid('${o.id}')">KONFIRMASI PEMBAYARAN</button>`:''}
+        
         ${o.payment_status==='PAID'?`<button class="primary" onclick="prepareSupplierOrder('${o.id}')">PROSES KE SUPPLIER</button>`:''}
         <button class="btn" onclick="copyCustomerData('${o.id}')">COPY DATA CUSTOMER</button>
         ${o.supplier_payment_status==='WAITING'?`<button class="btn" onclick="markSupplierPaid('${o.id}')">SUDAH DIBAYAR SUPPLIER</button>`:''}
@@ -597,7 +597,7 @@ async function refresh(){
   sProducts.textContent=products.length;
   sStock.textContent=products.reduce((a,x)=>a+Number(x.stock||0),0);
   sOrders.textContent=orders.length;
-  sProfit.textContent=money(products.reduce((a,x)=>a+(Number(x.price||0)-Number(x.cost||0))*Number(x.stock||0),0)); if(document.getElementById('sProofPending'))sProofPending.textContent=orders.filter(x=>['PROOF_SUBMITTED'].includes(x.payment_status)).length; if(document.getElementById('sReady'))sReady.textContent=orders.filter(x=>x.fulfillment_status==='READY_TO_PROCESS').length;
+  sProfit.textContent=money(products.reduce((a,x)=>a+(Number(x.price||0)-Number(x.cost||0))*Number(x.stock||0),0)); if(document.getElementById('sProofPending'))sProofPending.textContent=orders.filter(x=>x.payment_status==='WAITING_VERIFICATION' || (x.payment_status==='PENDING' && x.payment_proof_url)).length; if(document.getElementById('sReady'))sReady.textContent=orders.filter(x=>x.fulfillment_status==='READY_TO_PROCESS').length;
   productRows.innerHTML=products.map(p=>`<tr>
     <td><strong>${esc(p.name)}</strong><div style="font-size:11px;color:#777">${esc(p.brand||'')}</div></td>
     <td>${p.stock_source==='OWN'?'STOK SAYA':esc(p.supplier||'Supplier')}</td>
