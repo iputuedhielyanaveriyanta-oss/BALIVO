@@ -1,54 +1,769 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111"><meta name="description" content="BALIVO — Bali's Online Marketplace">
-<link rel="manifest" href="balivo-manifest.webmanifest"><title>BALIVO — Bali's Online Marketplace</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="description" content="BALIVO — Bali's Online Marketplace">
+<link rel="manifest" href="balivo-manifest.webmanifest">
+<title>BALIVO — Bali's Online Marketplace</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#f7f7f5;--card:#fff;--text:#111;--muted:#777;--line:#e5e5e5;--dark:#111;--sale:#d92d20}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}.top{background:#111;color:#fff;text-align:center;padding:9px;font-size:12px;letter-spacing:.5px}.nav{max-width:1180px;margin:auto;display:flex;align-items:center;gap:14px;padding:15px 20px;flex-wrap:wrap}.nav-wrap{background:#fff;position:sticky;top:0;z-index:30;border-bottom:1px solid var(--line)}.logo{font-weight:900;font-size:25px;letter-spacing:2px}.tag{font-size:11px;color:#777}.search{flex:1;min-width:180px}.search input{width:100%;padding:12px 15px;border:1px solid var(--line);border-radius:12px;background:#fafafa;outline:none}.nav-btn{background:#111;color:#fff;border:0;border-radius:11px;padding:11px 14px;font-weight:800}.count{display:inline-flex;min-width:20px;height:20px;border-radius:20px;background:#fff;color:#111;align-items:center;justify-content:center;font-size:11px;margin-left:4px}
-main{max-width:1180px;margin:auto;padding:20px}.hero{background:#111;color:#fff;border-radius:22px;padding:38px 30px;margin-bottom:24px}.hero small{color:#aaa;letter-spacing:3px;font-weight:800}.hero h1{font-size:clamp(38px,7vw,72px);line-height:.95;margin:14px 0}.hero p{color:#ccc;max-width:650px}.hero button{background:#fff;color:#111;border:0;border-radius:10px;padding:12px 17px;font-weight:900}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:24px 0 12px}.section-head h2{margin:0}.categories{display:flex;gap:8px;overflow:auto;padding:4px 0 10px;scrollbar-width:none}.categories::-webkit-scrollbar{display:none}.cat{white-space:nowrap;border:1px solid #ddd;background:#fff;color:#2563eb;border-radius:999px;padding:9px 13px;font-weight:700}.cat.active{background:#111;color:#fff;border-color:#111}.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:13px}.product{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden}.photo{aspect-ratio:1;background:#eee;position:relative}.photo img{width:100%;height:100%;object-fit:cover}.badge{position:absolute;left:8px;top:8px;background:#111;color:#fff;padding:5px 7px;border-radius:7px;font-size:11px;font-weight:800}.info{padding:12px}.brand{font-size:11px;color:#888;text-transform:uppercase}.name{font-weight:800;min-height:40px;margin:4px 0 7px}.price{font-weight:900;font-size:17px}.stock{font-size:11px;color:#777;margin-top:4px}.add{width:100%;margin-top:9px;padding:10px;background:#111;color:#fff;border:0;border-radius:9px;font-weight:800}.add:disabled{background:#ccc}.empty{text-align:center;padding:50px;color:#777}.drawer{position:fixed;right:0;top:0;height:100%;width:min(430px,100%);background:#fff;z-index:80;transform:translateX(100%);transition:.25s;box-shadow:-8px 0 30px #0002;display:flex;flex-direction:column}.drawer.open{transform:none}.drawer-head{display:flex;justify-content:space-between;padding:18px;border-bottom:1px solid var(--line)}.drawer-body{padding:18px;overflow:auto;flex:1}.cart-row{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}.cart-row img{width:70px;height:70px;object-fit:cover;border-radius:9px}.cart-row strong{display:block}.qty{display:flex;align-items:center;gap:8px;margin-top:7px}.qty button{width:28px;height:28px;border:1px solid #ddd;background:#fff;border-radius:7px}.drawer-foot{padding:18px;border-top:1px solid var(--line)}.checkout{width:100%;padding:14px;background:#111;color:#fff;border:0;border-radius:10px;font-weight:900}.modal{position:fixed;inset:0;background:#0009;z-index:90;display:none;align-items:flex-end;justify-content:center}.modal.open{display:flex}.sheet{background:#fff;width:min(720px,100%);max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:22px}.form{display:grid;gap:10px}.form input,.form textarea,.form select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px}.detail{position:fixed;inset:0;background:#000d;z-index:100;display:none;align-items:center;justify-content:center;padding:18px}.detail.open{display:flex}.detail-box{width:min(1100px,100%);height:min(90vh,760px);background:#fff;border-radius:20px;overflow:hidden;display:grid;grid-template-columns:1.1fr .9fr;position:relative}.viewer{background:#f1f1f1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}.viewer img{width:100%;height:100%;object-fit:contain}.arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:0;background:#fff;box-shadow:0 3px 14px #0003;font-size:22px}.prev{left:14px}.next{right:14px}.close{position:absolute;right:14px;top:14px;width:40px;height:40px;border-radius:50%;border:0;background:#fff;z-index:5;font-size:20px}.detail-info{padding:26px;overflow:auto}.detail-info h2{margin:6px 0}.detail-price{font-size:28px;font-weight:900;margin:10px 0}.thumbs{display:flex;gap:7px;margin-top:10px;overflow:auto}.thumbs img{width:58px;height:58px;object-fit:cover;border-radius:7px;border:2px solid transparent}.thumbs img.active{border-color:#111}.size-options{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.size-btn{min-width:52px;padding:10px 13px;border:1px solid #ddd;background:#fff;border-radius:10px;font-weight:800}.size-btn.active{background:#111;color:#fff}.size-btn:disabled{opacity:.35;text-decoration:line-through}.review{padding:12px 0;border-top:1px solid #eee}.stars{letter-spacing:2px}.footer{margin-top:50px;background:#111;color:#fff;padding:35px 20px}.footer-inner{max-width:1180px;margin:auto}.paybox{padding:15px;border-radius:14px;background:#111;color:#fff;margin-top:14px}.payrow{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #333}.payrow:last-child{border-bottom:0}.paybox img{display:block;max-width:280px;max-height:320px;object-fit:contain;background:#fff;border-radius:10px;padding:8px;margin:10px auto}.timeline{display:grid;gap:7px;margin:12px 0}.step{padding:9px;border-left:3px solid #ddd;background:#fafafa;border-radius:0 8px 8px 0}.step.done{border-left-color:#111;font-weight:800}.order-card{border:1px solid #ddd;border-radius:14px;padding:15px;margin-top:12px}.note{font-size:12px;color:#777;line-height:1.5}.danger{color:#b91c1c}.hidden{display:none!important}
-@media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.grid{grid-template-columns:repeat(2,1fr);gap:10px}.nav{padding:12px}.logo{font-size:21px}.tag{display:none}.search{order:4;flex-basis:100%}.detail-box{height:94vh;grid-template-columns:1fr;grid-template-rows:48% 52%}.detail-info{padding:17px}.viewer{min-height:42vh}}@media(max-width:420px){main{padding:14px 12px}.hero{padding:28px 20px}}
+:root{--bg:#f7f7f5;--card:#fff;--text:#111;--muted:#777;--line:#e7e7e7;--accent:#111;--sale:#d92d20}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}button{cursor:pointer;border:0}.top{background:#111;color:#fff;text-align:center;padding:9px;font-size:12px;letter-spacing:.5px}
+header{background:#fff;position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line)}.nav{max-width:1180px;margin:auto;display:flex;align-items:center;gap:24px;padding:16px 20px}.logo{font-weight:900;font-size:25px;letter-spacing:2px}.tag{font-size:11px;color:#777;margin-left:-16px}.search{flex:1;position:relative}.search input{width:100%;padding:13px 16px;border:1px solid var(--line);border-radius:12px;background:#fafafa;outline:none}.cart{background:#111;color:#fff;border-radius:12px;padding:12px 15px;font-weight:700}.count{display:inline-flex;min-width:20px;height:20px;border-radius:20px;background:#fff;color:#111;align-items:center;justify-content:center;font-size:11px;margin-left:5px}
+main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:#fff;border-radius:22px;padding:38px 30px;margin-bottom:25px}.hero small{letter-spacing:3px;color:#bbb;font-weight:700}.hero h1{font-size:clamp(38px,7vw,72px);line-height:.95;margin:14px 0}.hero p{color:#ccc;max-width:600px}.hero button{background:#fff;color:#111;padding:13px 18px;border-radius:10px;font-weight:800}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:26px 0 14px}.section-head h2{margin:0}.categories{display:flex;gap:10px;overflow:auto;padding:4px 0 9px;-webkit-overflow-scrolling:touch}.categories button{white-space:nowrap;padding:10px 14px;border:1px solid var(--line);background:#fff;border-radius:999px}.categories button.active{background:#111!important;color:#fff!important;border-color:#111!important;box-shadow:0 0 0 1px #111}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:13px}.product{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden}.photo{aspect-ratio:1/1;background:#eee;position:relative}.photo img{width:100%;height:100%;object-fit:cover}.badge{position:absolute;left:9px;top:9px;background:#111;color:#fff;border-radius:7px;padding:5px 7px;font-size:11px;font-weight:700}.info{padding:13px}.brand{font-size:11px;color:#888;text-transform:uppercase}.name{font-weight:700;margin:4px 0 8px;min-height:40px}.price{font-weight:900}.stock{font-size:11px;color:#777;margin-top:5px}.add{width:100%;margin-top:10px;padding:10px;background:#111;color:#fff;border-radius:9px;font-weight:700}.add:disabled{background:#ccc;cursor:not-allowed}
+.empty{text-align:center;padding:50px;color:#777}.drawer{position:fixed;right:0;top:0;height:100%;width:min(430px,100%);background:#fff;z-index:50;transform:translateX(100%);transition:.25s;box-shadow:-8px 0 30px #0002;display:flex;flex-direction:column}.drawer.open{transform:none}.drawer-head{display:flex;justify-content:space-between;padding:18px;border-bottom:1px solid var(--line)}.drawer-body{padding:18px;overflow:auto;flex:1}.cart-row{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}.cart-row img{width:70px;height:70px;object-fit:cover;border-radius:9px}.cart-row strong{display:block}.qty{display:flex;align-items:center;gap:8px;margin-top:7px}.qty button{width:28px;height:28px;border:1px solid var(--line);background:#fff;border-radius:7px}.drawer-foot{padding:18px;border-top:1px solid var(--line)}.checkout{width:100%;padding:14px;background:#111;color:#fff;border-radius:10px;font-weight:800}
+.modal{position:fixed;inset:0;background:#0008;z-index:60;display:none;align-items:flex-end;justify-content:center}.modal.open{display:flex}.sheet{background:#fff;width:min(700px,100%);max-height:90vh;overflow:auto;border-radius:22px 22px 0 0;padding:22px}.form{display:grid;gap:10px}.form input,.form select,.form textarea{padding:12px;border:1px solid var(--line);border-radius:9px}.order-note{font-size:12px;color:#777}.detail-img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;background:#eee}.detail-price{font-size:28px;font-weight:900;margin:10px 0}.detail-desc{color:#555;line-height:1.6;white-space:pre-line}.detail-box{border-top:1px solid var(--line);margin-top:18px;padding-top:18px}.stars{letter-spacing:2px;color:#f59e0b}.review{padding:12px 0;border-bottom:1px solid var(--line)}.review-head{display:flex;justify-content:space-between;gap:10px}.review-form{display:grid;gap:9px;margin-top:14px}.review-form input,.review-form textarea,.review-form select{padding:11px;border:1px solid var(--line);border-radius:9px}.review-btn{padding:11px 14px;border-radius:9px;background:#111;color:#fff;font-weight:700}..footer{margin-top:50px;background:#111;color:#fff;padding:35px 20px}.footer-inner{max-width:1180px;margin:auto}.product-modal{position:fixed;inset:0;background:#000d;z-index:100;display:none;align-items:center;justify-content:center;padding:18px}.product-modal.open{display:flex}.product-view{width:min(1100px,100%);height:min(90vh,760px);background:#fff;border-radius:20px;overflow:hidden;display:grid;grid-template-columns:1.1fr .9fr;position:relative}.viewer{background:#f1f1f1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:pan-y}.viewer img{width:100%;height:100%;object-fit:contain}.view-arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:0 3px 14px #0003;font-size:22px;z-index:2}.view-prev{left:14px}.view-next{right:14px}.view-close{position:absolute;right:14px;top:14px;width:40px;height:40px;border-radius:50%;background:#fff;z-index:3;font-size:20px}.view-info{padding:28px;overflow:auto}.view-info h2{margin:8px 0}.review{border-top:1px solid var(--line);padding:12px 0}.thumbs{display:flex;gap:7px;margin-top:10px;overflow:auto}.thumbs img{width:58px;height:58px;object-fit:cover;border-radius:7px;border:2px solid transparent}.thumbs img.active{border-color:#111}@media(max-width:700px){.product-view{height:94vh;grid-template-columns:1fr;grid-template-rows:52% 48%}.view-info{padding:18px}.viewer img{object-fit:contain}}.hidden{display:none!important}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}.tag{display:none}.nav{gap:10px}.logo{font-size:21px}.search{order:3;flex-basis:100%}.nav{flex-wrap:wrap}}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:420px){main{padding:15px 12px}.hero{padding:28px 22px}.grid{gap:10px}.info{padding:10px}.name{font-size:14px}}
+</style>
+
+<style id="balivo-size-ui">
+.size-box{margin:14px 0 10px}
+.size-title{font-weight:700;margin-bottom:8px}
+.size-options{display:flex;flex-wrap:wrap;gap:9px}
+.size-btn{min-width:52px;padding:10px 13px;border:1px solid #d7d7d7;border-radius:10px;background:#fff;font-weight:700}
+.size-btn.active{background:#111;color:#fff;border-color:#111}
+.size-btn:disabled{opacity:.35;text-decoration:line-through}
+.action-stack{display:flex;flex-direction:column;gap:14px;margin-top:16px}
+.action-stack button{width:100%;min-height:54px;margin:0!important;border-radius:14px}
+</style>
+
+<style id="balivo-final-ui">
+/* Separate review and cart actions so they never touch */
+.review-btn{display:block;width:100%;min-height:54px;margin-top:12px!important;margin-bottom:16px!important;border-radius:14px!important}
+#viewAdd{display:block;width:100%;min-height:54px;margin-top:0!important;border-radius:14px!important}
+#viewReviews{margin-bottom:18px}
+#reviewBottom{margin-top:18px;padding-bottom:24px}
+.size-box{display:block!important;padding:14px 0 2px}
+.size-options{min-height:44px}
+.size-btn{min-width:56px;min-height:44px}
+.size-empty{padding:10px 12px;border:1px dashed #ccc;border-radius:10px;color:#777;font-size:13px}
+@media(max-width:600px){
+  .product-view{grid-template-columns:1fr;height:94vh}
+  .viewer{min-height:42vh}
+  .view-info{overflow:auto;padding:16px}
+  .review-btn,#viewAdd{min-height:56px}
+}
+</style>
+<style id="balivo-category-final">
+#categories{display:flex;flex-wrap:nowrap;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:4px 0 8px}
+#categories::-webkit-scrollbar{display:none}
+#categories button{position:relative;z-index:5;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;white-space:nowrap;padding:9px 13px;border:1px solid #ddd;background:#fff;color:#2563eb;border-radius:999px;transition:background .15s,color .15s,border-color .15s,transform .1s;flex:0 0 auto}
+#categories button.active{background:#111!important;color:#fff!important;border-color:#111!important;font-weight:800}
+#categories button:active{transform:scale(.97)}
+.category-filter-select{flex:0 0 auto;padding:9px 34px 9px 13px;border:1px solid #ddd;border-radius:999px;background:#fff;color:#2563eb;font-weight:700;outline:none;appearance:auto}
+.category-filter-select.has-selection{background:#111;color:#fff;border-color:#111}
+@media(max-width:600px){#categories{padding-bottom:7px}.category-filter-select{max-width:210px}}
+</style>
+
+
+
+
+
+<style id="category-button-filter-final">
+#categories{position:relative;display:flex;flex-wrap:nowrap;gap:8px;align-items:center;overflow-x:auto;overflow-y:visible;scrollbar-width:none;padding:4px 0 10px}
+#categories::-webkit-scrollbar{display:none}
+#categories .category-btn{position:relative;z-index:2;display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;padding:10px 14px;border:1px solid #ddd;background:#fff;color:#2563eb;border-radius:999px;white-space:nowrap;font-weight:600;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s,border-color .15s,transform .1s}
+#categories .category-btn.active{background:#111!important;color:#fff!important;border-color:#111!important;font-weight:800}
+#categories .category-btn:active{transform:scale(.97)}
+.cat-arrow{font-size:13px;line-height:1;opacity:.9}
+.category-popup{position:fixed;z-index:10000;min-width:210px;max-width:min(320px,calc(100vw - 16px));max-height:min(60vh,420px);overflow:auto;background:#fff;border:1px solid #ddd;border-radius:14px;box-shadow:0 12px 35px #0003;padding:6px}
+.category-option{display:block;width:100%;padding:11px 13px;border:0;background:#fff;color:#111;text-align:left;border-radius:9px;font-size:15px;cursor:pointer;touch-action:manipulation}
+.category-option:hover,.category-option:active{background:#f1f1f1}
+.category-option.parent-option{font-weight:800}
+.category-option.chosen{background:#111;color:#fff;font-weight:800}
+@media(max-width:600px){#categories{padding-bottom:7px}.category-popup{min-width:210px}.category-option{padding:13px;font-size:16px}}
+</style>
+
+<style id="nested-category-filter-fix">
+.category-popup{position:fixed;z-index:9999;min-width:210px;max-width:min(300px,calc(100vw - 16px));max-height:65vh;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:16px;padding:8px;box-shadow:0 14px 40px #0003}
+.category-option{display:block;width:100%;padding:13px 14px;border:0;background:#fff;color:#111;text-align:left;border-radius:10px;font-size:16px}
+.category-option:hover,.category-option:active{background:#f2f2f2}
+.category-option.chosen{background:#111;color:#fff;font-weight:800}
+.category-option.parent-option{margin-bottom:4px}
+</style>
+<style id="real-payment-ui">
+.real-order-summary{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fafafa;display:grid;gap:11px}.real-order-summary span{display:block;font-size:12px;color:#777}.real-order-summary b{display:block;font-size:17px;margin-top:3px}.real-order-summary strong{display:block;font-size:26px;margin-top:3px}.real-pay-box{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#111;color:#fff}.real-pay-box>b{display:block;margin-bottom:10px}.real-pay-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #333;color:#bbb}.real-pay-row:last-child{border-bottom:0}.real-pay-row strong{color:#fff;text-align:right}.real-qris{display:block;width:min(280px,100%);max-height:320px;object-fit:contain;margin:10px auto;background:#fff;border-radius:10px;padding:8px}.real-pay-note{font-size:12px;color:#aaa;line-height:1.5;margin-top:8px}.real-pay-warning{margin-top:14px;padding:12px;border:1px dashed #aaa;border-radius:10px;font-size:12px;color:#666;line-height:1.5}
+</style>
+<style id="balivo-header-cart-orders-fix">
+.topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;flex-wrap:nowrap!important}
+.topbar .brand{flex:0 0 auto!important}
+.topbar .actions,.topbar .right,.topbar .cart-actions{display:flex!important;align-items:center!important;gap:8px!important;flex:0 0 auto!important;white-space:nowrap!important}
+.topbar button{white-space:nowrap!important}
+@media(max-width:600px){.topbar{gap:6px!important}.topbar .brand{font-size:18px!important}.topbar .actions,.topbar .right,.topbar .cart-actions{gap:5px!important}.topbar button{padding:8px 9px!important;font-size:12px!important}}
 </style></head>
 <body>
-<div class="top">BALIVO — Bali's Online Marketplace</div>
-<div class="nav-wrap"><div class="nav"><div class="logo">BALIVO</div><div class="tag">Bali's Online Marketplace</div><div class="search"><input id="search" placeholder="Cari produk, brand, kategori..."></div><button class="nav-btn" id="trackBtn">📦 Lacak Pesanan</button><button class="nav-btn" id="cartBtn">🛒 Cart <span class="count" id="cartCount">0</span></button></div></div>
+<div class="top">BALIVO • Bali's Online Marketplace</div>
+<header><div class="nav">
+<div><div class="logo">BALIVO</div><div class="tag">Bali's Online Marketplace</div></div>
+<div class="search"><input id="search" placeholder="Cari produk..." autocomplete="off"></div>
+<div class="cart-actions"><button class="cart" onclick="openCart()">🛒 Cart <span id="cartCount" class="count">0</span></button> <button class="cart" onclick="openMyOrders()">📦 Pesanan</button></div>
+</div></header>
 <main>
-<section class="hero"><small>BALIVO MARKETPLACE</small><h1>Belanja dari Bali.</h1><p>Fashion, surf, lifestyle, kebutuhan rumah dan berbagai produk pilihan dalam satu marketplace.</p><button id="shopBtn">BELANJA SEKARANG</button></section>
+<section class="hero"><small>DISCOVER • SHOP • BALI</small><h1>Belanja lebih mudah.<br>Temukan pilihan terbaik.</h1><p>Fashion, lifestyle, surf, dan produk pilihan dari berbagai supplier dalam satu marketplace.</p><button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">BELANJA SEKARANG</button></section>
 <div class="section-head"><h2>Kategori</h2></div><div id="categories" class="categories"></div>
-<div class="section-head"><h2>Produk</h2><span id="productCount" class="note"></span></div><div id="products" class="grid"></div>
+<div class="section-head"><h2 id="productTitle">Produk Pilihan</h2><span id="resultCount" style="font-size:12px;color:#777"></span></div>
+<div id="products" class="grid"></div>
+<div id="empty" class="empty hidden">Produk tidak ditemukan.</div>
 </main>
-<footer class="footer"><div class="footer-inner"><b>BALIVO</b><p>Marketplace & dropship Bali.</p></div></footer>
-<div id="cartDrawer" class="drawer"><div class="drawer-head"><b>Keranjang</b><button class="close" onclick="closeCart()">✕</button></div><div id="cartBody" class="drawer-body"></div><div class="drawer-foot"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><b>Total</b><b id="cartTotal">Rp0</b></div><button class="checkout" id="checkoutBtn">CHECKOUT</button></div></div>
-<div id="checkoutModal" class="modal"><div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Checkout</h2><button class="nav-btn" onclick="closeCheckout()">✕</button></div><div id="checkoutItems"></div><div class="form" style="margin-top:15px"><input id="cName" placeholder="Nama lengkap"><input id="cPhone" placeholder="Nomor WhatsApp" inputmode="tel"><textarea id="cAddress" rows="4" placeholder="Alamat lengkap"></textarea><select id="cPayment"><option value="BANK_TRANSFER">Transfer Bank</option><option value="QRIS">QRIS</option><option value="E_WALLET">E-Wallet</option><option value="VIRTUAL_ACCOUNT">Virtual Account</option></select></div><div class="note" style="margin-top:10px">Stok akan diamankan saat order dibuat. Pembayaran manual perlu bukti pembayaran dan verifikasi admin.</div><button class="checkout" style="margin-top:14px" id="placeOrderBtn">BUAT PESANAN</button></div></div>
-<div id="paymentModal" class="modal"></div>
-<div id="detailModal" class="detail"><div class="detail-box"><button class="close" onclick="closeDetail()">✕</button><div class="viewer"><button class="arrow prev" onclick="changePhoto(-1)">‹</button><img id="detailImage"><button class="arrow next" onclick="changePhoto(1)">›</button></div><div class="detail-info"><div class="brand" id="detailBrand"></div><h2 id="detailName"></h2><div class="detail-price" id="detailPrice"></div><div id="detailStock" class="note"></div><div id="detailSizes"></div><p id="detailDesc" class="note" style="white-space:pre-line"></p><div class="thumbs" id="detailThumbs"></div><button class="checkout" id="detailAdd">TAMBAH KE CART</button><div class="review"><h3>⭐ Ulasan</h3><div id="detailReviews"></div><div id="reviewBox"></div></div></div></div></div>
-<script>
-const SUPABASE_URL='https://hftgmssnzvrlwlslcaet.supabase.co';const SUPABASE_KEY='sb_publishable_xOadp1YRBil2PZ9RHeeWIQ_Z3LqMF-D';const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let products=[],cart=JSON.parse(localStorage.getItem('balivoCart')||'[]'),category='ALL',detailProduct=null,photoIndex=0,selectedSize='';
-const cats=['ALL','Fashion','Fashion / Mens / T-Shirt','Fashion / Mens / Celana','Fashion / Mens / Sepatu','Fashion / Mens / Sandal','Fashion / Mens / Jacket','Fashion / Mens / Topi','Fashion / Mens / Tas','Fashion / Mens / Aksesoris','Fashion / Ladies / Top','Fashion / Ladies / Dress','Fashion / Ladies / Celana','Fashion / Ladies / Rok','Fashion / Ladies / Jeans','Fashion / Ladies / Jacket','Fashion / Ladies / Sepatu','Fashion / Ladies / Sandal','Fashion / Ladies / Tas','Fashion / Ladies / Aksesoris','Alat Rumah Tangga','Alat Rumah Tangga / Peralatan Dapur','Alat Rumah Tangga / Alat Masak','Alat Rumah Tangga / Makan & Minum','Alat Rumah Tangga / Penyimpanan','Alat Rumah Tangga / Kebersihan','Surf & Outdoor','Surf & Outdoor / Surfboard','Surf & Outdoor / Accessories','Surf & Outdoor / Camping','Surf & Outdoor / Hiking','Tas & Travel','Tas & Travel / Backpack','Tas & Travel / Travel Bag','Tas & Travel / Luggage','Beauty & Personal Care','Beauty & Personal Care / Skincare','Beauty & Personal Care / Body Care','Beauty & Personal Care / Hair Care','Beauty & Personal Care / Parfum','Elektronik & Gadget','Elektronik & Gadget / Handphone','Elektronik & Gadget / Aksesoris HP','Elektronik & Gadget / Audio','Elektronik & Gadget / Gaming','Sports & Fitness','Sports & Fitness / Fitness','Sports & Fitness / Running','Sports & Fitness / Football','Sports & Fitness / Cycling','Anak & Bayi','Anak & Bayi / Pakaian Anak','Anak & Bayi / Mainan','Anak & Bayi / Bayi','Otomotif','Otomotif / Motor','Otomotif / Mobil','Otomotif / Aksesoris','Hewan Peliharaan','Hewan Peliharaan / Makanan','Hewan Peliharaan / Aksesoris','Souvenir & Gift','Souvenir & Gift / Souvenir Bali','Souvenir & Gift / Gift','Souvenir & Gift / Kerajinan','Makanan & Minuman','Makanan & Minuman / Snack','Makanan & Minuman / Minuman','Makanan & Minuman / Kopi'];
-function saveCart(){localStorage.setItem('balivoCart',JSON.stringify(cart));renderCart();document.getElementById('cartCount').textContent=cart.reduce((a,x)=>a+x.qty,0)}
-function categoryMatch(p,c){let a=Array.isArray(p.categories)?p.categories:(p.category?[String(p.category)]:[]);return c==='ALL'||a.some(x=>x===c||x.startsWith(c+' / ')||c.startsWith(x+' / '))}
-function renderCategories(){const el=document.getElementById('categories');el.innerHTML=cats.slice(0,18).map(c=>`<button class="cat ${category===c?'active':''}" onclick="setCategory('${esc(c)}')">${esc(c==='ALL'?'Semua':c.split(' / ').slice(-1)[0])}</button>`).join('')+`<select class="cat" onchange="setCategory(this.value)"><option value="">Kategori lainnya</option>${cats.slice(18).map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select>`}
-function setCategory(c){category=c||'ALL';renderCategories();renderProducts()}
-function filtered(){const q=document.getElementById('search').value.trim().toLowerCase();return products.filter(p=>p.status==='ACTIVE'&&categoryMatch(p,category)&&(!q||[p.name,p.brand,p.category,(p.categories||[]).join(' ')].join(' ').toLowerCase().includes(q)))}
-function renderProducts(){const el=document.getElementById('products'),arr=filtered();document.getElementById('productCount').textContent=arr.length+' produk';if(!arr.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">Belum ada produk sesuai pilihan.</div>';return}el.innerHTML=arr.map(p=>`<article class="product"><div class="photo" onclick="openDetail('${p.id}')"><img src="${esc(p.image||'')}" alt="${esc(p.name)}" loading="lazy">${Number(p.stock||0)<=0?'<span class="badge">HABIS</span>':''}</div><div class="info"><div class="brand">${esc(p.brand||'')}</div><div class="name">${esc(p.name)}</div><div class="price">${money(p.price)}</div><div class="stock">${Number(p.stock||0)>0?'Stok '+p.stock:'Stok habis'}</div><button class="add" ${Number(p.stock||0)<=0?'disabled':''} onclick="addToCart('${p.id}')">${Number(p.stock||0)>0?'TAMBAH KE CART':'HABIS'}</button></div></article>`).join('')}
-function addToCart(id,size=''){const p=products.find(x=>x.id===id);if(!p||Number(p.stock)<=0)return;const sizes=p.sizes||{};if(Object.keys(sizes).some(k=>Number(sizes[k])>0)&&!size){openDetail(id);return}const key=id+'|'+(size||'');const x=cart.find(a=>a.key===key);const max=size?Number(sizes[size]||0):Number(p.stock||0);if(x){if(x.qty>=max)return alert('Stok tidak cukup.');x.qty++}else cart.push({key,id,qty:1,size:size||'',name:p.name,price:Number(p.price),image:p.image||''});saveCart();}
-function renderCart(){const body=document.getElementById('cartBody');if(!cart.length){body.innerHTML='<div class="empty">Cart masih kosong.</div>';document.getElementById('cartTotal').textContent=money(0);return}let total=0;body.innerHTML=cart.map((x,i)=>{total+=x.price*x.qty;return `<div class="cart-row"><img src="${esc(x.image)}"><div style="flex:1"><strong>${esc(x.name)}</strong><div class="note">${x.size?'Size '+esc(x.size)+' · ':''}${money(x.price)}</div><div class="qty"><button onclick="changeQty(${i},-1)">−</button><b>${x.qty}</b><button onclick="changeQty(${i},1)">+</button><button class="danger" style="margin-left:auto;background:none;border:0" onclick="removeCart(${i})">Hapus</button></div></div></div>`}).join('');document.getElementById('cartTotal').textContent=money(total)}
-function changeQty(i,d){const x=cart[i],p=products.find(a=>a.id===x.id);const max=x.size?Number((p?.sizes||{})[x.size]||0):Number(p?.stock||0);x.qty=Math.max(0,Math.min(max,x.qty+d));if(!x.qty)cart.splice(i,1);saveCart()}function removeCart(i){cart.splice(i,1);saveCart()}function openCart(){document.getElementById('cartDrawer').classList.add('open')}function closeCart(){document.getElementById('cartDrawer').classList.remove('open')}
-function openCheckout(){if(!cart.length)return alert('Cart masih kosong.');document.getElementById('checkoutItems').innerHTML=cart.map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee"><span>${esc(x.name)} ${x.size?'· '+esc(x.size):''} × ${x.qty}</span><b>${money(x.price*x.qty)}</b></div>`).join('');document.getElementById('checkoutModal').classList.add('open')}function closeCheckout(){document.getElementById('checkoutModal').classList.remove('open')}
-async function placeOrder(){const name=document.getElementById('cName').value.trim(),phone=document.getElementById('cPhone').value.trim(),address=document.getElementById('cAddress').value.trim(),payment=document.getElementById('cPayment').value;if(!name||!phone||!address)return alert('Nama, WhatsApp dan alamat wajib diisi.');const items=cart.map(x=>({product_id:x.id,product_name:x.name,size:x.size||null,unit_price:x.price,quantity:x.qty,subtotal:x.price*x.qty}));const total=items.reduce((a,x)=>a+x.subtotal,0);const b=document.getElementById('placeOrderBtn');b.disabled=true;b.textContent='MEMPROSES...';try{const {data,error}=await sb.rpc('create_balivo_order',{p_customer_name:name,p_customer_phone:phone,p_customer_address:address,p_payment_method:payment,p_subtotal:total,p_total:total,p_items:items});if(error)throw error;const o=Array.isArray(data)?data[0]:data;if(!o?.id)throw new Error('Order tidak terbentuk.');localStorage.setItem('balivoLastOrder',JSON.stringify({order_number:o.order_number,phone}));cart=[];saveCart();closeCheckout();closeCart();await showPayment(o.order_number,o.id,total,payment,phone)}catch(e){alert('Pesanan gagal: '+e.message)}finally{b.disabled=false;b.textContent='BUAT PESANAN'}}
-async function showPayment(orderNumber,orderId,total,payment,phone){const m=document.getElementById('paymentModal');m.className='modal open';m.innerHTML='<div class="sheet"><div style="text-align:center">Memuat data pembayaran...</div></div>';const {data:s,error}=await sb.rpc('balivo_public_payment_settings');if(error){m.innerHTML=`<div class="sheet"><h2>Order ${esc(orderNumber)}</h2><p>${esc(error.message)}</p><button class="checkout" onclick="closePayment()">TUTUP</button></div>`;return}const method=payment==='BANK_TRANSFER'?`<div class="payrow"><span>Bank</span><strong>${esc(s?.bank_name||'-')}</strong></div><div class="payrow"><span>Rekening</span><strong>${esc(s?.bank_account_number||'-')}</strong></div><div class="payrow"><span>Nama</span><strong>${esc(s?.bank_account_name||'-')}</strong></div>`:payment==='QRIS'?`${s?.qris_image_url?`<img src="${esc(s.qris_image_url)}">`:''}<div class="payrow"><span>QRIS</span><strong>Scan QR di atas</strong></div>`:payment==='E_WALLET'?`<div class="payrow"><span>${esc(s?.ewallet_provider||'E-Wallet')}</span><strong>${esc(s?.ewallet_number||'-')}</strong></div><div class="payrow"><span>Nama</span><strong>${esc(s?.ewallet_name||'-')}</strong></div>`:`<div class="payrow"><span>${esc(s?.va_bank_name||'Virtual Account')}</span><strong>${esc(s?.va_account_number||'-')}</strong></div><div class="payrow"><span>Nama</span><strong>${esc(s?.va_account_name||'-')}</strong></div>`;m.innerHTML=`<div class="sheet"><div style="display:flex;justify-content:space-between"><h2>Order ${esc(orderNumber)}</h2><button class="nav-btn" onclick="closePayment()">✕</button></div><div class="order-card"><span class="note">Total pembayaran</span><h2 style="margin:4px 0">${money(total)}</h2><span class="note">Status: MENUNGGU PEMBAYARAN</span></div><div class="paybox">${method}<p style="color:#bbb;font-size:12px">Setelah transfer, upload bukti pembayaran. Admin akan memverifikasi sebelum pesanan diproses.</p></div><div class="form" style="margin-top:14px"><input id="proofPhone" value="${esc(phone)}" placeholder="Nomor WhatsApp"><input id="proofFile" type="file" accept="image/jpeg,image/png,image/webp"></div><div id="proofMsg" class="note" style="margin-top:8px"></div><button class="checkout" style="margin-top:12px" onclick="submitProof('${esc(orderNumber)}')">UPLOAD BUKTI PEMBAYARAN</button><button class="nav-btn" style="width:100%;margin-top:8px" onclick="showTrack('${esc(orderNumber)}','${esc(phone)}');closePayment()">LACAK ORDER</button></div>`}
-function closePayment(){document.getElementById('paymentModal').className='modal'}
-async function submitProof(orderNumber){const phone=document.getElementById('proofPhone').value.trim(),file=document.getElementById('proofFile').files[0],msg=document.getElementById('proofMsg');if(!phone||!file){msg.textContent='Nomor WhatsApp dan bukti wajib diisi.';return}if(file.size>5*1024*1024||!/^image\/(jpeg|png|webp)$/.test(file.type)){msg.textContent='File harus JPG/PNG/WEBP maksimal 5 MB.';return}msg.textContent='Mengunggah...';try{const ext=(file.name.split('.').pop()||'jpg').toLowerCase(),path=crypto.randomUUID()+'.'+ext;const {error:u}=await sb.storage.from('balivo-payment-proofs').upload(path,file,{contentType:file.type,upsert:false});if(u)throw u;const {data:url}=sb.storage.from('balivo-payment-proofs').getPublicUrl(path);const {error}=await sb.rpc('balivo_submit_payment_proof',{p_order_number:orderNumber,p_phone:phone,p_proof_url:url.publicUrl});if(error)throw error;msg.textContent='✓ Bukti terkirim. Menunggu verifikasi admin.'}catch(e){msg.textContent='Gagal: '+e.message}}
-async function showTrack(orderNumber='',phone=''){const m=document.createElement('div');m.className='modal open';m.id='trackModal';m.innerHTML=`<div class="sheet"><div style="display:flex;justify-content:space-between"><h2>Lacak Pesanan</h2><button class="nav-btn" onclick="document.getElementById('trackModal').remove()">✕</button></div><div class="form"><input id="trackOrder" placeholder="Nomor order" value="${esc(orderNumber)}"><input id="trackPhone" placeholder="Nomor WhatsApp" value="${esc(phone)}"></div><button class="checkout" style="margin-top:12px" id="trackSubmit">LACAK</button><div id="trackResult"></div></div>`;document.body.appendChild(m);m.querySelector('#trackSubmit').onclick=async()=>{const n=m.querySelector('#trackOrder').value.trim(),p=m.querySelector('#trackPhone').value.trim(),out=m.querySelector('#trackResult');if(!n||!p)return alert('Nomor order dan WhatsApp wajib diisi.');out.innerHTML='<p class="note">Memuat...</p>';try{const {data,error}=await sb.rpc('balivo_track_order',{p_order_number:n,p_phone:p});if(error)throw error;const o=data.order,items=data.items||[];const status=String(o.fulfillment_status||o.status||'NEW');const ranks={NEW:0,READY_TO_PROCESS:1,SUPPLIER_PAYMENT_PENDING:2,SUPPLIER_PAID:3,SHIPPED:4,DELIVERED:5,COMPLETED:6};const labels=['Pesanan dibuat','Pembayaran diterima','Diproses ke supplier','Supplier dibayar','Dikirim','Terkirim','Selesai'];const r=ranks[status]??0;out.innerHTML=`<div class="order-card"><div style="display:flex;justify-content:space-between"><b>${esc(o.order_number)}</b><b>${esc(status)}</b></div><p>${esc(o.customer_name)} · ${esc(o.customer_phone)}<br>${esc(o.customer_address)}</p><div class="timeline">${labels.map((x,i)=>`<div class="step ${i<=r?'done':''}">${i<=r?'✓':'○'} ${x}</div>`).join('')}</div><h3>Produk</h3>${items.map(i=>`<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:7px 0"><span>${esc(i.product_name)} ${i.size?'· '+esc(i.size):''} × ${i.quantity}</span><b>${money(i.subtotal)}</b></div>`).join('')}<h3>Total ${money(o.total)}</h3>${o.shipping_courier||o.supplier_tracking_number?`<p><b>Pengiriman:</b> ${esc(o.shipping_courier||'')} ${esc(o.supplier_tracking_number||'')}</p>`:''}${o.payment_status!=='PAID'&&o.status!=='CANCELLED'?`<button class="checkout" onclick="document.getElementById('trackModal').remove();showPayment('${esc(o.order_number)}','${esc(o.id)}',${Number(o.total)},'${esc(o.payment_method)}','${esc(p)}')">UPLOAD / BAYAR</button>`:''}${['SHIPPED','DELIVERED'].includes(String(o.fulfillment_status))?'<button class="nav-btn" style="width:100%;margin-top:8px" id="receiveBtn">PESANAN DITERIMA</button>':''}${!['SHIPPED','DELIVERED','COMPLETED','CANCELLED'].includes(String(o.status))?'<button class="nav-btn" style="width:100%;margin-top:8px" id="cancelBtn">BATALKAN PESANAN</button>':''}${o.status==='COMPLETED'?'<p class="note">Pesanan selesai. Kamu bisa memberi ulasan melalui halaman produk.</p>':''}</div>`;const rec=out.querySelector('#receiveBtn');if(rec)rec.onclick=async()=>{const {error}=await sb.rpc('balivo_mark_order_received',{p_order_number:n,p_phone:p});if(error)alert(error.message);else m.querySelector('#trackSubmit').click()};const can=out.querySelector('#cancelBtn');if(can)can.onclick=async()=>{if(!confirm('Batalkan pesanan dan kembalikan stok?'))return;const {error}=await sb.rpc('balivo_cancel_order',{p_order_number:n,p_phone:p,p_reason:'Dibatalkan customer'});if(error)alert(error.message);else m.querySelector('#trackSubmit').click()}}catch(e){out.innerHTML='<p class="note">'+esc(e.message)+'</p>'}};if(orderNumber&&phone)m.querySelector('#trackSubmit').click()}
-function openDetail(id){detailProduct=products.find(p=>p.id===id);if(!detailProduct)return;photoIndex=0;selectedSize='';renderDetail();document.getElementById('detailModal').classList.add('open')}function closeDetail(){document.getElementById('detailModal').classList.remove('open')}
-function changePhoto(d){if(!detailProduct)return;const imgs=detailProduct.images?.length?detailProduct.images:[detailProduct.image];photoIndex=(photoIndex+d+imgs.length)%imgs.length;renderDetailImage()}
-function renderDetailImage(){const imgs=detailProduct.images?.length?detailProduct.images:[detailProduct.image];document.getElementById('detailImage').src=imgs[photoIndex]||'';document.getElementById('detailThumbs').innerHTML=imgs.filter(Boolean).map((x,i)=>`<img class="${i===photoIndex?'active':''}" src="${esc(x)}" onclick="photoIndex=${i};renderDetailImage()">`).join('')}
-async function renderDetail(){const p=detailProduct;document.getElementById('detailBrand').textContent=p.brand||'';document.getElementById('detailName').textContent=p.name;document.getElementById('detailPrice').textContent=money(p.price);document.getElementById('detailStock').textContent='Stok '+(p.stock||0);document.getElementById('detailDesc').textContent=p.description||p.details||'';const sizes=p.sizes||{};const keys=Object.keys(sizes).filter(k=>Number(sizes[k])>=0&&Number(sizes[k])>0);document.getElementById('detailSizes').innerHTML=keys.length?`<b>Size</b><div class="size-options">${keys.map(k=>`<button class="size-btn" ${Number(sizes[k])<=0?'disabled':''} onclick="selectedSize='${esc(k)}';renderDetail()" style="${selectedSize===k?'background:#111;color:#fff':''}">${esc(k)}</button>`).join('')}</div>`:'';renderDetailImage();document.getElementById('detailAdd').onclick=()=>{if(keys.length&&!selectedSize)return alert('Pilih size terlebih dahulu.');addToCart(p.id,selectedSize);closeDetail();openCart()};const {data:reviews}=await sb.from('reviews').select('customer_name,rating,comment,verified_purchase,created_at').eq('product_id',p.id).eq('status','PUBLISHED').order('created_at',{ascending:false}).limit(30);document.getElementById('detailReviews').innerHTML=reviews?.length?reviews.map(r=>`<div class="review"><b>${esc(r.customer_name)}</b> ${r.verified_purchase?'✓ Verified':''}<div class="stars">${'★'.repeat(Number(r.rating||0))}${'☆'.repeat(5-Number(r.rating||0))}</div><div class="note">${esc(r.comment)}</div></div>`).join(''):'<div class="note">Belum ada ulasan.</div>'}
-document.getElementById('search').addEventListener('input',renderProducts);document.getElementById('cartBtn').onclick=openCart;document.getElementById('checkoutBtn').onclick=openCheckout;document.getElementById('placeOrderBtn').onclick=placeOrder;document.getElementById('trackBtn').onclick=()=>{const x=JSON.parse(localStorage.getItem('balivoLastOrder')||'null');showTrack(x?.order_number||'',x?.phone||'')};document.getElementById('shopBtn').onclick=()=>document.getElementById('products').scrollIntoView({behavior:'smooth'});
-async function load(){const {data,error}=await sb.from('products').select('id,name,brand,category,categories,price,stock,status,image,images,sizes,description,details,affiliate_url').eq('status','ACTIVE').order('created_at',{ascending:false});if(error){document.getElementById('products').innerHTML='<div class="empty" style="grid-column:1/-1">Gagal memuat produk: '+esc(error.message)+'</div>';return}products=data||[];renderCategories();renderProducts();renderCart()}
-load();if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./balivo-sw.js').catch(()=>{}));
-</script></body></html>
+<footer class="footer"><div class="footer-inner"><b>BALIVO</b><p>Bali's Online Marketplace</p><small>Marketplace dengan katalog supplier, stok, checkout, dan pembayaran terintegrasi.</small></div></footer>
+
+<aside id="drawer" class="drawer"><div class="drawer-head"><b>Keranjang</b><button onclick="closeCart()">✕</button></div><div id="cartBody" class="drawer-body"></div><div class="drawer-foot"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><b>Total</b><b id="cartTotal">Rp0</b></div><button class="checkout" onclick="openCheckout()">Lanjut Checkout</button></div></aside>
+
+
+
+<div id="productModal" class="product-modal"><div class="product-view"><button class="view-close" onclick="closeProduct()">✕</button><div id="viewer" class="viewer"><button class="view-arrow view-prev" onclick="productPrev()">‹</button><img id="viewImage" alt=""><button class="view-arrow view-next" onclick="productNext()">›</button></div><div class="view-info"><div id="viewBrand" class="brand"></div><h2 id="viewName"></h2><div id="viewPrice" class="price"></div><div id="viewStock" class="stock"></div><p id="viewDescription"></p><div id="viewDetails"></div><div class="thumbs" id="viewThumbs"></div><h3>⭐ Ulasan Customer</h3><div id="viewReviews"></div>
+<div class="size-box">
+  <div class="size-title">Pilih Size</div>
+  <div id="viewSizes" class="size-options"></div>
+</div>
+<button id="viewAdd" class="checkout">Tambah ke Cart</button>
+<div id="viewAffiliate" style="margin-top:10px"></div>
+<div id="reviewBottom" class="detail-box"></div>
+</div></div></div>
+<div id="checkoutModal" class="modal"><div class="sheet">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin-top:0">Checkout</h2><button onclick="closeCheckout()">✕</button></div>
+<form id="checkoutForm" class="form">
+<input id="customerName" required placeholder="Nama lengkap">
+<input id="customerPhone" required placeholder="Nomor WhatsApp">
+<textarea id="customerAddress" required rows="3" placeholder="Alamat lengkap"></textarea>
+<select id="payment" required><option value="">Pilih pembayaran</option><option>QRIS</option><option>Virtual Account</option><option>E-Wallet</option><option>Transfer Bank</option></select>
+<div id="checkoutSummary"></div><p class="order-note">Setelah pesanan dibuat, customer akan melihat QRIS / rekening pembayaran BALIVO sesuai metode yang dipilih.</p>
+<button class="checkout" type="submit">LANJUT KE PEMBAYARAN</button>
+</form></div></div>
+
+<div id="myOrdersModal" class="modal"><div class="sheet">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin-top:0">Pesanan Saya</h2><button onclick="closeMyOrders()">✕</button></div>
+<p class="order-note">Masukkan nomor WhatsApp yang digunakan saat checkout.</p>
+<form id="myOrdersForm" class="form"><input id="lookupPhone" required placeholder="Nomor WhatsApp"><button class="checkout" type="submit">LIHAT PESANAN</button></form>
+<div id="myOrdersResult" style="margin-top:16px"></div></div></div><script>
+
+const SUPABASE_URL='https://hftgmssnzvrlwlslcaet.supabase.co';
+const SUPABASE_KEY='sb_publishable_xOadp1YRBil2PZ9RHeeWIQ_Z3LqMF-D';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);function openMyOrders(){document.getElementById("myOrdersModal").classList.add("open");document.getElementById("lookupPhone").focus()}
+function closeMyOrders(){document.getElementById("myOrdersModal").classList.remove("open")}
+function orderStatusText(v){return ({NEW:"MENUNGGU CEK STOK",pending:"MENUNGGU CEK STOK",confirmed:"MENUNGGU PEMBAYARAN",WAITING_VERIFICATION:"MENUNGGU VERIFIKASI PEMBAYARAN",paid:"SUDAH BAYAR",PAID:"SUDAH BAYAR",shipped:"DIKIRIM",completed:"SELESAI",rejected:"STOK TIDAK TERSEDIA",cancelled:"DIBATALKAN"})[v]||String(v||"-").toUpperCase()}
+async function lookupMyOrders(){const phone=document.getElementById("lookupPhone").value.trim(),out=document.getElementById("myOrdersResult");out.innerHTML="<div class=\"empty\">Memuat pesanan...</div>";try{const r=await sb.from("orders").select("id,order_number,created_at,customer_name,customer_phone,payment_method,payment_status,status,total").eq("customer_phone",phone).order("created_at",{ascending:false}).limit(50);if(r.error)throw r.error;if(!r.data?.length){out.innerHTML="<div class=\"empty\">Belum ada pesanan dengan nomor WhatsApp tersebut.</div>";return}const ids=r.data.map(x=>x.id),ir=await sb.from("order_items").select("order_id,product_name,size,unit_price,quantity").in("order_id",ids);if(ir.error)throw ir.error;const by={};(ir.data||[]).forEach(i=>(by[i.order_id]??=[]).push(i));out.innerHTML=r.data.map(o=>`<div style="border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:10px"><div><b>${esc(o.order_number||o.id)}</b><div class="order-note">${new Date(o.created_at).toLocaleString("id-ID")}</div></div><b>${esc(orderStatusText(o.payment_status||o.status))}</b></div><div style="margin-top:10px">${(by[o.id]||[]).map(i=>`<div style="padding:7px 0;border-bottom:1px solid var(--line)"><b>${esc(i.product_name||"-")}</b><br><span class="order-note">Size: ${esc(i.size||"-")} · Qty: ${Number(i.quantity||0)} · ${money(Number(i.unit_price||0)*Number(i.quantity||0))}</span></div>`).join("")}</div><div style="margin-top:10px">Pembayaran: <b>${esc(o.payment_method||"-")}</b><br>Total: <strong>${money(o.total)}</strong><br><span class="order-note">Status pesanan: ${esc(orderStatusText(o.status))}</span></div></div>`).join("")}catch(e){out.innerHTML=`<div class="empty">Gagal memuat pesanan.<br><small>${esc(e.message)}</small></div>`}}
+document.getElementById("myOrdersForm").addEventListener("submit",e=>{e.preventDefault();lookupMyOrders()})
+
+
+let products=[];
+let cart=JSON.parse(localStorage.getItem('balivo_cart')||'[]');
+let category='Semua';
+let currentProductIndex=0;
+let galleryIndex=0;
+let selectedSize=null;
+let touchStartY=0;
+
+const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function loadProducts(){
+  const {data,error}=await sb.from('products')
+    .select('id,name,brand,category,categories,description,details,image,images,sizes,price,stock,status,stock_source,supplier_cost,markup,supplier_product_url,affiliate_url')
+    .eq('status','ACTIVE')
+    .order('created_at',{ascending:false});
+
+  if(error){
+    console.error('BALIVO products:',error);
+    products=[];
+    renderCategories();
+    document.getElementById('empty').classList.remove('hidden');
+    document.getElementById('resultCount').textContent='Data produk gagal dimuat';
+    return;
+  }
+
+  products=(data||[]).map(p=>({
+    ...p,
+    images:Array.isArray(p.images)?p.images:[]
+  }));
+
+  render();
+}
+
+function saveCart(){
+  localStorage.setItem('balivo_cart',JSON.stringify(cart));
+  document.getElementById('cartCount').textContent=cart.reduce((a,x)=>a+x.qty,0);
+}
+
+function productList(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  return products.filter(p=>{
+    const cats=Array.isArray(p.categories)
+      ? p.categories
+      : String(p.category||'Lainnya').split(' | ').filter(Boolean);
+    const categoryOK=category==='Semua'||cats.some(c=>c===category||c.startsWith(category+' / '));
+    return categoryOK && (!q||`${p.name||''} ${p.brand||''} ${cats.join(' ')}`.toLowerCase().includes(q));
+  });
+}
+
+function categoryCatalog(){
+  return [
+    {name:'Fashion',subs:[
+      {name:'Mens',subs:['T-Shirt','Celana','Sepatu','Sandal','Jacket','Topi','Tas','Kompek','Ikat Pinggang','Aksesoris']},
+      {name:'Ladies',subs:['Top','Dress','Celana','Rok','Jeans','Jacket','Sepatu','Sandal','Tas','Aksesoris']}
+    ]},
+    {name:'Alat Rumah Tangga',subs:['Peralatan Dapur','Alat Masak','Makan & Minum','Penyimpanan','Kebersihan','Kamar Mandi','Kamar Tidur','Dekorasi','Perkakas','Lampu & Penerangan','Outdoor & Taman']},
+    {name:'Surf & Outdoor',subs:['Surfboard','Surf Accessories','Camping','Hiking']},
+    {name:'Tas & Travel',subs:['Backpack','Travel Bag','Luggage']},
+    {name:'Beauty & Personal Care',subs:['Skincare','Body Care','Hair Care','Parfum']},
+    {name:'Elektronik & Gadget',subs:['Handphone','Aksesoris HP','Audio','Gaming']},
+    {name:'Sports & Fitness',subs:['Fitness','Running','Football','Cycling']},
+    {name:'Anak & Bayi',subs:['Pakaian Anak','Mainan','Perlengkapan Bayi']},
+    {name:'Otomotif',subs:['Motor','Mobil','Aksesoris']},
+    {name:'Hewan Peliharaan',subs:['Makanan Hewan','Aksesoris']},
+    {name:'Souvenir & Gift',subs:['Souvenir Bali','Gift','Kerajinan']},
+    {name:'Makanan & Minuman',subs:['Snack','Minuman','Kopi']}
+  ];
+}
+
+function categoryHasChildren(path){
+  const parts=String(path).split(' / ').filter(Boolean);
+  let node=categoryCatalog().find(x=>x.name===parts[0]);
+  for(let i=1;i<parts.length && node;i++){
+    const children=Array.isArray(node.subs)?node.subs:[];
+    node=children.find(x=>(typeof x==='string'?x:x.name)===parts[i]);
+  }
+  return !!(node && Array.isArray(node.subs) && node.subs.length);
+}
+
+function categoryChildren(path){
+  const parts=String(path).split(' / ').filter(Boolean);
+  let node=categoryCatalog().find(x=>x.name===parts[0]);
+  for(let i=1;i<parts.length && node;i++){
+    const children=Array.isArray(node.subs)?node.subs:[];
+    node=children.find(x=>(typeof x==='string'?x:x.name)===parts[i]);
+  }
+  if(!node)return [];
+  return (node.subs||[]).map(x=>typeof x==='string'?{name:x,subs:[]}:x);
+}
+
+function selectedCategoryLabel(topName){
+  if(category==='Semua') return topName;
+  if(category===topName) return topName;
+  const prefix=topName+' / ';
+  if(category.startsWith(prefix)){
+    const parts=category.split(' / ').filter(Boolean);
+    return parts[parts.length-1] || topName;
+  }
+  return topName;
+}
+
+function renderCategories(){
+  const catalog=categoryCatalog();
+  const top=['Semua',...catalog.map(x=>x.name)];
+  document.getElementById('categories').innerHTML=top.map(c=>{
+    const group=catalog.find(x=>x.name===c);
+    const active=c==='Semua' ? category==='Semua' : (category===c || category.startsWith(c+' / '));
+    const label=c==='Semua' ? 'Semua' : selectedCategoryLabel(c);
+    return `<button type="button" class="category-btn ${active?'active':''}" data-category="${esc(c)}" data-has-subs="${group?'1':'0'}" aria-pressed="${active?'true':'false'}">${esc(label)}${group?'<span class="cat-arrow" aria-hidden="true">⌄</span>':''}</button>`;
+  }).join('');
+}
+
+function closeCategoryMenu(){
+  const old=document.getElementById('categoryPopup');
+  if(old)old.remove();
+}
+
+function openCategoryMenu(c,anchor){
+  const children=categoryChildren(c);
+  if(!children.length)return;
+  closeCategoryMenu();
+
+  const popup=document.createElement('div');
+  popup.id='categoryPopup';
+  popup.className='category-popup';
+  popup.dataset.category=c;
+  popup.innerHTML=`<button type="button" class="category-option parent-option ${category===c?'chosen':''}" data-popup-category="${esc(c)}">✓ ${esc(c)}</button>`+
+    children.map(item=>{
+      const full=c+' / '+item.name;
+      const chosen=category===full || category.startsWith(full+' / ');
+      const arrow=item.subs&&item.subs.length?' <span style="float:right">›</span>':'';
+      return `<button type="button" class="category-option ${chosen?'chosen':''}" data-popup-category="${esc(full)}" data-has-children="${item.subs&&item.subs.length?'1':'0'}">${chosen?'✓ ':''}${esc(item.name)}${arrow}</button>`;
+    }).join('');
+
+  document.body.appendChild(popup);
+
+  const r=anchor.getBoundingClientRect();
+  const margin=8;
+  const popupWidth=Math.min(Math.max(popup.offsetWidth,210),window.innerWidth-margin*2);
+  let left=Math.max(margin,Math.min(r.left,window.innerWidth-popupWidth-margin));
+  let top=r.bottom+6;
+  popup.style.left=left+'px';
+  popup.style.top=top+'px';
+  const h=popup.offsetHeight;
+  if(top+h>window.innerHeight-margin) popup.style.top=Math.max(margin,r.top-h-6)+'px';
+
+  popup.addEventListener('click',function(e){
+    const opt=e.target.closest('[data-popup-category]');
+    if(!opt)return;
+    e.preventDefault();
+    e.stopPropagation();
+    const value=opt.getAttribute('data-popup-category');
+    const hasChildren=opt.getAttribute('data-has-children')==='1';
+    const fresh=[...document.querySelectorAll('#categories [data-category]')]
+      .find(x=>x.getAttribute('data-category')===c.split(' / ')[0]);
+
+    category=value;
+    renderCategories();
+    renderProductsOnly();
+
+    if(hasChildren){
+      const newAnchor=[...document.querySelectorAll('#categories [data-category]')]
+        .find(x=>x.getAttribute('data-category')===c.split(' / ')[0]);
+      if(newAnchor)openCategoryMenu(value,newAnchor);
+    }else{
+      closeCategoryMenu();
+    }
+  });
+}
+
+function setCategory(c){
+  category=c;
+  closeCategoryMenu();
+  renderCategories();
+  renderProductsOnly();
+  requestAnimationFrame(()=>{
+    const b=[...document.querySelectorAll('#categories [data-category]')]
+      .find(x=>x.getAttribute('data-category')===c || (c.startsWith(x.getAttribute('data-category')+' / ')));
+    if(b)b.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  });
+}
+
+// Setiap kategori mempunyai menu filter/subkategori sendiri.
+// Tidak ada tombol "Filter" terpisah.
+document.addEventListener('click',function(e){
+  const b=e.target.closest('#categories [data-category]');
+  if(!b)return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  const c=b.getAttribute('data-category');
+  const hasSubs=b.getAttribute('data-has-subs')==='1';
+  const popup=document.getElementById('categoryPopup');
+  const sameOpen=popup && popup.dataset.category===c;
+  if(sameOpen){closeCategoryMenu();return;}
+
+  category=c;
+  renderCategories();
+  renderProductsOnly();
+
+  requestAnimationFrame(()=>{
+    const fresh=[...document.querySelectorAll('#categories [data-category]')]
+      .find(x=>x.getAttribute('data-category')===c);
+    if(hasSubs && fresh)openCategoryMenu(c,fresh);
+  });
+},{capture:true});
+
+window.addEventListener('scroll',closeCategoryMenu,{passive:true});
+window.addEventListener('resize',closeCategoryMenu);
+
+function renderProductsOnly(){
+  const list=productList();
+  document.getElementById('resultCount').textContent=list.length+' produk';
+  document.getElementById('empty').classList.toggle('hidden',list.length!==0);
+  document.getElementById('products').innerHTML=list.map(p=>`
+    <article class="product" onclick="openProduct('${p.id}')">
+      <div class="photo">
+        <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
+        ${Number(p.stock)<=0?'<span class="badge">HABIS</span>':''}
+      </div>
+      <div class="info">
+        <div class="brand">${esc(p.brand||'Supplier')}</div>
+        <div class="name">${esc(p.name||'Produk')}</div>
+        <div class="price">${money(p.price)}</div>
+        <div class="stock">${Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'}</div>
+        <button class="add" ${Number(p.stock)<=0?'disabled':''} onclick="event.stopPropagation();openProduct('${p.id}')">${sizeData(p).length?'Pilih Size':'Lihat Produk'}</button>
+      </div>
+    </article>
+  `).join('');
+}
+
+function render(){
+  const list=productList();
+  document.getElementById('resultCount').textContent=list.length+' produk';
+  document.getElementById('empty').classList.toggle('hidden',list.length!==0);
+
+  document.getElementById('products').innerHTML=list.map(p=>`
+    <article class="product" onclick="openProduct('${p.id}')">
+      <div class="photo">
+        <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
+        ${Number(p.stock)<=0?'<span class="badge">HABIS</span>':''}
+      </div>
+      <div class="info">
+        <div class="brand">${esc(p.brand||'Supplier')}</div>
+        <div class="name">${esc(p.name||'Produk')}</div>
+        <div class="price">${money(p.price)}</div>
+        <div class="stock">${Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'}</div>
+        <button class="add" ${Number(p.stock)<=0?'disabled':''}
+          onclick="event.stopPropagation();openProduct('${p.id}')">${sizeData(p).length?'Pilih Size':'Lihat Produk'}</button>
+      </div>
+    </article>
+  `).join('');
+
+  renderCategories();
+  renderCart();
+}
+
+async function getReviews(id){
+  const {data,error}=await sb.from('reviews')
+    .select('customer_name,rating,comment,created_at')
+    .eq('product_id',id)
+    .eq('status','PUBLISHED')
+    .order('created_at',{ascending:false});
+  if(error){console.error(error);return []}
+  return data||[];
+}
+
+async function openProduct(id){
+  const list=productList();
+  const i=list.findIndex(p=>p.id===id);
+  if(i<0)return;
+  currentProductIndex=i;
+  galleryIndex=0;
+  selectedSize=null;
+  document.getElementById('productModal').classList.add('open');
+  await showProduct(list[i]);
+}
+
+
+function sizeData(p){
+  let raw=p.sizes;
+  if(typeof raw==='string'){try{raw=JSON.parse(raw)}catch(e){raw=null}}
+  if(raw && typeof raw==='object' && !Array.isArray(raw)){
+    return Object.entries(raw).map(([size,stock])=>({size,stock:Number(stock)||0}));
+  }
+  // Backward-compatible fallback: if no per-size stock exists, no size selector is required.
+  return [];
+}
+function hasSizes(p){ return sizeData(p).length>0; }
+
+function renderSizes(p){
+  const box=document.getElementById('viewSizes');
+  const data=sizeData(p);
+  selectedSize=null;
+  if(!data.length){
+  box.innerHTML='<div class="size-empty">Ukuran belum diatur untuk produk ini. Atur stok S / M / L / XL / XXL dari Admin.</div>';
+  box.parentElement.style.display='block';
+  return;
+}
+  box.parentElement.style.display='block';
+  box.innerHTML=data.map(x=>
+    `<button type="button" class="size-btn" data-size="${esc(x.size)}" ${x.stock<=0?'disabled':''}
+      onclick="selectSize('${String(x.size).replace(/'/g,"\\'")}')">
+      ${esc(x.size)}${x.stock<=0?' · Habis':''}
+    </button>`
+  ).join('');
+}
+function selectSize(size){
+  const p=currentProduct();
+  const data=sizeData(p);
+  const item=data.find(x=>x.size===size);
+  if(!item || item.stock<=0)return;
+  selectedSize=size;
+  document.querySelectorAll('#viewSizes .size-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.size===size);
+  });
+}
+
+async function showProduct(p){
+  const images=[p.image,...(p.images||[])].filter(Boolean);
+  if(!images.length)images=[''];
+
+  galleryIndex=galleryIndex%images.length;
+  document.getElementById('viewImage').src=images[galleryIndex];
+  document.getElementById('viewBrand').textContent=p.brand||'BALIVO';
+  document.getElementById('viewName').textContent=p.name||'';
+  document.getElementById('viewPrice').textContent=money(p.price);
+  document.getElementById('viewStock').textContent=Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis';
+  document.getElementById('viewAffiliate').innerHTML=p.affiliate_url
+    ? `<button type="button" onclick="event.stopPropagation();openAffiliate('${p.id}')" style="display:block;width:100%;padding:14px;background:#111;color:#fff;border:0;border-radius:10px;font-weight:800;cursor:pointer">BELI SEKARANG</button>`
+    : '';
+  renderSizes(p);
+  document.getElementById('viewDescription').textContent=p.description||'Deskripsi produk belum tersedia.';
+  document.getElementById('viewDetails').innerHTML=
+    '<div class="detail-box"><h3>Detail Produk</h3>'+
+    '<div class="detail-desc">'+esc(p.details||'Informasi detail produk belum tersedia.')+'</div>'+
+    '<p style="font-size:12px;color:#777">Kategori: '+esc(p.category||'Lainnya')+'</p></div>';
+
+  document.getElementById('viewThumbs').innerHTML=images.map((im,i)=>
+    `<img class="${i===galleryIndex?'active':''}" src="${esc(im)}" onclick="galleryIndex=${i};showProduct(currentProduct())">`
+  ).join('');
+
+  const reviews=await getReviews(p.id);
+  const avg=reviews.length
+    ? reviews.reduce((sum,r)=>sum+Number(r.rating||0),0)/reviews.length
+    : 0;
+
+  document.getElementById('viewReviews').innerHTML=
+    `<div style="font-size:12px;color:#777;margin-bottom:8px">
+      ${reviews.length?avg.toFixed(1)+' ★ • '+reviews.length+' ulasan':'Belum ada ulasan'}
+    </div>`+
+    (reviews.length
+      ? reviews.map(r=>`
+          <div class="review">
+            <div class="review-head">
+              <b>${esc(r.customer_name||'Customer')}</b>
+              <span class="stars">${'★'.repeat(Number(r.rating)||0)}</span>
+            </div>
+            <div style="margin-top:5px">${esc(r.comment||'')}</div>
+          </div>`).join('')
+      : '')+
+    '';
+  document.getElementById('reviewBottom').innerHTML=
+    `<h3 style="margin:0 0 12px">Tulis Ulasan</h3>
+     <form class="review-form" onsubmit="submitReview(event,'${p.id}')">
+       <input id="reviewName" required placeholder="Nama">
+       <select id="reviewRating" required>
+         <option value="5">★★★★★ 5</option>
+         <option value="4">★★★★ 4</option>
+         <option value="3">★★★ 3</option>
+         <option value="2">★★ 2</option>
+         <option value="1">★ 1</option>
+       </select>
+       <textarea id="reviewText" required rows="3" placeholder="Ceritakan pengalaman kamu"></textarea>
+       <button class="review-btn">Kirim Ulasan</button>
+     </form>`;
+
+
+  const addButton=document.getElementById('viewAdd');
+  addButton.disabled=Number(p.stock)<=0;
+  addButton.textContent=Number(p.stock)>0?'Tambah ke Cart':'Stok Habis';
+  addButton.onclick=()=>{if(Number(p.stock)>0)add(p.id)};
+}
+
+function openAffiliate(id){
+  const p=products.find(x=>x.id===id);
+  if(!p||!p.affiliate_url)return;
+  window.open(p.affiliate_url,'_blank','noopener,noreferrer');
+}
+function currentProduct(){return productList()[currentProductIndex]}
+
+function productNext(){
+  const p=currentProduct();
+  if(!p)return;
+  const images=[p.image,...(p.images||[])].filter(Boolean);
+  if(!images.length)return;
+  galleryIndex=(galleryIndex+1)%images.length;
+  showProduct(p);
+}
+
+function productPrev(){
+  const p=currentProduct();
+  if(!p)return;
+  const images=[p.image,...(p.images||[])].filter(Boolean);
+  if(!images.length)return;
+  galleryIndex=(galleryIndex-1+images.length)%images.length;
+  showProduct(p);
+}
+
+function closeProduct(){
+  document.getElementById('productModal').classList.remove('open');
+}
+
+document.addEventListener('touchstart',e=>{
+  if(document.getElementById('productModal').classList.contains('open'))
+    touchStartY=e.changedTouches[0].screenY;
+},{passive:true});
+
+document.addEventListener('touchend',e=>{
+  if(!document.getElementById('productModal').classList.contains('open'))return;
+  const dy=e.changedTouches[0].screenY-touchStartY;
+  if(Math.abs(dy)>60)(dy<0?productNext:productPrev)();
+},{passive:true});
+
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('productModal').classList.contains('open'))return;
+  if(e.key==='ArrowDown'||e.key==='ArrowRight')productNext();
+  if(e.key==='ArrowUp'||e.key==='ArrowLeft')productPrev();
+  if(e.key==='Escape')closeProduct();
+});
+
+function add(id){
+  const p=products.find(x=>x.id===id);
+  if(!p||Number(p.stock)<1)return;
+  const sizes=sizeData(p);
+  if(sizes.length && !selectedSize){
+    alert('Silakan pilih size terlebih dahulu.');
+    return;
+  }
+  const size=selectedSize || null;
+  const x=cart.find(x=>x.id===id && x.size===size);
+  if(x){
+    const maxStock=size ? (sizes.find(s=>s.size===size)?.stock||0) : Number(p.stock);
+    if(x.qty<maxStock)x.qty++;else return;
+  } else cart.push({id,qty:1,size});
+  saveCart();renderCart();openCart();
+}
+
+function change(id,d){
+  const x=cart.find(x=>x.id===id),p=products.find(x=>x.id===id);
+  if(!x)return;
+  x.qty+=d;
+  if(x.qty<=0)cart=cart.filter(y=>y.id!==id);
+  if(p&&x.qty>Number(p.stock))x.qty=Number(p.stock);
+  saveCart();renderCart();
+}
+
+function renderCart(){
+  const body=document.getElementById('cartBody');
+  if(!cart.length){
+    body.innerHTML='<div class="empty">Keranjang masih kosong.</div>';
+    document.getElementById('cartTotal').textContent=money(0);
+    return;
+  }
+  let total=0;
+  body.innerHTML=cart.map(x=>{
+    const p=products.find(y=>y.id===x.id);
+    if(!p)return '';
+    total+=Number(p.price)*x.qty;
+    return `<div class="cart-row">
+      <img src="${esc(p.image||'')}">
+      <div style="flex:1">
+        <strong>${esc(p.name)}</strong>
+        ${x.size?`<div>Size: <b>${esc(x.size)}</b></div>`:''}
+        <div>${money(p.price)}</div>
+        <div class="qty">
+          <button onclick="change('${p.id}',-1)">−</button>
+          <span>${x.qty}</span>
+          <button onclick="change('${p.id}',1)">+</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('cartTotal').textContent=money(total);
+}
+
+function openCart(){document.getElementById('drawer').classList.add('open');renderCart()}
+function closeCart(){document.getElementById('drawer').classList.remove('open')}
+function openCheckout(){
+  if(!cart.length)return;
+  document.getElementById('checkoutSummary').innerHTML='<b>Total: '+document.getElementById('cartTotal').textContent+'</b><div style="font-size:12px;color:#777;margin-top:5px">Setelah order dibuat, Admin BALIVO akan memproses pesanan.</div>';
+  document.getElementById('checkoutModal').classList.add('open');
+}
+function closeCheckout(){document.getElementById('checkoutModal').classList.remove('open')}
+
+async function submitReview(e,id){
+  e.preventDefault();
+  const {error}=await sb.from('reviews').insert({
+    product_id:id,
+    customer_name:document.getElementById('reviewName').value.trim(),
+    rating:Number(document.getElementById('reviewRating').value),
+    comment:document.getElementById('reviewText').value.trim(),
+    status:'PUBLISHED'
+  });
+  if(error){alert('Ulasan gagal dikirim: '+error.message);return}
+  alert('Ulasan berhasil dikirim.');
+  await showProduct(products.find(p=>p.id===id));
+}
+
+document.getElementById('search').addEventListener('input',render);
+
+document.getElementById('checkoutForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(!cart.length)return;
+
+  const name=document.getElementById('customerName').value.trim();
+  const phone=document.getElementById('customerPhone').value.trim();
+  const address=document.getElementById('customerAddress').value.trim();
+  const payment=document.getElementById('payment').value;
+
+  const items=cart.map(x=>{
+    const p=products.find(y=>y.id===x.id);
+    return p?{product_id:p.id,product_name:p.name,size:x.size||null,unit_price:Number(p.price),quantity:x.qty,subtotal:Number(p.price)*x.qty}:null;
+  }).filter(Boolean);
+
+  const total=items.reduce((s,x)=>s+x.subtotal,0);
+  const sourceProducts=cart.map(x=>products.find(p=>p.id===x.id)).filter(Boolean);
+  const isDropship=sourceProducts.some(p=>p.stock_source==='SUPPLIER');
+  const supplierCost=sourceProducts.reduce((sum,p)=>{
+    const line=cart.find(x=>x.id===p.id);
+    return sum+(Number(p.supplier_cost||p.cost||0)*Number(line?.qty||0));
+  },0);
+  const profit=total-supplierCost;
+
+  const {data:order,error:orderError}=await sb.rpc('create_balivo_order',{
+    p_customer_name:name,
+    p_customer_phone:phone,
+    p_customer_address:address,
+    p_payment_method:payment,
+    p_subtotal:total,
+    p_total:total,
+    p_items:items
+  });
+
+  if(orderError){alert('Pesanan gagal dibuat: '+orderError.message);return}
+  const created=Array.isArray(order)?order[0]:order;
+  if(!created?.id){alert('Pesanan gagal dibuat: data order tidak diterima.');return}
+
+  cart=[];saveCart();closeCheckout();closeCart();
+  openRealPayment(created.id,created.order_number,total,payment,phone);
+  await loadProducts();
+});
+
+async function openRealPayment(orderId,orderNumber,total,payment,phone){
+  const m=document.getElementById('orderSuccess');
+  m.style.display='flex';
+  m.className='modal open';
+  m.innerHTML=`<div class="sheet" style="padding:24px"><div style="text-align:center;color:#777">Memuat data pembayaran...</div></div>`;
+  const {data:settings,error}=await sb.rpc('balivo_public_payment_settings');
+  if(error){
+    m.innerHTML=`<div class="sheet" style="padding:24px"><h2>Data pembayaran gagal dimuat</h2><p style="color:#666">${esc(error.message)}</p><button class="checkout" onclick="closePaymentDemo()">TUTUP</button></div>`;
+    return;
+  }
+  const s=settings||{};
+  const method=String(payment||'').toLowerCase();
+  let paymentHtml='';
+  if(method==='qris'){
+    paymentHtml=s.qris_image_url
+      ? `<div class="real-pay-box"><b>SCAN QRIS</b><img src="${esc(s.qris_image_url)}" alt="QRIS BALIVO" class="real-qris"><div class="real-pay-note">Scan QRIS di atas dan bayar tepat sesuai total pesanan.</div></div>`
+      : `<div class="real-pay-box"><b>QRIS BELUM DIATUR</b><div class="real-pay-note">Admin belum memasukkan QRIS pembayaran.</div></div>`;
+  }else if(method==='virtual account'){
+    paymentHtml=`<div class="real-pay-box"><b>VIRTUAL ACCOUNT</b><div class="real-pay-row"><span>Bank</span><strong>${esc(s.va_bank_name||'-')}</strong></div><div class="real-pay-row"><span>Nomor VA</span><strong>${esc(s.va_account_number||'-')}</strong></div><div class="real-pay-row"><span>Nama</span><strong>${esc(s.va_account_name||'-')}</strong></div></div>`;
+  }else if(method==='e-wallet'){
+    paymentHtml=`<div class="real-pay-box"><b>E-WALLET</b><div class="real-pay-row"><span>Provider</span><strong>${esc(s.ewallet_provider||'-')}</strong></div><div class="real-pay-row"><span>Nomor</span><strong>${esc(s.ewallet_number||'-')}</strong></div><div class="real-pay-row"><span>Nama</span><strong>${esc(s.ewallet_name||'-')}</strong></div></div>`;
+  }else{
+    paymentHtml=`<div class="real-pay-box"><b>TRANSFER BANK</b><div class="real-pay-row"><span>Bank</span><strong>${esc(s.bank_name||'-')}</strong></div><div class="real-pay-row"><span>No. Rekening</span><strong>${esc(s.bank_account_number||'-')}</strong></div><div class="real-pay-row"><span>Atas Nama</span><strong>${esc(s.bank_account_name||'-')}</strong></div></div>`;
+  }
+  m.innerHTML=`<div class="sheet" style="padding:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Pembayaran Pesanan</h2><button type="button" onclick="closePaymentDemo()">✕</button></div>
+    <div class="real-order-summary"><div><span>Nomor Pesanan</span><b>${esc(orderNumber)}</b></div><div><span>Metode</span><b>${esc(payment)}</b></div><div><span>Total yang harus dibayar</span><strong>${money(total)}</strong></div></div>
+    ${paymentHtml}
+    <div class="real-pay-warning">Pembayaran dilakukan langsung ke rekening / QRIS BALIVO. Tidak ada pembayaran demo.</div>
+    <button id="paymentConfirmBtn" class="checkout" style="margin-top:16px" onclick="submitRealPaymentConfirmation('${orderId}','${esc(phone)}')">SAYA SUDAH BAYAR</button>
+    <button type="button" class="btn" style="width:100%;margin-top:9px;padding:13px" onclick="closePaymentDemo()">Bayar Nanti</button>
+  </div>`;
+}
+
+function closePaymentDemo(){
+  const m=document.getElementById('orderSuccess');
+  m.className='modal';m.style.display='none';m.innerHTML='';
+}
+
+async function submitRealPaymentConfirmation(orderId,phone){
+  const btn=document.getElementById('paymentConfirmBtn');
+  if(btn){btn.disabled=true;btn.textContent='MENGIRIM...';}
+  const {data,error}=await sb.rpc('balivo_submit_payment_confirmation',{p_order_id:orderId,p_customer_phone:phone});
+  if(error||data!==true){
+    if(btn){btn.disabled=false;btn.textContent='SAYA SUDAH BAYAR';}
+    alert('Konfirmasi pembayaran gagal: '+(error?.message||'Order tidak ditemukan.'));return;
+  }
+  const m=document.getElementById('orderSuccess');
+  m.innerHTML=`<div class="sheet" style="padding:26px;text-align:center"><div style="font-size:48px">✓</div><h2>Konfirmasi Terkirim</h2><p style="color:#666">Order <b>${esc(orderId)}</b> menunggu verifikasi admin.</p><p style="font-size:13px;color:#777">Admin akan memeriksa pembayaran sebelum order diproses.</p><button class="checkout" onclick="closePaymentDemo()">SELESAI</button></div>`;
+}
+
+
+saveCart();
+// Render kategori langsung agar tombol tetap muncul walaupun data produk/Supabase gagal dimuat.
+renderCategories();
+loadProducts();
+
+</script>
+<div id="orderSuccess" class="modal" style="display:none"></div></body>
+</html>
