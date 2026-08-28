@@ -44,7 +44,7 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 
 
 /* BALIVO PRODUCT CARDS — vivid gradient palette */
-.grid .card{
+.grid .product{
   position:relative;
   overflow:hidden;
   border:1px solid rgba(0,0,0,.10);
@@ -52,37 +52,44 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   box-shadow:0 8px 20px rgba(0,0,0,.10);
   transition:transform .18s ease,box-shadow .18s ease;
 }
-.grid .card:nth-child(6n+1){
+.grid .product:nth-child(6n+1){
   background:linear-gradient(180deg,#5fc9f5 0%,#c9effb 48%,#f7fcff 100%) !important;
 }
-.grid .card:nth-child(6n+2){
+.grid .product:nth-child(6n+2){
   background:linear-gradient(180deg,#ff9f73 0%,#ffe0b6 48%,#fff9ef 100%) !important;
 }
-.grid .card:nth-child(6n+3){
+.grid .product:nth-child(6n+3){
   background:linear-gradient(180deg,#b77bea 0%,#e7cafa 48%,#fbf5ff 100%) !important;
 }
-.grid .card:nth-child(6n+4){
+.grid .product:nth-child(6n+4){
   background:linear-gradient(180deg,#f58fae 0%,#ffd1dd 48%,#fff7fa 100%) !important;
 }
-.grid .card:nth-child(6n+5){
+.grid .product:nth-child(6n+5){
   background:linear-gradient(180deg,#55d4d9 0%,#b9f0ef 48%,#f4ffff 100%) !important;
 }
-.grid .card:nth-child(6n+6){
+.grid .product:nth-child(6n+6){
   background:linear-gradient(180deg,#ffd15a 0%,#ffe8a6 48%,#fffaf0 100%) !important;
 }
-.grid .card::before{
+.grid .product::before{
   content:"";
   position:absolute;
   left:0;right:0;top:0;height:6px;
   background:rgba(255,255,255,.62);
   z-index:2;
 }
-.grid .card .body{
-  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.72)) !important;
+.grid .product .body{
+  background:linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.58) 100%) !important;
 }
-.grid .card:hover{
+.grid .product:hover{
   transform:translateY(-3px);
   box-shadow:0 13px 28px rgba(0,0,0,.15);
+}
+
+.grid .product .photo{
+  background:transparent !important;
+}
+.grid .product .info{
+  background:transparent !important;
 }
 </style>
 
