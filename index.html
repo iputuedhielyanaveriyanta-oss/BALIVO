@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#111111">
 <meta name="description" content="BALIVO — Bali's Online Marketplace">
 <link rel="manifest" href="balivo-manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
 <title>BALIVO — Bali's Online Marketplace</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -949,5 +952,14 @@ renderCategories();
 loadProducts();
 
 </script>
-<div id="orderSuccess" class="modal" style="display:none"></div></body>
+<div id="orderSuccess" class="modal" style="display:none"></div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./balivo-sw.js', {scope: './'})
+      .catch(err => console.warn('BALIVO PWA service worker:', err));
+  });
+}
+</script>
+</body>
 </html>
