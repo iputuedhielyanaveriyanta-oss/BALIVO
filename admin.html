@@ -101,12 +101,13 @@
 .selected-cat{display:inline-flex;align-items:center;gap:5px;background:#111;color:#fff;border-radius:999px;padding:5px 9px;font-size:11px}
 .selected-cat button{background:transparent;color:#fff;border:0;padding:0;font-weight:900;cursor:pointer}
 .cat-sub button.selected,.cat-col>button.selected{background:#111!important;color:#fff!important}
+#productMode{min-height:46px}
 </style>
 </head>
 <body>
 <div class="top"><b>BALIVO ADMIN</b> <span style="opacity:.7">— Dropship & Marketplace</span></div>
 <div class="wrap">
-<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="affiliate">Affiliate</button><button data-tab="import">Dropship Import</button><button data-tab="products">Produk</button><button data-tab="orders">Order</button><button data-tab="payment-settings">Pembayaran</button></div>
+<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="products">Produk</button><button data-tab="orders">Order</button><button data-tab="payment-settings">Pembayaran</button></div>
 <div class="authbar">
   <span id="authStatus" class="authdot">Belum login admin</span>
   <button id="loginBtn" class="btn" onclick="openLogin()">Login Admin</button>
@@ -118,26 +119,18 @@
 <div class="stat"><small>Total Produk</small><b id="sProducts">0</b></div><div class="stat"><small>Stok</small><b id="sStock">0</b></div><div class="stat"><small>Order</small><b id="sOrders">0</b></div><div class="stat"><small>Profit Kotor</small><b id="sProfit">Rp0</b></div><div class="stat"><small>Menunggu Verifikasi</small><b id="sProofPending">0</b></div><div class="stat"><small>Siap Diproses</small><b id="sReady">0</b></div>
 </div></section>
 
-<section id="import" class="tab hidden"><section class="panel" id="shopeeImportPanel">
-  <h2>🔗 Preview Produk Shopee</h2>
-  <p style="color:#777">
-    Tempel <b>link Shopee atau link Shopee Affiliate</b>. BALIVO hanya menampilkan preview produk.
-    Produk tidak di-import dan tidak disimpan ke katalog.
-  </p>
-  <div class="form" style="grid-template-columns:1fr">
-    <input id="shopeeUrl" type="url" placeholder="Paste link Shopee / Affiliate di sini..." />
-    <button class="primary" onclick="previewShopeeProduct()">TAMPILKAN PRODUK</button>
-  </div>
-  <div id="shopeeImportMsg" class="preview" style="margin-top:10px">Belum ada link.</div>
-  <div id="shopeePreview" style="margin-top:14px"></div>
-</section>
-<div class="panel"><h2>Dropship Import</h2><p style="color:#777">Import katalog supplier dari JSON atau CSV. Harga jual dihitung dari harga modal + markup.</p>
-<div class="form"><input id="file" class="wide" type="file" accept=".json,.csv,text/csv,application/json"><input id="markup" type="number" value="25" min="0" step="0.1" placeholder="Markup %"><select id="mode"><option value="publish">Publish langsung</option><option value="draft">Simpan sebagai draft</option></select></div><br><button class="primary" onclick="importFile()">IMPORT PRODUK</button><div id="importPreview" class="preview" style="margin-top:12px">Belum ada file.</div></div>
-<div class="panel"><h3>Format JSON contoh</h3><div class="preview">[
-  {"name":"Produk Supplier","brand":"Supplier A","category":"T-Shirt","cost":100000,"stock":10,"image":"https://...jpg"}
-]</div></div></section>
-
 <section id="products" class="tab hidden">
+<div class="panel" style="margin-bottom:14px">
+  <h2 style="margin:0 0 6px">Tambah Produk</h2>
+  <p style="color:#777;margin:0 0 12px">Pilih jenis produk terlebih dahulu. Form lain akan disembunyikan agar layar tetap rapi.</p>
+  <label style="font-size:12px;color:#666;display:block;margin-bottom:5px">Jenis Produk</label>
+  <select id="productMode" onchange="switchProductMode(this.value)" style="width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-weight:700">
+    <option value="OWN">PRODUK SAYA</option>
+    <option value="DROPSHIP">DROPSHIP / SUPPLIER</option>
+    <option value="AFFILIATE">AFFILIATE</option>
+  </select>
+</div>
+<div id="productModeOwn">
 <div class="panel own-panel">
   <h2>Tambah Produk Saya</h2>
   <p style="color:#777">Untuk barang milik sendiri, kamu bisa input produk, modal, harga jual, stok, dan foto. Produk akan tersimpan di Supabase.</p>
@@ -223,7 +216,7 @@
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div id="selectedCategory" class="file-note">Belum dipilih</div><button type="button" id="clearCategory" class="mini">Hapus Semua</button></div><div id="selectedCategories" class="selected-cats"></div><input id="categoryPath" type="hidden" value="">
 </div>
 </div>
-    <div><label>Sumber Stok</label><select id="ownSource"><option value="OWN">STOK SAYA</option><option value="SUPPLIER">SUPPLIER</option></select></div>
+    <div id="ownSourceWrap" class="hidden"><label>Sumber Stok</label><select id="ownSource"><option value="OWN">STOK SAYA</option><option value="SUPPLIER">SUPPLIER</option></select></div>
     <div id="ownSupplierWrap"><label>Supplier (opsional)</label><input id="ownSupplier" placeholder="Nama supplier"></div>
     <div><label>Harga Modal *</label><input id="ownCost" type="number" min="0" step="1000" placeholder="100000"></div>
     <div><label>Harga Jual *</label><input id="ownPrice" type="number" min="0" step="1000" placeholder="149000"></div>
@@ -263,10 +256,31 @@
   <p style="color:#777">Stok bisa langsung diubah di sini. Perubahan tersimpan ke database.</p>
   <table class="table"><thead><tr><th>Produk</th><th>Sumber</th><th>Modal</th><th>Harga Jual</th><th>Size / Stok</th><th>Stok</th><th>Profit</th><th>Supplier</th><th>Affiliate</th><th>Aksi</th></tr></thead><tbody id="productRows"></tbody></table>
 </div>
+</div>
+
+<div id="productModeDropship" class="hidden">
+<section class="panel" id="shopeeImportPanel">
+  <h2>🔗 Preview Produk Shopee</h2>
+  <p style="color:#777">
+    Tempel <b>link Shopee atau link Shopee Affiliate</b>. BALIVO hanya menampilkan preview produk.
+    Produk tidak di-import dan tidak disimpan ke katalog.
+  </p>
+  <div class="form" style="grid-template-columns:1fr">
+    <input id="shopeeUrl" type="url" placeholder="Paste link Shopee / Affiliate di sini..." />
+    <button class="primary" onclick="previewShopeeProduct()">TAMPILKAN PRODUK</button>
+  </div>
+  <div id="shopeeImportMsg" class="preview" style="margin-top:10px">Belum ada link.</div>
+  <div id="shopeePreview" style="margin-top:14px"></div>
 </section>
+<div class="panel"><h2>Dropship Import</h2><p style="color:#777">Import katalog supplier dari JSON atau CSV. Harga jual dihitung dari harga modal + markup.</p>
+<div class="form"><input id="file" class="wide" type="file" accept=".json,.csv,text/csv,application/json"><input id="markup" type="number" value="25" min="0" step="0.1" placeholder="Markup %"><select id="mode"><option value="publish">Publish langsung</option><option value="draft">Simpan sebagai draft</option></select></div><br><button class="primary" onclick="importFile()">IMPORT PRODUK</button><div id="importPreview" class="preview" style="margin-top:12px">Belum ada file.</div></div>
+<div class="panel"><h3>Format JSON contoh</h3><div class="preview">[
+  {"name":"Produk Supplier","brand":"Supplier A","category":"T-Shirt","cost":100000,"stock":10,"image":"https://...jpg"}
+]</div></div>
+</div>
 
+<div id="productModeAffiliate" class="hidden">
 
-<section id="affiliate" class="tab hidden">
   <div class="panel affiliate-panel">
     <h2>🔗 Shopee Affiliate</h2>
     <p style="color:#777">
@@ -286,7 +300,11 @@
 
     <div id="affiliatePreview" style="margin-top:14px"></div>
   </div>
+
+</div>
 </section>
+
+
 <section id="orders" class="tab hidden">
 
 
@@ -758,6 +776,20 @@ Mode: ${mode.value==='draft'?'DRAFT':'PUBLISH'}`;
     await refresh();
   }catch(e){alert('Import gagal: '+e.message)}
 }
+
+function switchProductMode(mode){
+  const own=document.getElementById('productModeOwn');
+  const ds=document.getElementById('productModeDropship');
+  const af=document.getElementById('productModeAffiliate');
+  own?.classList.toggle('hidden',mode!=='OWN');
+  ds?.classList.toggle('hidden',mode!=='DROPSHIP');
+  af?.classList.toggle('hidden',mode!=='AFFILIATE');
+  const source=document.getElementById('ownSource');
+  if(source) source.value=mode==='DROPSHIP'?'SUPPLIER':'OWN';
+  const wrap=document.getElementById('ownSupplierWrap');
+  if(wrap) wrap.style.display=mode==='DROPSHIP'?'block':'none';
+}
+switchProductMode(document.getElementById('productMode')?.value||'OWN');
 
 ownSource.addEventListener('change',()=>{ownSupplierWrap.style.display=ownSource.value==='SUPPLIER'?'block':'none'});
 ownImageFile?.addEventListener('change',()=>{
