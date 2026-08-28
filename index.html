@@ -91,6 +91,57 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 .grid .product .info{
   background:transparent !important;
 }
+
+/* FINAL VISUAL TUNING — larger product photo, tighter/smaller typography */
+.grid .product .photo{
+  aspect-ratio: 1 / 1.12 !important;
+}
+.grid .product .info{
+  padding: 9px 10px 10px !important;
+}
+.grid .product .brand{
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
+}
+.grid .product .name{
+  font-size: 13px !important;
+  line-height: 1.12 !important;
+  margin: 2px 0 5px !important;
+  min-height: 29px !important;
+}
+.grid .product .price{
+  font-size: 16px !important;
+  line-height: 1.05 !important;
+}
+.grid .product .stock{
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  margin-top: 4px !important;
+}
+.grid .product .add{
+  margin-top: 7px !important;
+  padding: 8px 6px !important;
+  font-size: 13px !important;
+  line-height: 1.05 !important;
+  min-height: 38px;
+}
+.grid .product .badge-affiliate{
+  left: 7px !important;
+  top: 7px !important;
+  padding: 7px 9px !important;
+  font-size: 13px !important;
+}
+@media(max-width:600px){
+  .grid .product .photo{aspect-ratio:1 / 1.12 !important}
+  .grid .product .info{padding:8px 9px 9px !important}
+  .grid .product .brand{font-size:9px !important}
+  .grid .product .name{font-size:12px !important;line-height:1.08 !important;margin:2px 0 4px !important;min-height:26px !important}
+  .grid .product .price{font-size:15px !important}
+  .grid .product .stock{font-size:9px !important;margin-top:3px !important}
+  .grid .product .add{margin-top:6px !important;padding:7px 5px !important;font-size:12px !important;min-height:34px}
+}
+
 </style>
 
 <style id="balivo-size-ui">
