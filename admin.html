@@ -281,27 +281,37 @@
 </div>
 
 <div id="productModeAffiliate" class="hidden">
-
   <div class="panel affiliate-panel">
-    <h2>🔗 Shopee Affiliate</h2>
-    <p style="color:#777">
-      Tempel link Shopee Affiliate di sini. BALIVO akan menampilkan preview produk
-      dan menyediakan tombol untuk membuka link affiliate tersebut.
-    </p>
-
+    <h2>🔗 Tambah Produk Affiliate</h2>
+    <p style="color:#777">Tempel link affiliate terlebih dahulu. Setelah produk ditemukan, form detail akan muncul otomatis.</p>
     <div class="form" style="grid-template-columns:1fr">
-      <input id="affiliatePreviewUrl" type="url"
-        placeholder="Paste link Shopee Affiliate di sini...">
-      <button class="primary" onclick="previewAffiliateProduct()">TAMPILKAN PRODUK</button>
+      <input id="affiliatePreviewUrl" type="url" placeholder="Paste link Shopee Affiliate di sini...">
+      <button class="primary" type="button" onclick="previewAffiliateProduct()">TAMPILKAN PRODUK</button>
     </div>
-
-    <div id="affiliateMsg" class="preview" style="margin-top:12px">
-      Belum ada link affiliate.
-    </div>
-
+    <div id="affiliateMsg" class="preview" style="margin-top:12px">Belum ada link affiliate.</div>
     <div id="affiliatePreview" style="margin-top:14px"></div>
+    <input id="affiliateImgData" type="hidden" value="">
   </div>
 
+  <div id="affiliateProductForm" class="panel hidden" style="margin-top:14px">
+    <h3>Detail Produk Affiliate</h3>
+    <p style="color:#777">Data yang berhasil dibaca dari link sudah diisi otomatis. Kamu tinggal cek, pilih kategori, tambahkan foto jika perlu, lalu simpan.</p>
+    <div class="form product-form">
+      <div><label>Nama Produk *</label><input id="affiliateName" placeholder="Nama produk"></div>
+      <div><label>Brand</label><input id="affiliateBrand" placeholder="Brand"></div>
+      <div><label>Kategori *</label><input id="affiliateCategory" placeholder="Contoh: Fashion / Mens / T-Shirt"></div>
+      <div><label>Harga Jual *</label><input id="affiliatePrice" type="number" min="0" step="1000" placeholder="149000"></div>
+      <div><label>Komisi Affiliate</label><input id="affiliateCommission" type="number" min="0" step="0.1" value="0" placeholder="%"></div>
+      <div class="wide"><label>Link Affiliate</label><input id="affiliateSaveUrl" type="url" readonly></div>
+      <div class="wide"><label>Foto Produk (opsional)</label><input id="affiliateImageFile" type="file" accept="image/jpeg,image/png,image/webp">
+        <div class="file-note">Foto dari preview akan dipakai otomatis. Upload foto sendiri hanya jika ingin menggantinya.</div>
+        <div id="affiliateImagePreview" style="display:none;margin-top:10px"><img id="affiliateImagePreviewImg" alt="Preview" style="max-width:220px;max-height:220px;border-radius:12px;object-fit:cover"></div>
+      </div>
+      <div class="wide"><label>Deskripsi</label><textarea id="affiliateDescription" rows="3" placeholder="Deskripsi produk"></textarea></div>
+    </div>
+    <button class="primary" type="button" onclick="saveAffiliateProduct()">SIMPAN PRODUK AFFILIATE</button>
+    <div id="affiliateSaveMsg" class="preview" style="margin-top:12px">Belum disimpan.</div>
+  </div>
 </div>
 </section>
 
@@ -462,7 +472,14 @@ async function previewShopeeProduct(){
         </div>
       </div>
     `;
-    msg.innerHTML='<b>Produk tampil.</b> Tidak ada data yang disimpan atau diubah di katalog BALIVO.';
+    document.getElementById('affiliateName').value=title;
+    document.getElementById('affiliateBrand').value=brand||'Shopee';
+    document.getElementById('affiliatePrice').value=Number(price)||0;
+    document.getElementById('affiliateDescription').value=description;
+    document.getElementById('affiliateSaveUrl').value=url;
+    document.getElementById('affiliateImgData').value=image;
+    document.getElementById('affiliateProductForm').classList.remove('hidden');
+    msg.innerHTML='<b>Produk ditemukan.</b> Lengkapi kategori dan cek data sebelum disimpan.';
   }catch(e){
     msg.textContent='Produk tidak dapat ditampilkan: '+e.message;
   }
@@ -472,7 +489,7 @@ async function previewShopeeProduct(){
 async function previewAffiliateProduct(){
   if(!requireAdmin())return;
 
-  const input=document.getElementById('affiliateUrl');
+  const input=document.getElementById('affiliatePreviewUrl');
   const msg=document.getElementById('affiliateMsg');
   const box=document.getElementById('affiliatePreview');
   const url=input.value.trim();
@@ -640,7 +657,7 @@ async function refresh(){
   sProfit.textContent=money(products.reduce((a,x)=>a+(Number(x.price||0)-Number(x.cost||0))*Number(x.stock||0),0)); if(document.getElementById('sProofPending'))sProofPending.textContent=orders.filter(x=>x.payment_status==='WAITING_VERIFICATION' || (x.payment_status==='PENDING' && x.payment_proof_url)).length; if(document.getElementById('sReady'))sReady.textContent=orders.filter(x=>x.fulfillment_status==='READY_TO_PROCESS').length;
   productRows.innerHTML=products.map(p=>`<tr>
     <td><strong>${esc(p.name)}</strong><div style="font-size:11px;color:#777">${esc(p.brand||'')}</div></td>
-    <td>${p.stock_source==='OWN'?'STOK SAYA':esc(p.supplier||'Supplier')}</td>
+    <td>${p.stock_source==='OWN'?'STOK SAYA':p.stock_source==='AFFILIATE'?'AFFILIATE':esc(p.supplier||'Supplier')}</td>
     <td>${money(p.cost)}</td><td>${money(p.price)}</td>
     <td><strong>${Number(p.stock)||0}</strong><div style="font-size:11px;color:#777;margin-top:4px">${renderAdminSizes(p)}</div></td>
     <td class="profit">${money(Number(p.price||0)-Number(p.cost||0))}</td>
@@ -780,6 +797,34 @@ Mode: ${mode.value==='draft'?'DRAFT':'PUBLISH'}`;
   }catch(e){alert('Import gagal: '+e.message)}
 }
 
+async function saveAffiliateProduct(){
+  if(!requireAdmin())return;
+  const name=document.getElementById('affiliateName').value.trim();
+  const brand=document.getElementById('affiliateBrand').value.trim()||'Shopee';
+  const category=document.getElementById('affiliateCategory').value.trim();
+  const price=Number(document.getElementById('affiliatePrice').value);
+  const commission=Number(document.getElementById('affiliateCommission').value)||0;
+  const url=document.getElementById('affiliateSaveUrl').value.trim();
+  const description=document.getElementById('affiliateDescription').value.trim();
+  const file=document.getElementById('affiliateImageFile').files?.[0];
+  const imageFallback=document.getElementById('affiliatePreviewImgData')?.value||'';
+  if(!name||!category||!Number.isFinite(price)||price<0||!url){alert('Nama, kategori, harga jual, dan link affiliate wajib diisi.');return;}
+  if(!validOptionalUrl(url)){alert('Link affiliate tidak valid.');return;}
+  const msg=document.getElementById('affiliateSaveMsg'); msg.textContent='Menyimpan produk affiliate...';
+  try{
+    let image=imageFallback;
+    if(file) image=await uploadProductImage(file);
+    const {error}=await sb.from('products').insert({
+      name,brand,category,categories:[category],cost:0,price,stock:0,stock_source:'AFFILIATE',
+      image,images:image?[image]:[],sizes:null,description,details:'',status:'ACTIVE',
+      supplier_cost:0,markup:0,supplier_product_url:null,affiliate_url:url,affiliate_commission:commission
+    });
+    if(error)throw error;
+    msg.textContent='Produk affiliate berhasil disimpan dan akan tampil di katalog BALIVO.';
+    await refresh();
+  }catch(e){msg.textContent='Gagal: '+e.message}
+}
+
 function switchProductMode(mode){
   const own=document.getElementById('productModeOwn');
   const ds=document.getElementById('productModeDropship');
@@ -800,6 +845,14 @@ ownImageFile?.addEventListener('change',()=>{
   if(!f){box.style.display='none';return}
   if(f.size>5*1024*1024){alert('Foto maksimal 5 MB.');ownImageFile.value='';box.style.display='none';return}
   if(!/^image\/(jpeg|png|webp)$/.test(f.type)){alert('Gunakan JPG, PNG, atau WEBP.');ownImageFile.value='';box.style.display='none';return}
+  img.src=URL.createObjectURL(f);box.style.display='block';
+});
+
+document.getElementById('affiliateImageFile')?.addEventListener('change',()=>{
+  const f=document.getElementById('affiliateImageFile').files?.[0], box=document.getElementById('affiliateImagePreview'), img=document.getElementById('affiliateImagePreviewImg');
+  if(!f){box.style.display='none';return;}
+  if(f.size>5*1024*1024){alert('Foto maksimal 5 MB.');document.getElementById('affiliateImageFile').value='';box.style.display='none';return;}
+  if(!/^image\/(jpeg|png|webp)$/.test(f.type)){alert('Gunakan JPG, PNG, atau WEBP.');document.getElementById('affiliateImageFile').value='';box.style.display='none';return;}
   img.src=URL.createObjectURL(f);box.style.display='block';
 });
 
