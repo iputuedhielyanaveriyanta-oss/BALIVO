@@ -2,10 +2,11 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<meta name="theme-color" content="#111"><title>BALIVO ADMIN — Dropship</title>
+<meta name="theme-color" content="#111"><link rel="manifest" href="balivo-admin-manifest.webmanifest"><title>BALIVO ADMIN — Dropship</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#111;--muted:#737373;--line:#e5e7eb;--dark:#111;--ok:#15803d;--red:#dc2626}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif}.top{background:#111;color:#fff;padding:14px 20px}.top b{letter-spacing:2px}.wrap{max-width:1200px;margin:auto;padding:20px}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:18px}.tabs button{padding:11px 14px;border:1px solid var(--line);background:#fff;border-radius:10px;white-space:nowrap}.tabs button.active{background:#111;color:#fff}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{padding:15px;border:1px solid var(--line);border-radius:12px}.stat small{color:var(--muted)}.stat b{display:block;font-size:24px;margin-top:5px}.form{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.form input,.form textarea,.form select{padding:11px;border:1px solid var(--line);border-radius:9px;width:100%}.wide{grid-column:1/-1}button.primary{background:#111;color:#fff;padding:11px 15px;border-radius:9px;font-weight:700}.btn{padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:#fff}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line);font-size:13px}.pill{padding:4px 7px;border-radius:999px;background:#f0f0f0;font-size:11px}.profit{color:var(--ok);font-weight:800}.danger{color:var(--red)}.preview{background:#fafafa;border:1px dashed #ccc;padding:12px;border-radius:10px;white-space:pre-wrap;font-size:12px}.hidden{display:none!important}@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.table{display:block;overflow:auto;white-space:nowrap}}
+.modal{position:fixed;inset:0;background:#0008;z-index:10000;padding:20px}.modal .panel{margin:auto}
 </style>
 
 <style>
@@ -114,7 +115,7 @@
 
 
 <section id="dashboard" class="tab"><div class="grid">
-<div class="stat"><small>Total Produk</small><b id="sProducts">0</b></div><div class="stat"><small>Stok</small><b id="sStock">0</b></div><div class="stat"><small>Order</small><b id="sOrders">0</b></div><div class="stat"><small>Profit Kotor</small><b id="sProfit">Rp0</b></div>
+<div class="stat"><small>Total Produk</small><b id="sProducts">0</b></div><div class="stat"><small>Stok</small><b id="sStock">0</b></div><div class="stat"><small>Order</small><b id="sOrders">0</b></div><div class="stat"><small>Profit Kotor</small><b id="sProfit">Rp0</b></div><div class="stat"><small>Menunggu Verifikasi</small><b id="sProofPending">0</b></div><div class="stat"><small>Siap Diproses</small><b id="sReady">0</b></div>
 </div></section>
 
 <section id="import" class="tab hidden"><section class="panel" id="shopeeImportPanel">
@@ -291,7 +292,7 @@
   <p style="color:#777">Setelah customer membayar, order dropship masuk di sini. Satu klik menyiapkan data untuk checkout ke supplier.</p>
   <div id="dropshipRows"></div>
 </section>
-<div class="panel"><h2>Order BALIVO</h2><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Pembayaran</th><th>Status</th></tr></thead><tbody id="orderRows"></tbody></table></div></section>
+<div class="panel"><h2>Order BALIVO</h2><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Pembayaran</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="orderRows"></tbody></table></div></section>
 </div>
 <script>
 const SUPABASE_URL='https://hftgmssnzvrlwlslcaet.supabase.co';
@@ -571,16 +572,32 @@ async function markSupplierShipped(id){
   if(error)alert(error.message);else await refresh();
 }
 
+
+async function balivoAdminOrderDetail(id){
+  if(!requireAdmin())return;
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  const {data:items,error}=await sb.from('order_items').select('product_name,size,quantity,unit_price,subtotal,product_id').eq('order_id',id);
+  if(error){alert(error.message);return}
+  const {data:proofs}=await sb.from('payment_proofs').select('*').eq('order_id',id).order('created_at',{ascending:false});
+  const proof=proofs?.[0];
+  const html=`<div id="balivoAdminDetail" class="modal" style="display:flex;align-items:center;justify-content:center"><div class="panel" style="width:min(900px,95vw);max-height:90vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Detail ${esc(o.order_number)}</h2><button class="btn" onclick="document.getElementById('balivoAdminDetail').remove()">✕</button></div><p><b>${esc(o.customer_name)}</b> · ${esc(o.customer_phone)}<br>${esc(o.customer_address)}</p><div class="preview">Pembayaran: <b>${esc(o.payment_status)}</b> · Fulfillment: <b>${esc(o.fulfillment_status)}</b> · Refund: <b>${esc(o.refund_status||'NOT_REQUIRED')}</b></div><h3>Produk</h3><div>${(items||[]).map(i=>`<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:8px 0"><span>${esc(i.product_name)} ${i.size?'· '+esc(i.size):''} × ${i.quantity}</span><b>${money(i.subtotal)}</b></div>`).join('')}</div><h3>Pembayaran</h3>${o.payment_proof_url?`<div class="preview"><a href="${esc(o.payment_proof_url)}" target="_blank" rel="noopener">BUKA BUKTI PEMBAYARAN</a><br><img src="${esc(o.payment_proof_url)}" style="max-width:320px;max-height:300px;margin-top:8px;border-radius:10px"></div>`:'<div class="preview">Belum ada bukti pembayaran.</div>'}<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${o.payment_status!=='PAID'&&o.status!=='CANCELLED'?`<button class="primary" onclick="balivoReviewPayment('${o.id}',true)">TERIMA PEMBAYARAN</button><button class="btn" onclick="balivoReviewPayment('${o.id}',false)">TOLAK PEMBAYARAN</button>`:''}${o.fulfillment_status==='SHIPPED'?`<button class="btn" onclick="balivoMarkDelivered('${o.id}')">TANDAI DITERIMA</button>`:''}${o.status!=='CANCELLED'&&!['SHIPPED','DELIVERED','COMPLETED'].includes(o.fulfillment_status)?`<button class="btn danger" onclick="balivoCancelAdmin('${o.id}')">BATALKAN ORDER</button>`:''}<button class="btn" onclick="balivoSetTracking('${o.id}')">ISI KURIR & RESI</button></div><div id="balivoAdminDetailMsg" class="preview" style="margin-top:12px"></div></div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+async function balivoReviewPayment(id,approve){if(!requireAdmin())return;let reason=null;if(!approve){reason=prompt('Alasan penolakan:','Bukti pembayaran tidak valid');if(reason===null)return}const {error}=await sb.rpc('balivo_admin_review_payment',{p_order_id:id,p_approve:approve,p_reason:reason});if(error)alert(error.message);else{document.getElementById('balivoAdminDetail')?.remove();await refresh()}}
+async function balivoSetTracking(id){if(!requireAdmin())return;const courier=prompt('Nama kurir:','JNE');if(courier===null)return;const tracking=prompt('Nomor resi:','');if(tracking===null)return;const {error}=await sb.rpc('balivo_admin_set_tracking',{p_order_id:id,p_courier:courier,p_tracking:tracking});if(error)alert(error.message);else await refresh()}
+async function balivoMarkDelivered(id){if(!requireAdmin())return;const courier=prompt('Kurir (opsional):','');const {error}=await sb.rpc('balivo_admin_mark_delivered',{p_order_id:id,p_courier:courier||null});if(error)alert(error.message);else{document.getElementById('balivoAdminDetail')?.remove();await refresh()}}
+async function balivoCancelAdmin(id){if(!requireAdmin())return;const o=orders.find(x=>x.id===id);if(!o)return;if(!confirm('Batalkan order dan kembalikan stok?'))return;const {error}=await sb.rpc('balivo_cancel_order',{p_order_number:o.order_number,p_phone:o.customer_phone,p_reason:'Dibatalkan admin'});if(error)alert(error.message);else{document.getElementById('balivoAdminDetail')?.remove();await refresh()}}
+
 async function refresh(){
   const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,stock,status,stock_source,image,sizes,supplier_id,supplier_cost,markup,supplier_product_url,affiliate_url,suppliers(name)').order('created_at',{ascending:false});
   if(pe){console.error(pe);return}
   products=(p||[]).map(x=>({...x,supplier:x.suppliers?.name||'-'}));
-  const {data:o,error:oe}=session?await sb.from('orders').select('id,order_number,customer_name,customer_phone,customer_address,total,subtotal,payment_method,payment_status,status,fulfillment_type,supplier_cost,markup_profit,supplier_payment_status,fulfillment_status,supplier_order_note,supplier_tracking_number,created_at').order('created_at',{ascending:false}):{data:[],error:null};
+  const {data:o,error:oe}=session?await sb.from('orders').select('id,order_number,customer_name,customer_phone,customer_address,total,subtotal,payment_method,payment_status,status,fulfillment_type,supplier_cost,markup_profit,supplier_payment_status,fulfillment_status,supplier_order_note,supplier_tracking_number,shipping_courier,payment_proof_url,payment_rejection_reason,refund_status,created_at').order('created_at',{ascending:false}):{data:[],error:null};
   if(oe)console.error(oe);orders=o||[];
   sProducts.textContent=products.length;
   sStock.textContent=products.reduce((a,x)=>a+Number(x.stock||0),0);
   sOrders.textContent=orders.length;
-  sProfit.textContent=money(products.reduce((a,x)=>a+(Number(x.price||0)-Number(x.cost||0))*Number(x.stock||0),0));
+  sProfit.textContent=money(products.reduce((a,x)=>a+(Number(x.price||0)-Number(x.cost||0))*Number(x.stock||0),0)); if(document.getElementById('sProofPending'))sProofPending.textContent=orders.filter(x=>['PROOF_SUBMITTED'].includes(x.payment_status)).length; if(document.getElementById('sReady'))sReady.textContent=orders.filter(x=>x.fulfillment_status==='READY_TO_PROCESS').length;
   productRows.innerHTML=products.map(p=>`<tr>
     <td><strong>${esc(p.name)}</strong><div style="font-size:11px;color:#777">${esc(p.brand||'')}</div></td>
     <td>${p.stock_source==='OWN'?'STOK SAYA':esc(p.supplier||'Supplier')}</td>
@@ -590,7 +607,7 @@ async function refresh(){
     <td><button class="mini" onclick="editSizes('${p.id}')">Edit Size</button> <button class="mini" onclick="deleteProduct('${p.id}')">Hapus</button></td>
   </tr>`).join('');
   renderDropship();
-  orderRows.innerHTML=orders.map(o=>`<tr><td>${esc(o.order_number||o.id)}</td><td>${esc(o.customer_name||'-')}</td><td>${money(o.total)}</td><td>${esc(o.payment_method||'-')} / ${esc(o.payment_status||'-')}</td><td><span class="pill">${esc(o.status||'-')}</span></td></tr>`).join('');
+  orderRows.innerHTML=orders.map(o=>`<tr><td>${esc(o.order_number||o.id)}</td><td>${esc(o.customer_name||'-')}<div style="font-size:11px;color:#777">${esc(o.customer_phone||'')}</div></td><td>${money(o.total)}</td><td>${esc(o.payment_method||'-')} / ${esc(o.payment_status||'-')}</td><td><span class="pill">${esc(o.status||'-')}</span></td><td><button class="btn" onclick="balivoAdminOrderDetail('${o.id}')">DETAIL</button></td></tr>`).join('');
 }
 
 async function getSupplierId(name){

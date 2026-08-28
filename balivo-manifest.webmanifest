@@ -1,9 +1,9 @@
 {
-  "name": "BALIVO — Bali's Online Marketplace",
-  "short_name": "BALIVO",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#f7f7f5",
-  "theme_color": "#111111",
-  "description": "Bali's Online Marketplace"
+  "name":"BALIVO — Bali's Online Marketplace",
+  "short_name":"BALIVO",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#f7f7f5",
+  "theme_color":"#111111",
+  "description":"Bali's Online Marketplace"
 }
