@@ -372,14 +372,14 @@ function renderProductsOnly(){
     <article class="product" onclick="openProduct('${p.id}')">
       <div class="photo">
         <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
-        ${p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP' ? '<span class="badge">SHOPEE</span>' : (Number(p.stock)<=0?'<span class="badge">HABIS</span>':'')}
+        ${p.product_type==='AFFILIATE' ? '<span class="badge">BIG SALE</span>' : (p.product_type==='DROPSHIP' ? '<span class="badge">SHOPEE</span>' : (Number(p.stock)<=0?'<span class="badge">HABIS</span>':''))}
       </div>
       <div class="info">
         <div class="brand">${esc(p.brand||'Supplier')}</div>
         <div class="name">${esc(p.name||'Produk')}</div>
         <div class="price">${money(p.price)}</div>
-        <div class="stock">${(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP')?'Beli di Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis')}</div>
-        <button class="add" ${p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP'?'':'disabled'} onclick="event.stopPropagation();${(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP')?`openExternalProduct('${p.id}')`:`openProduct('${p.id}')`}">${(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP')?'BELI DI SHOPEE':(sizeData(p).length?'Pilih Size':'Lihat Produk')}</button>
+        <div class="stock">${p.product_type==='AFFILIATE'?'Beli di Shopee':(p.product_type==='DROPSHIP'?'Beli di Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'))}</div>
+        <button class="add" ${p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP'?'':'disabled'} onclick="event.stopPropagation();${(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP')?`openExternalProduct('${p.id}')`:`openProduct('${p.id}')`}">${p.product_type==='AFFILIATE'?'BELI DISINI':(p.product_type==='DROPSHIP'?'BELI DI SHOPEE':(sizeData(p).length?'Pilih Size':'Lihat Produk'))}</button>
       </div>
     </article>
   `).join('');
@@ -394,15 +394,14 @@ function render(){
     <article class="product" onclick="openProduct('${p.id}')">
       <div class="photo">
         <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
-        ${Number(p.stock)<=0?'<span class="badge">HABIS</span>':''}
+        ${p.product_type==='AFFILIATE' ? '<span class="badge">BIG SALE</span>' : (p.product_type==='DROPSHIP' ? '<span class="badge">SHOPEE</span>' : (Number(p.stock)<=0?'<span class="badge">HABIS</span>':''))}
       </div>
       <div class="info">
         <div class="brand">${esc(p.brand||'Supplier')}</div>
         <div class="name">${esc(p.name||'Produk')}</div>
         <div class="price">${money(p.price)}</div>
-        <div class="stock">${Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'}</div>
-        <button class="add" ${Number(p.stock)<=0?'disabled':''}
-          onclick="event.stopPropagation();openProduct('${p.id}')">${sizeData(p).length?'Pilih Size':'Lihat Produk'}</button>
+        <div class="stock">${p.product_type==='AFFILIATE'?'Beli di Shopee':(p.product_type==='DROPSHIP'?'Beli di Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'))}</div>
+        <button class="add" ${p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP'?'':'disabled'} onclick="event.stopPropagation();${(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP')?`openExternalProduct('${p.id}')`:`openProduct('${p.id}')`}">${p.product_type==='AFFILIATE'?'BELI DISINI':(p.product_type==='DROPSHIP'?'BELI DI SHOPEE':(sizeData(p).length?'Pilih Size':'Lihat Produk'))}</button>
       </div>
     </article>
   `).join('');
@@ -483,13 +482,14 @@ async function showProduct(p){
   document.getElementById('viewBrand').textContent=p.brand||'BALIVO';
   document.getElementById('viewName').textContent=p.name||'';
   document.getElementById('viewPrice').textContent=money(p.price);
-  document.getElementById('viewStock').textContent=(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP')?'Pembelian melalui Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis');
+  document.getElementById('viewStock').textContent=p.product_type==='AFFILIATE'?'':(p.product_type==='DROPSHIP'?'Pembelian melalui Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'));
   const externalLink=p.affiliate_url||p.supplier_product_url||'';
-  const externalType=p.product_type==='AFFILIATE'?'AFFILIATE':(p.product_type==='DROPSHIP'?'DROPSHIP':'');
   document.getElementById('viewAffiliate').innerHTML=externalLink
-    ? `<button type="button" onclick="event.stopPropagation();openExternalProduct('${p.id}')" style="display:block;width:100%;padding:14px;background:#111;color:#fff;border:0;border-radius:10px;font-weight:800;cursor:pointer">BELI DI SHOPEE${externalType?' · '+externalType:''}</button>`
+    ? `<button type="button" onclick="event.stopPropagation();openExternalProduct('${p.id}')" style="display:block;width:100%;padding:14px;background:#111;color:#fff;border:0;border-radius:10px;font-weight:800;cursor:pointer">${p.product_type==='AFFILIATE'?'BELI DISINI':'BELI DI SHOPEE'}</button>`
     : '';
   renderSizes(p);
+  const sizeBox=document.querySelector('#viewSizes')?.parentElement;
+  if(sizeBox) sizeBox.style.display=p.product_type==='AFFILIATE'?'none':'block';
   document.getElementById('viewDescription').textContent=p.description||'Deskripsi produk belum tersedia.';
   document.getElementById('viewDetails').innerHTML=
     '<div class="detail-box"><h3>Detail Produk</h3>'+
@@ -540,7 +540,7 @@ async function showProduct(p){
   const external=!!(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP');
   if(external){
     addButton.disabled=false;
-    addButton.textContent='BELI DI SHOPEE';
+    addButton.textContent=p.product_type==='AFFILIATE'?'BELI DISINI':'BELI DI SHOPEE';
     addButton.onclick=()=>openExternalProduct(p.id);
   }else{
     addButton.disabled=Number(p.stock)<=0;
@@ -551,8 +551,9 @@ async function showProduct(p){
 
 function openExternalProduct(id){
   const p=products.find(x=>x.id===id); if(!p)return;
-  const url=p.affiliate_url||p.supplier_product_url||''; if(!url)return;
-  window.open(url,'_blank','noopener,noreferrer');
+  const url=String(p.affiliate_url||p.supplier_product_url||'').trim();
+  if(!url){alert('Link Shopee produk ini belum tersedia.');return;}
+  window.location.href=url;
 }
 function openAffiliate(id){openExternalProduct(id)}
 function currentProduct(){return productList()[currentProductIndex]}
