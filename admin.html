@@ -234,33 +234,18 @@
 
     <div><label>Stok *</label><input id="ownStock" type="number" min="0" step="1" value="0"></div>
     <div class="wide">
-      <label>Stok per Size (opsional untuk pakaian)</label>
-      <div id="sizeStockInputs" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
-         <input id="sizeS" type="number" min="0" value="0" placeholder="S">
-         <input id="sizeM" type="number" min="0" value="0" placeholder="M">
-         <input id="sizeL" type="number" min="0" value="0" placeholder="L">
-         <input id="sizeXL" type="number" min="0" value="0" placeholder="XL">
-         <input id="sizeXXL" type="number" min="0" value="0" placeholder="XXL">
-         <input id="size8" type="number" min="0" value="0" placeholder="8">
-         <input id="size9" type="number" min="0" value="0" placeholder="9">
-         <input id="size10" type="number" min="0" value="0" placeholder="10">
-         <input id="size11" type="number" min="0" value="0" placeholder="11">
-         <input id="size12" type="number" min="0" value="0" placeholder="12">
-         <input id="size36" type="number" min="0" value="0" placeholder="36">
-         <input id="size37" type="number" min="0" value="0" placeholder="37">
-         <input id="size38" type="number" min="0" value="0" placeholder="38">
-         <input id="size39" type="number" min="0" value="0" placeholder="39">
-         <input id="size40" type="number" min="0" value="0" placeholder="40">
-         <input id="size41" type="number" min="0" value="0" placeholder="41">
-         <input id="size42" type="number" min="0" value="0" placeholder="42">
-         <input id="size43" type="number" min="0" value="0" placeholder="43">
-         <input id="size44" type="number" min="0" value="0" placeholder="44">
-         <input id="size45" type="number" min="0" value="0" placeholder="45">
-         <input id="size6" type="number" min="0" value="0" placeholder="6">
-         <input id="size7" type="number" min="0" value="0" placeholder="7">
-         <input id="size14" type="number" min="0" value="0" placeholder="14">
-         </div>
-      <div class="file-note">Isi stok per size jika produk punya ukuran. Size tersedia: S, M, L, XL, XXL, 8–12, 36–45, 6–10, dan 6/8/10/12/14. Total stok otomatis dihitung dari size yang diisi.</div>
+      <label>Golongan Size</label>
+      <select id="sizeGroup" onchange="renderSizeGroupInputs(this.value)">
+        <option value="">— Pilih golongan size —</option>
+        <option value="alpha">S, M, L, XL, XXL</option>
+        <option value="num8_12">8, 9, 10, 11, 12</option>
+        <option value="eu36_40">36, 37, 38, 39, 40</option>
+        <option value="eu41_45">41, 42, 43, 44, 45</option>
+        <option value="num6_10">6, 7, 8, 9, 10</option>
+        <option value="kids">6, 8, 10, 12, 14</option>
+      </select>
+      <div id="sizeStockInputs" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px"></div>
+      <div class="file-note">Pilih satu golongan size terlebih dahulu. Setelah dipilih, hanya kolom stok untuk size tersebut yang muncul. Total stok otomatis dihitung dari size yang diisi.</div>
     </div>
     <div><label>Foto Produk (upload)</label>
 <input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp">
@@ -359,10 +344,27 @@ function renderAdminSizes(p){
   if(!keys.some(k=>Object.prototype.hasOwnProperty.call(s,k))) return '<span>—</span>';
   return keys.map(k=>`<span>${k}: ${Number(s[k]||0)}</span>`).join('');
 }
+const SIZE_GROUPS={
+  alpha:['S','M','L','XL','XXL'],
+  num8_12:['8','9','10','11','12'],
+  eu36_40:['36','37','38','39','40'],
+  eu41_45:['41','42','43','44','45'],
+  num6_10:['6','7','8','9','10'],
+  kids:['6','8','10','12','14']
+};
+function renderSizeGroupInputs(group,values={}){
+  const box=document.getElementById('sizeStockInputs');
+  if(!box)return;
+  const keys=SIZE_GROUPS[group]||[];
+  box.innerHTML=keys.map(k=>`<div><label style="display:block;font-size:12px;margin-bottom:4px">Size ${esc(k)}</label><input id="sizeStock_${encodeURIComponent(k)}" type="number" min="0" step="1" value="${Number(values[k]??0)}" placeholder="0" aria-label="Stok size ${esc(k)}"></div>`).join('');
+}
 function readSizeStock(){
-  const s={}; ['S','M','L','XL','XXL','8','9','10','11','12','36','37','38','39','40','41','42','43','44','45','6','7','14'].forEach(k=>{const el=document.getElementById('size'+k);if(el)s[k]=Number(el.value)||0});
-  const any=Object.values(s).some(v=>v>0);
-  return any?s:null;
+  const group=document.getElementById('sizeGroup')?.value||'';
+  const keys=SIZE_GROUPS[group]||[];
+  if(!keys.length)return null;
+  const s={};
+  keys.forEach(k=>{const el=document.getElementById('sizeStock_'+encodeURIComponent(k));if(el)s[k]=Math.max(0,Number(el.value)||0)});
+  return Object.values(s).some(v=>v>0)?s:null;
 }
 
 
@@ -671,7 +673,7 @@ async function saveOwnProduct(){
     if(error)throw error;
     ownMessage.textContent='Produk berhasil disimpan ke Supabase. Foto, harga, stok, kategori, dan link pembelian sudah tersimpan.';
     ['ownName','ownBrand','ownCategory','ownSupplier','ownCost','ownPrice','ownDescription','ownDetails','ownImageUrl','affiliateUrl'].forEach(id=>document.getElementById(id).value='');
-    ownStock.value='0';['sizeS','sizeM','sizeL','sizeXL','sizeXXL','size8','size9','size10','size11','size12','size36','size37','size38','size39','size40','size41','size42','size43','size44','size45','size6','size7','size14'].forEach(id=>document.getElementById(id).value='0');ownImageFile.value='';
+    ownStock.value='0';document.getElementById('sizeGroup').value='';document.getElementById('sizeStockInputs').innerHTML='';ownImageFile.value='';
     await refresh();
   }catch(e){ownMessage.textContent='Gagal: '+e.message}
 }
@@ -689,13 +691,28 @@ async function editSizes(id){
   if(!requireAdmin())return;
   const p=products.find(x=>x.id===id); if(!p)return;
   const sizes=parseSizes(p.sizes);
-  for(const size of ['S','M','L','XL','XXL']){
-    const v=prompt('Stok size '+size, String(Number(sizes[size]||0)));
-    if(v===null)return;
-    sizes[size]=Math.max(0,parseInt(v,10)||0);
+  const entries=Object.keys(sizes);
+  let group=Object.keys(SIZE_GROUPS).find(g=>SIZE_GROUPS[g].length===entries.length && SIZE_GROUPS[g].every(k=>entries.includes(k)));
+  if(!group){
+    const labels=Object.entries(SIZE_GROUPS).map(([k,v],i)=>`${i+1}. ${v.join(', ')}`).join('\n');
+    const pick=prompt('Pilih golongan size untuk diedit:\n'+labels,'1');
+    if(pick===null)return;
+    group=Object.keys(SIZE_GROUPS)[Math.max(0,parseInt(pick,10)-1)];
+    if(!group)return;
   }
-  const stock=Object.values(sizes).reduce((a,b)=>a+Number(b||0),0);
-  const {error}=await sb.from('products').update({sizes,stock}).eq('id',id);
+  const values={};
+  SIZE_GROUPS[group].forEach(k=>values[k]=Number(sizes[k]||0));
+  const text=SIZE_GROUPS[group].map(k=>`${k}: ${values[k]}`).join('\n');
+  const answer=prompt('Masukkan stok masing-masing size dengan format size:jumlah, pisahkan koma.\nContoh: '+SIZE_GROUPS[group].map(k=>`${k}:2`).join(', ')+'\n\nSaat ini:\n'+text, text);
+  if(answer===null)return;
+  const updated={};
+  for(const part of answer.split(',')){
+    const [k,v]=part.split(':').map(x=>x.trim());
+    if(SIZE_GROUPS[group].includes(k))updated[k]=Math.max(0,parseInt(v,10)||0);
+  }
+  if(!Object.keys(updated).length){alert('Format stok tidak valid.');return}
+  const stock=Object.values(updated).reduce((a,b)=>a+Number(b||0),0);
+  const {error}=await sb.from('products').update({sizes:updated,stock}).eq('id',id);
   if(error)alert('Gagal menyimpan size: '+error.message);else await refresh();
 }
 async function setStock(id,value){
