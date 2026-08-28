@@ -31,6 +31,12 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   line-height:1;
   box-shadow:0 2px 5px #0003;
 }
+
+/* Affiliate cards: display only. The card/image/detail must not open. */
+.product.affiliate-locked{cursor:default}
+.product.affiliate-locked .photo{pointer-events:none}
+.product.affiliate-locked .info{pointer-events:none}
+.product.affiliate-locked .info .add{pointer-events:auto}
 </style>
 
 <style id="balivo-size-ui">
@@ -379,7 +385,8 @@ function renderProductsOnly(){
   document.getElementById('resultCount').textContent=list.length+' produk';
   document.getElementById('empty').classList.toggle('hidden',list.length!==0);
   document.getElementById('products').innerHTML=list.map(p=>`
-    <article class="product" onclick="openProduct('${p.id}')">
+    <article class="product ${p.product_type==='AFFILIATE'?'affiliate-locked':''}" ${p.product_type==='AFFILIATE'?'':'onclick="openProduct(\'${p.id}\')"'}>
+      
       <div class="photo">
         <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
         ${p.product_type==='AFFILIATE' ? '<span class="badge">BIG SALE</span>' : (p.product_type==='DROPSHIP' ? '<span class="badge">SHOPEE</span>' : (Number(p.stock)<=0?'<span class="badge">HABIS</span>':''))}
@@ -410,7 +417,8 @@ function render(){
       : `event.stopPropagation();openProduct('${p.id}')`;
 
     return `
-    <article class="product" onclick="openProduct('${p.id}')">
+    <article class="product ${p.product_type==='AFFILIATE'?'affiliate-locked':''}" ${p.product_type==='AFFILIATE'?'':'onclick="openProduct(\'${p.id}\')"'}>
+      
       <div class="photo">
         <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
         ${saleBadge}
