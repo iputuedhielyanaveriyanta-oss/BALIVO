@@ -518,6 +518,22 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   white-space:nowrap!important;
 }
 </style>
+<style id="balivo-size-stock-qty-final">
+#viewSizes .size-btn{min-height:70px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:5px!important}
+#viewSizes .size-btn small{font-size:10px!important;line-height:1!important;color:#777!important;font-weight:700!important}
+#viewSizes .size-btn.active small{color:#fff!important}
+#viewSizes .size-btn.out{opacity:.45!important}
+#selectedSizeOrder{display:none;margin:12px 0!important}
+.size-stock-order{border:1px solid #ddd;border-radius:14px;padding:12px;background:#fafafa}
+.size-stock-line{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:10px}
+.qty-order{display:flex;align-items:center;justify-content:center;gap:22px}
+.qty-order button{width:42px!important;height:42px!important;border:0!important;border-radius:12px!important;background:#111!important;color:#fff!important;font-size:24px!important;font-weight:900!important}
+.qty-order strong{min-width:30px;text-align:center;font-size:20px}
+.qty-note{text-align:center;color:#777;font-size:11px;margin-top:7px}
+</style><style id="balivo-direct-checkout-final">
+#checkoutModal{z-index:10050!important}
+#productModal{z-index:10000!important}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -1011,19 +1027,59 @@ function renderSizes(p){
   box.innerHTML=data.map(x=>
     `<button type="button" class="size-btn" data-size="${esc(x.size)}" ${x.stock<=0?'disabled':''}
       onclick="selectSize('${String(x.size).replace(/'/g,"\\'")}')">
-      ${esc(x.size)}${x.stock<=0?' · Habis':''}
+      <span class="size-label">${esc(x.size)}</span><small>${Number(x.stock)>0?Number(x.stock)+' stok':'Habis'}</small>
     </button>`
   ).join('');
 }
+  let orderBox=document.getElementById('selectedSizeOrder');
+  if(orderBox)orderBox.style.display='none';
+
 function selectSize(size){
   const p=currentProduct();
+  if(!p)return;
   const data=sizeData(p);
-  const item=data.find(x=>x.size===size);
-  if(!item || item.stock<=0)return;
+  const item=data.find(x=>String(x.size)===String(size));
+  if(!item || Number(item.stock)<=0)return;
+
   selectedSize=size;
-  document.querySelectorAll('#viewSizes .size-btn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.size===size);
+  document.querySelectorAll('#viewSizes .size-btn').forEach(btn=>{
+    btn.classList.toggle('active', String(btn.dataset.size)===String(size));
   });
+
+  let box=document.getElementById('selectedSizeOrder');
+  if(!box){
+    box=document.createElement('div');
+    box.id='selectedSizeOrder';
+    document.getElementById('viewSizes')?.parentElement?.appendChild(box);
+  }
+
+  const stock=Math.max(0,Number(item.stock)||0);
+  box.style.display='block';
+  box.innerHTML=`
+    <div class="size-stock-order">
+      <div class="size-stock-line">
+        <span>Size <b>${esc(size)}</b></span>
+        <span>Sisa stok <b>${stock}</b></span>
+      </div>
+      <div class="qty-order">
+        <button type="button" onclick="changeSelectedQty(-1)">−</button>
+        <strong id="selectedQty">1</strong>
+        <button type="button" onclick="changeSelectedQty(1)">+</button>
+      </div>
+      <div class="qty-note">Maksimal order ${stock} pcs</div>
+    </div>`;
+}
+
+function changeSelectedQty(delta){
+  const p=currentProduct();
+  if(!p || !selectedSize)return;
+  const item=sizeData(p).find(x=>String(x.size)===String(selectedSize));
+  if(!item)return;
+  const el=document.getElementById('selectedQty');
+  if(!el)return;
+  const max=Math.max(1,Number(item.stock)||1);
+  const current=Math.max(1,Number(el.textContent)||1);
+  el.textContent=Math.max(1,Math.min(max,current+Number(delta||0)));
 }
 
 async function showProduct(p){
@@ -1098,7 +1154,17 @@ async function showProduct(p){
   }else{
     addButton.disabled=Number(p.stock)<=0;
     addButton.textContent=Number(p.stock)>0?'Tambah ke Cart':'Stok Habis';
-    addButton.onclick=()=>{if(Number(p.stock)>0)add(p.id)};
+    addButton.onclick=()=>{
+      const qty=Math.max(1,Number(document.getElementById('selectedQty')?.textContent)||1);
+      if(hasSizes(p)){
+        if(!selectedSize){alert('Silakan pilih size terlebih dahulu.');return;}
+        const item=sizeData(p).find(x=>String(x.size)===String(selectedSize));
+        if(!item || Number(item.stock)<=0)return;
+        add(p.id,Math.min(qty,Number(item.stock)),selectedSize);
+      }else if(Number(p.stock)>0){
+        add(p.id,qty,null);
+      }
+    };
   }
 }
 
@@ -1170,7 +1236,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeProduct();
 });
 
-function add(id){
+function add(id,qty=1,sizeOverride=null){
   const p=products.find(x=>x.id===id);
   if(!p||Number(p.stock)<1)return;
   const sizes=sizeData(p);
@@ -1184,7 +1250,9 @@ function add(id){
     const maxStock=size ? (sizes.find(s=>s.size===size)?.stock||0) : Number(p.stock);
     if(x.qty<maxStock)x.qty++;else return;
   } else cart.push({id,qty:1,size});
-  saveCart();renderCart();openCart();
+  saveCart();renderCart();
+  closeProduct();
+  setTimeout(()=>openCheckout(),80);openCart();
 }
 
 function change(id,d){
