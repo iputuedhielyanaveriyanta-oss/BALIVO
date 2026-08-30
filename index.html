@@ -490,6 +490,30 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   }
 }
 </style>
+<style id="balivo-red-price-strike-final">
+.price-normal{
+  color:#777!important;
+  text-decoration-line:line-through!important;
+  text-decoration-color:#d71920!important;
+  text-decoration-thickness:2px!important;
+  text-decoration-skip-ink:none!important;
+}
+.special-promo-page-grid .price-normal{
+  color:#777!important;
+  text-decoration-line:line-through!important;
+  text-decoration-color:#d71920!important;
+  text-decoration-thickness:2px!important;
+  text-decoration-skip-ink:none!important;
+}
+#viewPrice .price-normal{
+  color:#777!important;
+  text-decoration-line:line-through!important;
+  text-decoration-color:#d71920!important;
+  text-decoration-thickness:2px!important;
+  text-decoration-skip-ink:none!important;
+}
+.viewer{touch-action:pan-y!important}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -574,6 +598,7 @@ let products=[];
 let cart=JSON.parse(localStorage.getItem('balivo_cart')||'[]');
 let category='Semua';
 let currentProductIndex=0;
+let currentProductData=null;
 let galleryIndex=0;
 let selectedSize=null;
 let touchStartX=0; let touchStartY=0;
@@ -679,10 +704,11 @@ function openSpecialPromoProduct(id){
   const i=products.findIndex(p=>p.id===id);
   if(i<0)return;
   currentProductIndex=i;
+  currentProductData=products[i];
   galleryIndex=0;
   selectedSize=null;
   document.getElementById('productModal').classList.add('open');
-  showProduct(products[i]);
+  showProduct(currentProductData);
 }
 
 function closeSpecialPromoPage(){
@@ -944,10 +970,11 @@ async function openProduct(id){
   const i=list.findIndex(p=>p.id===id);
   if(i<0)return;
   currentProductIndex=i;
+  currentProductData=list[i];
   galleryIndex=0;
   selectedSize=null;
   document.getElementById('productModal').classList.add('open');
-  await showProduct(list[i]);
+  await showProduct(currentProductData);
 }
 
 
@@ -1075,7 +1102,7 @@ function openExternalProduct(id){
   window.location.href=url;
 }
 function openAffiliate(id){openExternalProduct(id)}
-function currentProduct(){return productList()[currentProductIndex]}
+function currentProduct(){return currentProductData||productList()[currentProductIndex]}
 
 function productNext(){
   const p=currentProduct();
@@ -1099,17 +1126,22 @@ function closeProduct(){
   document.getElementById('productModal').classList.remove('open');
 }
 
-document.addEventListener('touchstart',e=>{
+const galleryViewer=document.getElementById('viewer');
+galleryViewer?.addEventListener('touchstart',e=>{
   if(!document.getElementById('productModal').classList.contains('open'))return;
-  touchStartX=e.changedTouches[0].screenX;
-  touchStartY=e.changedTouches[0].screenY;
+  const t=e.changedTouches?.[0];
+  if(!t)return;
+  touchStartX=t.clientX;
+  touchStartY=t.clientY;
 },{passive:true});
 
-document.addEventListener('touchend',e=>{
+galleryViewer?.addEventListener('touchend',e=>{
   if(!document.getElementById('productModal').classList.contains('open'))return;
-  const dx=e.changedTouches[0].screenX-touchStartX;
-  const dy=e.changedTouches[0].screenY-touchStartY;
-  if(Math.abs(dx)<50 || Math.abs(dx)<=Math.abs(dy))return;
+  const t=e.changedTouches?.[0];
+  if(!t)return;
+  const dx=t.clientX-touchStartX;
+  const dy=t.clientY-touchStartY;
+  if(Math.abs(dx)<45 || Math.abs(dx)<=Math.abs(dy))return;
 
   const p=currentProduct();
   if(!p)return;
