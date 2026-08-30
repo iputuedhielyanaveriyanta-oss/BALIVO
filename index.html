@@ -994,36 +994,67 @@ if ('serviceWorker' in navigator) {
 
   btn.addEventListener('click',()=>{menu.style.display='flex'});
   close.addEventListener('click',()=>{menu.style.display='none'});
+
+  async function copyUrl(){
+    try{await navigator.clipboard.writeText(url);return true}
+    catch(e){
+      try{
+        const ta=document.createElement('textarea');
+        ta.value=url;ta.style.position='fixed';ta.style.opacity='0';
+        document.body.appendChild(ta);ta.select();
+        const ok=document.execCommand('copy');ta.remove();return ok;
+      }catch(e2){return false}
+    }
+  }
+
+  function openApp(uri, fallback){
+    let hidden=false;
+    const onVis=()=>{hidden=true};
+    document.addEventListener('visibilitychange',onVis,{once:true});
+    window.location.href=uri;
+    setTimeout(()=>{
+      document.removeEventListener('visibilitychange',onVis);
+      if(!hidden && fallback) window.location.href=fallback;
+    },900);
+  }
+
   menu.addEventListener('click',async e=>{
     const target=e.target.closest('[data-share]');
     if(!target)return;
     const type=target.dataset.share;
+    menu.style.display='none';
 
     if(type==='copy'){
-      try{await navigator.clipboard.writeText(url);alert('Link BALIVO sudah disalin.')}
-      catch(err){prompt('Salin link BALIVO:',url)}
-      menu.style.display='none';
+      await copyUrl();
       return;
     }
 
     if(type==='facebook'){
       window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(url),'_blank','noopener,noreferrer');
-    }else if(type==='whatsapp'){
-      window.open('https://wa.me/?text='+encodeURIComponent(text+' '+url),'_blank','noopener,noreferrer');
-    }else if(type==='telegram'){
-      window.open('https://t.me/share/url?url='+encodeURIComponent(url)+'&text='+encodeURIComponent(text),'_blank','noopener,noreferrer');
-    }else if(type==='instagram'){
-      // Instagram does not expose a normal web URL-share endpoint.
-      // Copy the URL so it can be pasted into Instagram.
-      const ok=await navigator.clipboard.writeText(url).then(()=>true).catch(()=>false);
-      alert(ok?'Link BALIVO sudah disalin. Buka Instagram untuk membagikannya.':'Salin link BALIVO lalu buka Instagram.');
-    }else if(type==='instagram-story'){
-      // Instagram Story link sticker cannot be injected by a normal web page.
-      // Copy the exact BALIVO URL for the Story Link Sticker.
-      const ok=await navigator.clipboard.writeText(url).then(()=>true).catch(()=>false);
-      alert(ok?'Link BALIVO sudah disalin. Buka Instagram Story dan tambahkan Link Sticker.':'Salin link BALIVO lalu tambahkan Link Sticker di Story.');
+      return;
     }
-    menu.style.display='none';
+
+    if(type==='whatsapp'){
+      window.open('https://wa.me/?text='+encodeURIComponent(text+' '+url),'_blank','noopener,noreferrer');
+      return;
+    }
+
+    if(type==='telegram'){
+      window.open('https://t.me/share/url?url='+encodeURIComponent(url)+'&text='+encodeURIComponent(text),'_blank','noopener,noreferrer');
+      return;
+    }
+
+    if(type==='instagram'){
+      await copyUrl();
+      openApp('instagram://app','https://www.instagram.com/');
+      return;
+    }
+
+    if(type==='instagram-story'){
+      await copyUrl();
+      openApp('instagram://story-camera','https://www.instagram.com/');
+      return;
+    }
   });
 })();
 </script>
