@@ -1033,7 +1033,8 @@ function balivoChatAnswer(topic){
     'Instagram BALIVO':'Akun Instagram resmi BALIVO akan ditampilkan setelah diatur.'
   };
   const a=document.getElementById('balivoChatAnswer');
-  a.innerHTML='<b>'+esc(topic)+'</b><div style="margin-top:7px">'+esc(answers[topic]||'Informasi belum tersedia.')+'</div>';
+  const safe = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  a.innerHTML='<b>'+safe(topic)+'</b><div style="margin-top:7px">'+safe(answers[topic]||'Informasi belum tersedia.')+'</div>';
   a.classList.remove('hidden');
 }
 </script>
