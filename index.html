@@ -552,12 +552,22 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 }
 </style>
 
-<style id="balivo-discount-product-count-final">
-.discount-hero-row{display:contents!important}
+<style id="balivo-discount-100plus-visible-final">
+.discount-cta-line{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+}
+.discount-cta-line .discount-90-blink{
+  flex:0 0 auto!important;
+}
 .discount-product-count{
   display:inline-block!important;
-  vertical-align:middle!important;
-  margin-left:10px!important;
+  flex:0 0 auto!important;
   color:#111!important;
   font-size:14px!important;
   font-weight:900!important;
@@ -565,10 +575,8 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   white-space:nowrap!important;
 }
 @media(max-width:600px){
-  .discount-product-count{
-    margin-left:8px!important;
-    font-size:10px!important;
-  }
+  .discount-cta-line{gap:8px!important}
+  .discount-product-count{font-size:10px!important}
 }
 </style>
 </head>
@@ -580,7 +588,7 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 <div class="cart-actions"><button class="cart" onclick="openCart()">🛒 Cart <span id="cartCount" class="count">0</span></button> <button class="cart" onclick="openMyOrders()">📦 Pesanan</button></div>
 </div></header>
 <main>
-<section class="hero"><small>DISCOVER • SHOP • BALI</small><h1>Belanja lebih mudah.<br>Temukan pilihan terbaik.</h1><p>Fashion, lifestyle, surf, dan produk pilihan dari berbagai supplier dalam satu marketplace.</p><button type="button" class="discount-90-blink" onclick="showSpecialPromoPage()"><span>DISCOUNT UP TO 90% OFF</span></button><span class="discount-product-count">100+ PRODUCTS</span></section>
+<section class="hero"><small>DISCOVER • SHOP • BALI</small><h1>Belanja lebih mudah.<br>Temukan pilihan terbaik.</h1><p>Fashion, lifestyle, surf, dan produk pilihan dari berbagai supplier dalam satu marketplace.</p><div class="discount-cta-line"><button type="button" class="discount-90-blink" onclick="showSpecialPromoPage()"><span>DISCOUNT UP TO 90% OFF</span></button><span class="discount-product-count">100+ PRODUCTS</span></div></section>
 <div id="categorySectionHead" class="section-head"><h2>Kategori</h2></div><div id="categories" class="categories"></div>
 <section id="specialPromoPage" class="special-promo-page" aria-label="Special Promo">
   <div class="special-promo-page-head">
