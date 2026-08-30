@@ -226,6 +226,7 @@
 </div>
 </div>
     <div><label>Harga Jual *</label><input id="ownPrice" type="number" min="0" step="1000" placeholder="149000"></div>
+    <div><label>Diskon (%)</label><input id="ownDiscount" type="number" min="0" max="100" step="1" value="0" placeholder="Contoh: 20"><div class="file-note">Isi 0 jika tidak ada diskon. Harga diskon dihitung otomatis di katalog.</div></div>
     <div id="costWrap"><label>Harga Modal *</label><input id="ownCost" type="number" min="0" step="1000" placeholder="100000"></div>
 
     <div id="dropshipFields" class="wide hidden" style="display:none">
@@ -324,6 +325,8 @@ let products=[],orders=[],session=null;
 let importedShopeeImages=[];
 const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const adminDiscount=p=>Math.min(100,Math.max(0,Number(p?.discount_percent)||0));
+const adminSalePrice=p=>Math.round(Number(p?.price||0)*(1-adminDiscount(p)/100));
 
 function openLogin(){document.getElementById('loginModal').classList.remove('hidden');document.getElementById('loginModal').style.display='flex';}
 function closeLogin(){document.getElementById('loginModal').classList.add('hidden');document.getElementById('loginModal').style.display='none';}
@@ -646,7 +649,7 @@ async function refresh(){
     if(document.getElementById('orderRows'))document.getElementById('orderRows').innerHTML='';
     return;
   }
-  const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,stock,status,stock_source,product_type,image,sizes,supplier_id,supplier_cost,markup,supplier_product_url,affiliate_url,affiliate_commission,suppliers(name)').order('created_at',{ascending:false});
+  const {data:p,error:pe}=await sb.from('products').select('id,name,brand,category,cost,price,discount_percent,stock,status,stock_source,product_type,image,sizes,supplier_id,supplier_cost,markup,supplier_product_url,affiliate_url,affiliate_commission,suppliers(name)').order('created_at',{ascending:false});
   if(pe){console.error(pe);return}
   products=(p||[]).map(x=>({...x,supplier:x.suppliers?.name||'-'}));
   const {data:o,error:oe}=session?await sb.from('orders').select('id,order_number,customer_name,customer_phone,customer_address,total,subtotal,payment_method,payment_status,status,fulfillment_type,supplier_cost,markup_profit,supplier_payment_status,fulfillment_status,supplier_order_note,supplier_tracking_number,shipping_courier,payment_proof_url,payment_rejection_reason,refund_status,created_at').order('created_at',{ascending:false}):{data:[],error:null};
@@ -654,13 +657,13 @@ async function refresh(){
   sProducts.textContent=products.length;
   sStock.textContent=products.reduce((a,x)=>a+Number(x.stock||0),0);
   sOrders.textContent=orders.length;
-  sProfit.textContent=money(products.reduce((a,x)=>a+(Number(x.price||0)-Number(x.cost||0))*Number(x.stock||0),0)); if(document.getElementById('sProofPending'))sProofPending.textContent=orders.filter(x=>x.payment_status==='WAITING_VERIFICATION' || (x.payment_status==='PENDING' && x.payment_proof_url)).length; if(document.getElementById('sReady'))sReady.textContent=orders.filter(x=>x.fulfillment_status==='READY_TO_PROCESS').length;
+  sProfit.textContent=money(products.reduce((a,x)=>a+(adminSalePrice(x)-Number(x.cost||0))*Number(x.stock||0),0)); if(document.getElementById('sProofPending'))sProofPending.textContent=orders.filter(x=>x.payment_status==='WAITING_VERIFICATION' || (x.payment_status==='PENDING' && x.payment_proof_url)).length; if(document.getElementById('sReady'))sReady.textContent=orders.filter(x=>x.fulfillment_status==='READY_TO_PROCESS').length;
   productRows.innerHTML=products.map(p=>`<tr>
     <td><strong>${esc(p.name)}</strong><div style="font-size:11px;color:#777">${esc(p.brand||'')}</div></td>
     <td>${p.stock_source==='OWN'?'STOK SAYA':p.stock_source==='AFFILIATE'?'AFFILIATE':esc(p.supplier||'Supplier')}</td>
-    <td>${money(p.cost)}</td><td>${money(p.price)}</td>
+    <td>${money(p.cost)}</td><td>${money(p.price)}${Number(p.discount_percent||0)>0?`<div style="font-size:11px;color:#dc2626;margin-top:3px">Diskon ${Number(p.discount_percent)}%</div>`:''}</td>
     <td><strong>${Number(p.stock)||0}</strong><div style="font-size:11px;color:#777;margin-top:4px">${renderAdminSizes(p)}</div></td>
-    <td class="profit">${money(Number(p.price||0)-Number(p.cost||0))}</td>
+    <td class="profit">${money(adminSalePrice(p)-Number(p.cost||0))}</td>
     <td><button class="mini" onclick="editSizes('${p.id}')">Edit Size</button> <button class="mini" onclick="deleteProduct('${p.id}')">Hapus</button></td>
   </tr>`).join('');
   renderDropship();
@@ -739,6 +742,7 @@ function resetUnifiedProductForm(){
   const ids=['ownName','ownBrand','ownPrice','ownCost','ownSupplier','supplierCost','supplierMarkup',
     'supplierProductUrl','affiliateUrl','affiliateCommission','ownImageUrl','ownDescription','ownDetails'];
   ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=el.type==='number'&&id==='affiliateCommission'?'0':'';});
+  const ownDiscount=document.getElementById('ownDiscount'); if(ownDiscount)ownDiscount.value='0';
   const fileEl=document.getElementById('ownImageFile'); if(fileEl)fileEl.value='';
   const preview=document.getElementById('ownImagePreview'); if(preview)preview.style.display='none';
   const previewImg=document.getElementById('ownImagePreviewImg'); if(previewImg)previewImg.removeAttribute('src');
@@ -760,8 +764,10 @@ async function saveUnifiedProduct(){
   if(!ownCategoryList.length){alert('Pilih minimal satu kategori.');return;}
   const name=ownName.value.trim();
   const price=Number(ownPrice.value);
+  const discount=Math.min(100,Math.max(0,Number(document.getElementById('ownDiscount')?.value)||0));
   const cost=Number(ownCost.value)||0;
   if(!name||!Number.isFinite(price)||price<0){alert('Nama dan harga jual wajib diisi.');return;}
+  if(discount<0||discount>100){alert('Diskon harus antara 0% sampai 100%.');return;}
   let sizes=null,stock=0;
   if(mode!=='AFFILIATE'){
     sizes=readSizeStock();
@@ -781,7 +787,7 @@ async function saveUnifiedProduct(){
     const mk=mode==='DROPSHIP'?(Number(supplierMarkup.value)||Math.max(0,price-supCost)):0;
     const {error}=await sb.from('products').insert({
       name,brand:ownBrand.value.trim()||'BALIVO',category:ownCategoryList[ownCategoryList.length-1]||'Lainnya',categories:ownCategoryList,
-      supplier_id:supplierId,cost:mode==='AFFILIATE'?0:cost,price,stock,stock_source:mode==='DROPSHIP'?'SUPPLIER':'OWN',product_type:mode,
+      supplier_id:supplierId,cost:mode==='AFFILIATE'?0:cost,price,discount_percent:discount,stock,stock_source:mode==='DROPSHIP'?'SUPPLIER':'OWN',product_type:mode,
       image,images:image?[image]:[],sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',
       supplier_cost:supCost,markup:mk,supplier_product_url:mode==='DROPSHIP'?supplierUrl:null,affiliate_url:mode==='AFFILIATE'?affiliateUrl:null,
       affiliate_commission:mode==='AFFILIATE'?(Number(affiliateCommission.value)||0):0

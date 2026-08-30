@@ -287,10 +287,15 @@ let touchStartY=0;
 
 const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const discountPercent=p=>Math.min(100,Math.max(0,Number(p?.discount_percent)||0));
+const salePrice=p=>Math.round(Number(p?.price||0)*(1-discountPercent(p)/100));
+const priceHtml=p=>discountPercent(p)>0
+  ? `<span style="text-decoration:line-through;color:#777;font-size:.78em;margin-right:5px">${money(p.price)}</span><b>${money(salePrice(p))}</b>`
+  : money(p.price);
 
 async function loadProducts(){
   const {data,error}=await sb.from('products')
-    .select('id,name,brand,category,categories,description,details,image,images,sizes,price,stock,status,stock_source,supplier_cost,markup,supplier_product_url,affiliate_url,product_type')
+    .select('id,name,brand,category,categories,description,details,image,images,sizes,price,discount_percent,stock,status,stock_source,supplier_cost,markup,supplier_product_url,affiliate_url,product_type')
     .eq('status','ACTIVE')
     .order('created_at',{ascending:false});
 
@@ -497,12 +502,12 @@ function renderProductsOnly(){
       
       <div class="photo">
         <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
-        ${p.product_type==='AFFILIATE' ? '<span class="badge">BIG SALE</span>' : (p.product_type==='DROPSHIP' ? '<span class="badge">SHOPEE</span>' : (Number(p.stock)<=0?'<span class="badge">HABIS</span>':''))}
+        ${discountPercent(p)>0 ? `<span class="badge" style="background:#d71920">-${Number(discountPercent(p))}%</span>` : (p.product_type==='AFFILIATE' ? '<span class="badge">BIG SALE</span>' : (p.product_type==='DROPSHIP' ? '<span class="badge">SHOPEE</span>' : (Number(p.stock)<=0?'<span class="badge">HABIS</span>':'')))}
       </div>
       <div class="info">
         <div class="brand">${esc(p.brand||'Supplier')}</div>
         <div class="name">${esc(p.name||'Produk')}</div>
-        <div class="price">${money(p.price)}</div>
+        <div class="price">${priceHtml(p)}</div>
         <div class="stock">${p.product_type==='AFFILIATE'?'Beli di Shopee':(p.product_type==='DROPSHIP'?'Beli di Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'))}</div>
         <button class="add" ${p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP'?'':'disabled'} onclick="event.stopPropagation();${(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP')?`openExternalProduct('${p.id}')`:`openProduct('${p.id}')`}">${p.product_type==='AFFILIATE'?'BELI DISINI':(p.product_type==='DROPSHIP'?'BELI DI SHOPEE':(sizeData(p).length?'Pilih Size':'Lihat Produk'))}</button>
       </div>
@@ -518,7 +523,7 @@ function render(){
   document.getElementById('products').innerHTML=list.map(p=>{
     const external=p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP';
     const externalUrl=p.affiliate_url||p.supplier_product_url||'';
-    const saleBadge=external?'<span class="badge-affiliate">BIG SALE</span>':(Number(p.stock)<=0?'<span class="badge">HABIS</span>':'');
+    const saleBadge=discountPercent(p)>0?`<span class="badge-affiliate">-${Number(discountPercent(p))}%</span>`:(external?'<span class="badge-affiliate">BIG SALE</span>':(Number(p.stock)<=0?'<span class="badge">HABIS</span>':''));
     const actionLabel=external?'BELI DISINI':(sizeData(p).length?'Pilih Size':'Lihat Produk');
     const action=external
       ? `event.stopPropagation();openExternalProduct('${p.id}')`
@@ -534,7 +539,7 @@ function render(){
       <div class="info">
         <div class="brand">${esc(p.brand||'Supplier')}</div>
         <div class="name">${esc(p.name||'Produk')}</div>
-        <div class="price">${money(p.price)}</div>
+        <div class="price">${priceHtml(p)}</div>
         <div class="stock">${external?'Beli di Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis')}</div>
         <button class="add ${p.product_type==='AFFILIATE'?'affiliate-cta':''}" onclick="${action}">${actionLabel}</button>
       </div>
@@ -629,7 +634,7 @@ async function showProduct(p){
   document.getElementById('viewImage').src=images[galleryIndex];
   document.getElementById('viewBrand').textContent=p.brand||'BALIVO';
   document.getElementById('viewName').textContent=p.name||'';
-  document.getElementById('viewPrice').textContent=money(p.price);
+  document.getElementById('viewPrice').innerHTML=priceHtml(p);
   document.getElementById('viewStock').textContent=p.product_type==='AFFILIATE'?'':(p.product_type==='DROPSHIP'?'Pembelian melalui Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'));
   const externalLink=p.affiliate_url||p.supplier_product_url||'';
   document.getElementById('viewAffiliate').innerHTML=externalLink
@@ -783,13 +788,13 @@ function renderCart(){
   body.innerHTML=cart.map(x=>{
     const p=products.find(y=>y.id===x.id);
     if(!p)return '';
-    total+=Number(p.price)*x.qty;
+    total+=salePrice(p)*x.qty;
     return `<div class="cart-row">
       <img src="${esc(p.image||'')}">
       <div style="flex:1">
         <strong>${esc(p.name)}</strong>
         ${x.size?`<div>Size: <b>${esc(x.size)}</b></div>`:''}
-        <div>${money(p.price)}</div>
+        <div>${priceHtml(p)}</div>
         <div class="qty">
           <button onclick="change('${p.id}',-1)">−</button>
           <span>${x.qty}</span>
@@ -837,7 +842,7 @@ document.getElementById('checkoutForm').addEventListener('submit',async e=>{
 
   const items=cart.map(x=>{
     const p=products.find(y=>y.id===x.id);
-    return p?{product_id:p.id,product_name:p.name,size:x.size||null,unit_price:Number(p.price),quantity:x.qty,subtotal:Number(p.price)*x.qty}:null;
+    return p?{product_id:p.id,product_name:p.name,size:x.size||null,unit_price:salePrice(p),quantity:x.qty,subtotal:salePrice(p)*x.qty}:null;
   }).filter(Boolean);
 
   const total=items.reduce((s,x)=>s+x.subtotal,0);
