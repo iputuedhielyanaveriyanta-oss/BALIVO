@@ -5,7 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111111">
 <meta name="description" content="BALIVO — Bali's Online Marketplace">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BALIVO">
+<meta property="og:title" content="BALIVO — Bali's Online Marketplace">
+<meta property="og:description" content="Belanja pilihan terbaik dari Bali di BALIVO.">
+<meta property="og:type" content="website">
 <link rel="manifest" href="balivo-manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180-v2.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192-v2.png">
+
 <title>BALIVO — Bali's Online Marketplace</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -623,39 +633,85 @@ function selectSize(size){
   });
 }
 
+
 function productShareUrl(id){
   const base=window.location.origin+window.location.pathname;
   return base+'?product='+encodeURIComponent(id);
 }
+async function copyShareLink(url){
+  try{await navigator.clipboard.writeText(url);return true}catch(e){
+    try{
+      const ta=document.createElement('textarea');ta.value=url;
+      ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();
+      const ok=document.execCommand('copy');ta.remove();return ok;
+    }catch(e2){return false}
+  }
+}
+function currentShareProduct(id){return products.find(x=>x.id===id)||null}
 
-async function shareProduct(id, instagramStory=false){
-  const p=products.find(x=>x.id===id);
-  if(!p)return;
+async function shareProduct(id){
+  const p=currentShareProduct(id); if(!p)return;
   const url=productShareUrl(id);
   const msg=document.getElementById('shareProductMsg');
-  const text=`${p.name||'Produk'} — BALIVO`;
-  if(msg)msg.textContent='';
-
   try{
     if(navigator.share){
-      await navigator.share({title:p.name||'Produk BALIVO',text,url});
-      if(msg)msg.textContent='Link produk siap dibagikan.';
+      await navigator.share({
+        title:p.name||'Produk BALIVO',
+        text:`${p.name||'Produk BALIVO'} — ${money(p.price)}`,
+        url
+      });
+      if(msg)msg.textContent='Produk berhasil dibagikan.';
       return;
     }
-  }catch(e){
-    if(e && e.name==='AbortError')return;
-  }
+  }catch(e){if(e?.name==='AbortError')return}
+  const ok=await copyShareLink(url);
+  if(msg)msg.textContent=ok?'Link produk BALIVO sudah disalin.':'Link produk: '+url;
+}
 
+async function shareInstagramStory(id){
+  const p=currentShareProduct(id); if(!p)return;
+  const url=productShareUrl(id);
+  const msg=document.getElementById('shareProductMsg');
+  const btn=document.getElementById('shareInstagramBtn');
+  if(msg)msg.textContent='Menyiapkan Story Instagram...';
+  if(btn){btn.disabled=true;btn.textContent='MENYIAPKAN...'}
   try{
-    await navigator.clipboard.writeText(url);
+    const imageUrl=p.image||((p.images||[])[0]||'');
+    if(!imageUrl)throw new Error('Gambar produk belum tersedia.');
+
+    const response=await fetch(imageUrl,{mode:'cors',credentials:'omit'});
+    if(!response.ok)throw new Error('Gambar produk tidak bisa diambil.');
+    const blob=await response.blob();
+
+    const file=new File([blob],
+      `BALIVO-${String(p.name||'produk').replace(/[^a-zA-Z0-9_-]+/g,'-')}.jpg`,
+      {type:blob.type||'image/jpeg'});
+
+    // On supported iPhones/browsers this opens the native share sheet.
+    // The user can select Instagram; the product URL is included as share text.
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({
+        title:p.name||'BALIVO',
+        text:`${p.name||'Produk BALIVO'} — ${money(p.price)}\n${url}`,
+        files:[file]
+      });
+      if(msg)msg.textContent='Pilih Instagram dari menu Share untuk membuat Story.';
+      return;
+    }
+
+    // Fallback: copy the exact BALIVO product URL.
+    const ok=await copyShareLink(url);
+    if(msg)msg.textContent=ok
+      ? 'Link produk sudah disalin. Di Instagram Story, tambahkan Link Sticker dan tempel link BALIVO.'
+      : 'Salin link produk BALIVO lalu tambahkan Link Sticker di Instagram Story.';
   }catch(e){
-    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
-  }
-  if(msg)msg.innerHTML=instagramStory
-    ? 'Link produk sudah disalin. Di Instagram Story, tambahkan <b>Link Sticker</b> lalu tempel link BALIVO ini.'
-    : 'Link produk sudah disalin.';
-  if(instagramStory){
-    try{window.location.href='instagram://story-camera';}catch(e){}
+    const ok=await copyShareLink(url);
+    if(msg)msg.textContent=ok
+      ? 'Link BALIVO sudah disalin. Tambahkan Link Sticker di Instagram Story.'
+      : 'Instagram Story tidak mendukung share otomatis di perangkat ini.';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='◎ STORY INSTAGRAM'}
   }
 }
 
@@ -724,8 +780,8 @@ async function showProduct(p){
 
   const shareBtn=document.getElementById('shareProductBtn');
   const igBtn=document.getElementById('shareInstagramBtn');
-  if(shareBtn)shareBtn.onclick=()=>shareProduct(p.id,false);
-  if(igBtn)igBtn.onclick=()=>shareProduct(p.id,true);
+  if(shareBtn)shareBtn.onclick=()=>shareProduct(p.id);
+  if(igBtn)igBtn.onclick=()=>shareInstagramStory(p.id);
 
   const addButton=document.getElementById('viewAdd');
   const external=!!(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP');
@@ -737,31 +793,6 @@ async function showProduct(p){
     addButton.disabled=Number(p.stock)<=0;
     addButton.textContent=Number(p.stock)>0?'Tambah ke Cart':'Stok Habis';
     addButton.onclick=()=>{if(Number(p.stock)>0)add(p.id)};
-  }
-}
-
-
-function balivoProductUrl(p){
-  const base=window.location.origin+window.location.pathname;
-  return base+'?product='+encodeURIComponent(p.id);
-}
-async function shareBalivoProduct(){
-  const p=currentProduct();
-  if(!p)return;
-  const url=balivoProductUrl(p);
-  const text=(p.name||'Produk BALIVO')+' — '+money(p.price)+'\n'+url;
-
-  if(navigator.share){
-    try{
-      await navigator.share({title:p.name||'Produk BALIVO',text,url});
-      return;
-    }catch(e){}
-  }
-  try{
-    await navigator.clipboard.writeText(url);
-    alert('Link produk BALIVO sudah disalin. Tempelkan link ini ke Story Instagram.');
-  }catch(e){
-    prompt('Salin link produk BALIVO ini:',url);
   }
 }
 
@@ -1018,13 +1049,27 @@ saveCart();
 // Render kategori langsung agar tombol tetap muncul walaupun data produk/Supabase gagal dimuat.
 renderCategories();
 loadProducts().then(()=>{
-  const id=new URLSearchParams(window.location.search).get('product');
-  if(id){
-    const p=products.find(x=>String(x.id)===String(id));
-    if(p)openProduct(p.id);
+  const sharedId=new URLSearchParams(window.location.search).get('product');
+  if(sharedId){
+    const timer=setInterval(()=>{
+      if(products.length){
+        clearInterval(timer);
+        openProduct(sharedId);
+      }
+    },100);
+    setTimeout(()=>clearInterval(timer),10000);
   }
 });
 
 </script>
-<div id="orderSuccess" class="modal" style="display:none"></div></body>
+<div id="orderSuccess" class="modal" style="display:none"></div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./balivo-sw.js', {scope: './'})
+      .catch(err => console.warn('BALIVO PWA service worker:', err));
+  });
+}
+</script>
+</body>
 </html>
