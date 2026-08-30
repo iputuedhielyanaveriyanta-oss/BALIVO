@@ -340,6 +340,122 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   }
 }
 </style>
+<style id="balivo-special-promo-4col-fixed">
+.special-promo-page-grid{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:12px!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:visible!important;
+}
+.special-promo-page-grid .product{
+  min-width:0!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.special-promo-page-grid .product .photo{
+  width:100%!important;
+  aspect-ratio:1/1!important;
+  overflow:hidden!important;
+}
+.special-promo-page-grid .product .photo img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+}
+.special-promo-page-grid .product .info{
+  min-width:0!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding:8px 7px 9px!important;
+}
+.special-promo-page-grid .product .brand{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  font-size:10px!important;
+  line-height:1.15!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.special-promo-page-grid .product .name{display:none!important}
+.special-promo-page-grid .product .price{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:5px 0 0!important;
+  overflow:visible!important;
+}
+.special-promo-page-grid .product .price-sale-wrap{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  width:100%!important;
+  min-width:0!important;
+  gap:3px!important;
+}
+.special-promo-page-grid .product .price-normal{
+  display:block!important;
+  max-width:100%!important;
+  font-size:10px!important;
+  line-height:1.1!important;
+  color:#777!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.special-promo-page-grid .product .price-sale{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  font-size:14px!important;
+  line-height:1.12!important;
+  color:#111!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  word-break:normal!important;
+}
+.special-promo-page-grid .product .add{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  margin-top:7px!important;
+  padding:7px 2px!important;
+  font-size:9px!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.special-promo-page-grid .promo-discount{
+  right:5px!important;
+  top:5px!important;
+  padding:4px 5px!important;
+  font-size:9px!important;
+  line-height:1!important;
+  border-radius:6px!important;
+}
+@media(max-width:600px){
+  .special-promo-page-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  .special-promo-page-grid .product .info{padding:7px 5px 8px!important}
+  .special-promo-page-grid .product .brand{font-size:8px!important}
+  .special-promo-page-grid .product .price{margin-top:4px!important}
+  .special-promo-page-grid .product .price-normal{font-size:7px!important}
+  .special-promo-page-grid .product .price-sale{font-size:10px!important}
+  .special-promo-page-grid .product .add{margin-top:5px!important;padding:6px 1px!important;font-size:7px!important}
+  .special-promo-page-grid .promo-discount{font-size:7px!important;padding:3px 4px!important}
+}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -426,7 +542,7 @@ let category='Semua';
 let currentProductIndex=0;
 let galleryIndex=0;
 let selectedSize=null;
-let touchStartY=0;
+let touchStartX=0; let touchStartY=0;
 
 const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -950,14 +1066,24 @@ function closeProduct(){
 }
 
 document.addEventListener('touchstart',e=>{
-  if(document.getElementById('productModal').classList.contains('open'))
-    touchStartY=e.changedTouches[0].screenY;
+  if(!document.getElementById('productModal').classList.contains('open'))return;
+  touchStartX=e.changedTouches[0].screenX;
+  touchStartY=e.changedTouches[0].screenY;
 },{passive:true});
 
 document.addEventListener('touchend',e=>{
   if(!document.getElementById('productModal').classList.contains('open'))return;
+  const dx=e.changedTouches[0].screenX-touchStartX;
   const dy=e.changedTouches[0].screenY-touchStartY;
-  if(Math.abs(dy)>60)(dy<0?productNext:productPrev)();
+  if(Math.abs(dx)<50 || Math.abs(dx)<=Math.abs(dy))return;
+
+  const p=currentProduct();
+  if(!p)return;
+  const images=[p.image,...(p.images||[])].filter(Boolean).filter((im,i,a)=>a.indexOf(im)===i);
+  if(images.length<2)return;
+
+  galleryIndex=(galleryIndex+(dx<0?1:-1)+images.length)%images.length;
+  showProduct(p);
 },{passive:true});
 
 document.addEventListener('keydown',e=>{
