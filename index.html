@@ -520,6 +520,37 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   margin-top:4px!important;
 }
 </style>
+<style id="balivo-large-discount-view">
+.view-discount{
+  position:absolute;
+  left:18px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:4;
+  display:none;
+  background:#d71920;
+  color:#fff;
+  border-radius:14px;
+  padding:14px 12px;
+  min-width:86px;
+  text-align:center;
+  font-size:22px;
+  font-weight:900;
+  line-height:1;
+  box-shadow:0 4px 14px #0004;
+  pointer-events:none;
+}
+.view-discount.show{display:block}
+@media(max-width:700px){
+  .view-discount{
+    left:12px;
+    min-width:72px;
+    padding:11px 9px;
+    font-size:18px;
+    border-radius:12px;
+  }
+}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -553,7 +584,7 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 
 
 
-<div id="productModal" class="product-modal"><div class="product-view"><button class="view-close" onclick="closeProduct()">✕</button><div id="viewer" class="viewer"><button class="view-arrow view-prev" onclick="productPrev()">‹</button><img id="viewImage" alt=""><button class="view-arrow view-next" onclick="productNext()">›</button></div><div class="view-info"><div id="viewBrand" class="brand"></div><h2 id="viewName"></h2><div id="viewPrice" class="price"></div><div id="viewStock" class="stock"></div><p id="viewDescription"></p><div id="viewDetails"></div><div class="thumbs" id="viewThumbs"></div><h3>⭐ Ulasan Customer</h3><div id="viewReviews"></div>
+<div id="productModal" class="product-modal"><div class="product-view"><button class="view-close" onclick="closeProduct()">✕</button><div id="viewer" class="viewer"><div id="viewDiscount" class="view-discount"></div><button class="view-arrow view-prev" onclick="productPrev()">‹</button><img id="viewImage" alt=""><button class="view-arrow view-next" onclick="productNext()">›</button></div><div class="view-info"><div id="viewBrand" class="brand"></div><h2 id="viewName"></h2><div id="viewPrice" class="price"></div><div id="viewStock" class="stock"></div><p id="viewDescription"></p><div id="viewDetails"></div><div class="thumbs" id="viewThumbs"></div><h3>⭐ Ulasan Customer</h3><div id="viewReviews"></div>
 <div class="size-box">
   <div class="size-title">Pilih Size</div>
   <div id="viewSizes" class="size-options"></div>
@@ -1031,6 +1062,12 @@ async function showProduct(p){
 
   galleryIndex=galleryIndex%images.length;
   document.getElementById('viewImage').src=images[galleryIndex];
+  const viewDiscount=document.getElementById('viewDiscount');
+  if(viewDiscount){
+    const pct=discountPercent(p);
+    viewDiscount.textContent=pct>0?`-${pct}%`:'';
+    viewDiscount.classList.toggle('show',pct>0);
+  }
   document.getElementById('viewBrand').textContent=p.brand||'BALIVO';
   document.getElementById('viewName').textContent=p.name||'';
   document.getElementById('viewPrice').innerHTML=priceHtml(p);
