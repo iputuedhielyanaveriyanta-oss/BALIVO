@@ -246,7 +246,45 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 .topbar .actions,.topbar .right,.topbar .cart-actions{display:flex!important;align-items:center!important;gap:8px!important;flex:0 0 auto!important;white-space:nowrap!important}
 .topbar button{white-space:nowrap!important}
 @media(max-width:600px){.topbar{gap:6px!important}.topbar .brand{font-size:18px!important}.topbar .actions,.topbar .right,.topbar .cart-actions{gap:5px!important}.topbar button{padding:8px 9px!important;font-size:12px!important}}
-</style></head>
+</style><style id="balivo-special-promo-page">
+.special-promo-page{display:none;background:#fff;border-radius:22px;padding:22px 18px 28px;margin-top:8px}
+.special-promo-page.open{display:block}
+.special-promo-page-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
+.special-promo-page-head h2{margin:0;font-size:28px;line-height:1}
+.special-promo-page-head p{margin:8px 0 0;color:#777;font-size:13px}
+.special-promo-back{background:#111;color:#fff;border-radius:10px;padding:10px 14px;font-weight:800;white-space:nowrap}
+.special-promo-page-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.special-promo-page-grid .product{cursor:pointer}
+.special-promo-page-grid .promo-discount{position:absolute;right:9px;top:9px;background:#d71920;color:#fff;border-radius:8px;padding:6px 8px;font-size:12px;font-weight:900}
+.special-promo-empty{text-align:center;padding:55px 15px;color:#777;grid-column:1/-1}
+@media(max-width:600px){
+ .special-promo-page{padding:18px 12px 24px}
+ .special-promo-page-head h2{font-size:23px}
+ .special-promo-page-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .special-promo-back{padding:9px 11px;font-size:12px}
+}
+</style>
+
+<style id="discount-90-blink">
+@keyframes discount90Blink{
+  0%,45%{background:#d71920!important;color:#fff!important}
+  50%,95%{background:#fff!important;color:#d71920!important}
+  100%{background:#d71920!important;color:#fff!important}
+}
+.hero button.discount-90-blink{
+  animation:discount90Blink 1.2s ease-in-out infinite;
+  border:2px solid #d71920!important;
+  font-weight:900!important;
+  box-shadow:0 0 0 0 rgba(215,25,32,.45),0 8px 22px rgba(0,0,0,.18);
+}
+.hero button.discount-90-blink:hover{
+  animation-play-state:paused;
+}
+@media(prefers-reduced-motion:reduce){
+  .hero button.discount-90-blink{animation:none;background:#d71920!important;color:#fff!important}
+}
+</style>
+</head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
 <header><div class="nav">
@@ -255,9 +293,20 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 <div class="cart-actions"><button class="cart" onclick="openCart()">🛒 Cart <span id="cartCount" class="count">0</span></button> <button class="cart" onclick="openMyOrders()">📦 Pesanan</button></div>
 </div></header>
 <main>
-<section class="hero"><small>DISCOVER • SHOP • BALI</small><h1>Belanja lebih mudah.<br>Temukan pilihan terbaik.</h1><p>Fashion, lifestyle, surf, dan produk pilihan dari berbagai supplier dalam satu marketplace.</p><button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">BELANJA SEKARANG</button></section>
-<div class="section-head"><h2>Kategori</h2></div><div id="categories" class="categories"></div>
-<div style="margin:14px 0"><button id="specialPromoBtn" class="special-promo-btn" onclick="toggleSpecialPromo()"><span>SPECIAL PROMO</span></button></div>
+<section class="hero"><small>DISCOVER • SHOP • BALI</small><h1>Belanja lebih mudah.<br>Temukan pilihan terbaik.</h1><p>Fashion, lifestyle, surf, dan produk pilihan dari berbagai supplier dalam satu marketplace.</p><button type="button" class="discount-90-blink" onclick="showSpecialPromoPage()">DISCOUNT UP TO 90% OFF</button></section>
+<div id="categorySectionHead" class="section-head"><h2>Kategori</h2></div><div id="categories" class="categories"></div>
+<section id="specialPromoPage" class="special-promo-page" aria-label="Special Promo">
+  <div class="special-promo-page-head">
+    <div>
+      <h2>🔥 SPECIAL PROMO</h2>
+      <p id="specialPromoPageCount">Diskon terbaik BALIVO</p>
+    </div>
+    <button type="button" class="special-promo-back" onclick="closeSpecialPromoPage()">‹ KEMBALI</button>
+  </div>
+  <div id="specialPromoPageGrid" class="special-promo-page-grid">
+    <div class="special-promo-empty">Memuat Special Promo...</div>
+  </div>
+</section>
 <div class="section-head"><h2 id="productTitle">Produk Pilihan</h2><span id="resultCount" style="font-size:12px;color:#777"></span></div>
 <div id="products" class="grid"></div>
 <div id="empty" class="empty hidden">Produk tidak ditemukan.</div>
@@ -306,7 +355,6 @@ document.getElementById("myOrdersForm").addEventListener("submit",e=>{e.preventD
 let products=[];
 let cart=JSON.parse(localStorage.getItem('balivo_cart')||'[]');
 let category='Semua';
-let specialPromoOnly=false;
 let currentProductIndex=0;
 let galleryIndex=0;
 let selectedSize=null;
@@ -355,11 +403,77 @@ function productList(){
       ? p.categories
       : String(p.category||'Lainnya').split(' | ').filter(Boolean);
     const categoryOK=category==='Semua'||cats.some(c=>c===category||c.startsWith(category+' / '));
-    const promoOK=!specialPromoOnly || (p.product_type==='OWN' && discountPercent(p)>0);
-    return categoryOK && promoOK && (!q||`${p.name||''} ${p.brand||''} ${cats.join(' ')}`.toLowerCase().includes(q));
+    return categoryOK && (!q||`${p.name||''} ${p.brand||''} ${cats.join(' ')}`.toLowerCase().includes(q));
   });
 }
 
+function specialPromoList(){
+  return products.filter(p =>
+    p.product_type==='OWN' &&
+    discountPercent(p)>0 &&
+    Number(p.stock||0)>0
+  );
+}
+
+function showSpecialPromoPage(){
+  const page=document.getElementById('specialPromoPage');
+  if(!page)return;
+
+  document.querySelector('.hero')?.classList.add('hidden');
+  document.getElementById('categories')?.classList.add('hidden');
+  document.getElementById('products')?.classList.add('hidden');
+  document.getElementById('empty')?.classList.add('hidden');
+  document.getElementById('productTitle')?.closest('.section-head')?.classList.add('hidden');
+  page.classList.add('open');
+
+  const list=specialPromoList();
+  const grid=document.getElementById('specialPromoPageGrid');
+  const count=document.getElementById('specialPromoPageCount');
+  if(count) count.textContent=list.length ? `${list.length} produk dengan diskon spesial` : 'Belum ada produk diskon';
+
+  if(!grid)return;
+  if(!list.length){
+    grid.innerHTML='<div class="special-promo-empty">Belum ada produk SPECIAL PROMO.</div>';
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+
+  grid.innerHTML=list.map(p=>`
+    <article class="product" onclick="openSpecialPromoProduct('${p.id}')">
+      <div class="photo">
+        <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
+        <span class="promo-discount">-${Number(discountPercent(p))}%</span>
+      </div>
+      <div class="info">
+        <div class="brand">${esc(p.brand||'BALIVO')}</div>
+        <div class="name">${esc(p.name||'Produk')}</div>
+        <div class="price">${priceHtml(p)}</div>
+        <button class="add" type="button" onclick="event.stopPropagation();openSpecialPromoProduct('${p.id}')">LIHAT PRODUK</button>
+      </div>
+    </article>`).join('');
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function openSpecialPromoProduct(id){
+  const i=products.findIndex(p=>p.id===id);
+  if(i<0)return;
+  currentProductIndex=i;
+  galleryIndex=0;
+  selectedSize=null;
+  document.getElementById('productModal').classList.add('open');
+  showProduct(products[i]);
+}
+
+function closeSpecialPromoPage(){
+  document.getElementById('specialPromoPage')?.classList.remove('open');
+  document.querySelector('.hero')?.classList.remove('hidden');
+  document.getElementById('categories')?.classList.remove('hidden');
+  document.getElementById('products')?.classList.remove('hidden');
+  document.getElementById('empty')?.classList.add('hidden');
+  document.getElementById('productTitle')?.closest('.section-head')?.classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 function categoryCatalog(){
   return [
     {name:'Fashion',subs:[
@@ -508,9 +622,6 @@ document.addEventListener('click',function(e){
   if(sameOpen){closeCategoryMenu();return;}
 
   category=c;
-  specialPromoOnly=false;
-  const promoBtn=document.getElementById('specialPromoBtn');
-  if(promoBtn){promoBtn.classList.remove('active');promoBtn.innerHTML='<span>SPECIAL PROMO</span>';}
   const title=document.getElementById('productTitle');
   if(title)title.textContent=c==='Semua'?'Produk Pilihan':c;
   renderCategories();
@@ -526,7 +637,6 @@ document.addEventListener('click',function(e){
 window.addEventListener('scroll',closeCategoryMenu,{passive:true});
 window.addEventListener('resize',closeCategoryMenu);
 
-function toggleSpecialPromo(){specialPromoOnly=!specialPromoOnly;category='Semua';const btn=document.getElementById('specialPromoBtn');if(btn){btn.classList.toggle('active',specialPromoOnly);btn.innerHTML=specialPromoOnly?'<span>SPECIAL PROMO • AKTIF</span>':'<span>SPECIAL PROMO</span>'}const title=document.getElementById('productTitle');if(title)title.textContent=specialPromoOnly?'SPECIAL PROMO':'Produk Pilihan';renderProductsOnly()}
 
 function renderProductsOnly(){
   const list=productList();
