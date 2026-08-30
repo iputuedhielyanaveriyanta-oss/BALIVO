@@ -456,6 +456,68 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   .special-promo-page-grid .promo-discount{font-size:7px!important;padding:3px 4px!important}
 }
 </style>
+<style id="balivo-detail-price-precise">
+#viewPrice{
+  margin:10px 0 14px!important;
+  width:100%!important;
+}
+#viewPrice .price-sale-wrap{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  gap:5px!important;
+  width:100%!important;
+}
+#viewPrice .price-normal{
+  display:block!important;
+  color:#d71920!important;
+  font-size:16px!important;
+  font-weight:700!important;
+  line-height:1.1!important;
+  text-decoration-line:line-through!important;
+  text-decoration-color:#d71920!important;
+  text-decoration-thickness:2px!important;
+  text-decoration-skip-ink:none!important;
+  white-space:nowrap!important;
+}
+#viewPrice .price-sale{
+  display:block!important;
+  color:#111!important;
+  font-size:29px!important;
+  font-weight:900!important;
+  line-height:1.05!important;
+  letter-spacing:-.3px!important;
+  white-space:nowrap!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+@media(max-width:700px){
+  #viewPrice{margin:8px 0 12px!important}
+  #viewPrice .price-normal{font-size:14px!important}
+  #viewPrice .price-sale{font-size:24px!important}
+}
+</style>
+<style id="balivo-special-card-price-precise">
+.special-promo-page-grid .product .price-sale-wrap{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  gap:3px!important;
+  width:100%!important;
+}
+.special-promo-page-grid .product .price-normal{
+  color:#d71920!important;
+  text-decoration-line:line-through!important;
+  text-decoration-color:#d71920!important;
+  text-decoration-thickness:1.5px!important;
+}
+.special-promo-page-grid .product .price-sale{
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -540,6 +602,8 @@ let products=[];
 let cart=JSON.parse(localStorage.getItem('balivo_cart')||'[]');
 let category='Semua';
 let currentProductIndex=0;
+let currentProductId=null;
+let currentProductSource='catalog';
 let galleryIndex=0;
 let selectedSize=null;
 let touchStartX=0; let touchStartY=0;
@@ -645,6 +709,8 @@ function openSpecialPromoProduct(id){
   const i=products.findIndex(p=>p.id===id);
   if(i<0)return;
   currentProductIndex=i;
+  currentProductId=id;
+  currentProductSource='special';
   galleryIndex=0;
   selectedSize=null;
   document.getElementById('productModal').classList.add('open');
@@ -910,6 +976,8 @@ async function openProduct(id){
   const i=list.findIndex(p=>p.id===id);
   if(i<0)return;
   currentProductIndex=i;
+  currentProductId=id;
+  currentProductSource='catalog';
   galleryIndex=0;
   selectedSize=null;
   document.getElementById('productModal').classList.add('open');
@@ -1041,7 +1109,16 @@ function openExternalProduct(id){
   window.location.href=url;
 }
 function openAffiliate(id){openExternalProduct(id)}
-function currentProduct(){return productList()[currentProductIndex]}
+function currentProduct(){
+  if(currentProductId){
+    const byId=products.find(p=>p.id===currentProductId);
+    if(byId)return byId;
+  }
+  const list=currentProductSource==='special'
+    ? specialPromoList()
+    : productList();
+  return list[currentProductIndex]||null;
+}
 
 function productNext(){
   const p=currentProduct();
@@ -1075,7 +1152,7 @@ document.addEventListener('touchend',e=>{
   if(!document.getElementById('productModal').classList.contains('open'))return;
   const dx=e.changedTouches[0].screenX-touchStartX;
   const dy=e.changedTouches[0].screenY-touchStartY;
-  if(Math.abs(dx)<50 || Math.abs(dx)<=Math.abs(dy))return;
+  if(Math.abs(dx)<45 || Math.abs(dx)<=Math.abs(dy))return;
 
   const p=currentProduct();
   if(!p)return;
