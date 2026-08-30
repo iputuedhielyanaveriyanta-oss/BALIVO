@@ -100,20 +100,11 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 }
 .grid .product.affiliate-locked .photo{
   cursor:pointer;
+  pointer-events:auto !important;
   -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
 }
-.grid .product.affiliate-locked .photo::after{
-  content:"↗";
-  position:absolute;
-  right:8px;
-  bottom:8px;
-  width:30px;height:30px;
-  display:flex;align-items:center;justify-content:center;
-  border-radius:50%;
-  background:#111;color:#fff;
-  font-weight:900;
-  box-shadow:0 2px 8px #0003;
-}
+
 .grid .product .info{
   background:transparent !important;
 }
