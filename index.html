@@ -98,6 +98,22 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 .grid .product .photo{
   background:transparent !important;
 }
+.grid .product.affiliate-locked .photo{
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.grid .product.affiliate-locked .photo::after{
+  content:"↗";
+  position:absolute;
+  right:8px;
+  bottom:8px;
+  width:30px;height:30px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  background:#111;color:#fff;
+  font-weight:900;
+  box-shadow:0 2px 8px #0003;
+}
 .grid .product .info{
   background:transparent !important;
 }
@@ -256,11 +272,6 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 </div>
 <button id="viewAdd" class="checkout">Tambah ke Cart</button>
 <div id="viewAffiliate" style="margin-top:10px"></div>
-<div class="share-product-box" style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:9px">
-  <button type="button" id="shareProductBtn" class="checkout" style="background:#fff;color:#111;border:1px solid #111">↗ BAGIKAN</button>
-  <button type="button" id="shareInstagramBtn" class="checkout" style="background:#111">◎ STORY INSTAGRAM</button>
-</div>
-<div id="shareProductMsg" style="font-size:12px;color:#666;margin-top:8px;line-height:1.4"></div>
 <div id="reviewBottom" class="detail-box"></div>
 </div></div></div>
 <div id="checkoutModal" class="modal"><div class="sheet">
@@ -507,7 +518,7 @@ function renderProductsOnly(){
   document.getElementById('products').innerHTML=list.map(p=>`
     <article class="product ${p.product_type==='AFFILIATE'?'affiliate-locked':''}" ${p.product_type==='AFFILIATE'?'':'onclick="openProduct(\'${p.id}\')"'}>
       
-      <div class="photo">
+      <div class="photo" ${p.product_type==='AFFILIATE' ? `onclick="event.stopPropagation();shareBalivoAffiliate('${p.id}')"` : ''}>
         <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
         ${p.product_type==='AFFILIATE' ? '<span class="badge">BIG SALE</span>' : (p.product_type==='DROPSHIP' ? '<span class="badge">SHOPEE</span>' : (Number(p.stock)<=0?'<span class="badge">HABIS</span>':''))}
       </div>
@@ -539,7 +550,7 @@ function render(){
     return `
     <article class="product ${p.product_type==='AFFILIATE'?'affiliate-locked':''}" ${p.product_type==='AFFILIATE'?'':'onclick="openProduct(\'${p.id}\')"'}>
       
-      <div class="photo">
+      <div class="photo" ${external && p.product_type==='AFFILIATE' ? `onclick="event.stopPropagation();shareBalivoAffiliate('${p.id}')"` : ''}>
         <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
         ${saleBadge}
       </div>
@@ -633,6 +644,28 @@ function selectSize(size){
   });
 }
 
+
+async function shareBalivoAffiliate(id){
+  const p=products.find(x=>x.id===id);
+  if(!p)return;
+  const url=productShareUrl(id);
+  const title=p.name||'Produk BALIVO';
+  const text=`${title}${p.price?' — '+money(p.price):''}`;
+  try{
+    if(navigator.share){
+      await navigator.share({title,text,url});
+      return;
+    }
+  }catch(e){
+    if(e?.name==='AbortError')return;
+  }
+  try{
+    await navigator.clipboard.writeText(url);
+    alert('Link produk BALIVO sudah disalin.');
+  }catch(e){
+    prompt('Salin link produk BALIVO:',url);
+  }
+}
 
 function productShareUrl(id){
   const base=window.location.origin+window.location.pathname;
@@ -777,11 +810,6 @@ async function showProduct(p){
        <button class="review-btn">Kirim Ulasan</button>
      </form>`;
 
-
-  const shareBtn=document.getElementById('shareProductBtn');
-  const igBtn=document.getElementById('shareInstagramBtn');
-  if(shareBtn)shareBtn.onclick=()=>shareProduct(p.id);
-  if(igBtn)igBtn.onclick=()=>shareInstagramStory(p.id);
 
   const addButton=document.getElementById('viewAdd');
   const external=!!(p.product_type==='AFFILIATE'||p.product_type==='DROPSHIP');
