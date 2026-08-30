@@ -514,6 +514,12 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 }
 .viewer{touch-action:pan-y!important}
 </style>
+
+<style id="balivo-price-after-discount-spacing">
+#productModal .price-sale-wrap .price-sale{
+  margin-top:4px!important;
+}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -1173,7 +1179,7 @@ function add(id){
     const maxStock=size ? (sizes.find(s=>s.size===size)?.stock||0) : Number(p.stock);
     if(x.qty<maxStock)x.qty++;else return;
   } else cart.push({id,qty:1,size});
-  saveCart();renderCart();openCart();
+  saveCart();renderCart();closeProduct();openCart();
 }
 
 function change(id,d){
