@@ -639,9 +639,13 @@ function selectSize(size){
 async function shareBalivoAffiliate(id){
   const p=products.find(x=>x.id===id);
   if(!p)return;
+
+  // Share the BALIVO web/app URL itself, with the product URL as the destination.
+  // No product image is sent to Instagram.
   const url=productShareUrl(id);
-  const title=p.name||'Produk BALIVO';
-  const text=`${title}${p.price?' — '+money(p.price):''}`;
+  const title='BALIVO — Bali\'s Online Marketplace';
+  const text='Open BALIVO • '+(p.name||'Lihat produk ini');
+
   try{
     if(navigator.share){
       await navigator.share({title,text,url});
@@ -650,11 +654,12 @@ async function shareBalivoAffiliate(id){
   }catch(e){
     if(e?.name==='AbortError')return;
   }
-  try{
-    await navigator.clipboard.writeText(url);
-    alert('Link produk BALIVO sudah disalin.');
-  }catch(e){
-    prompt('Salin link produk BALIVO:',url);
+
+  const ok=await copyShareLink(url);
+  if(ok){
+    alert('Link BALIVO sudah disalin. Di Instagram Story, tambahkan Link Sticker dan tempel link tersebut.');
+  }else{
+    prompt('Salin link BALIVO:',url);
   }
 }
 
