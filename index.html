@@ -517,7 +517,7 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 
 <style id="balivo-price-after-discount-spacing">
 #productModal .price-sale-wrap .price-sale{
-  margin-top:4px!important;
+  margin-top:5px!important;
 }
 </style>
 <style id="balivo-large-discount-view">
@@ -548,6 +548,37 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
     padding:11px 9px;
     font-size:18px;
     border-radius:12px;
+  }
+}
+</style>
+<style id="balivo-discount-price-precise">
+.product-info{position:relative!important}
+#productModal .product-info .detail-discount-badge{
+  position:absolute!important;
+  right:18px!important;
+  top:104px!important;
+  display:none;
+  color:#d71920!important;
+  background:transparent!important;
+  font-size:54px!important;
+  font-weight:900!important;
+  line-height:.9!important;
+  letter-spacing:-2px!important;
+  z-index:5!important;
+  pointer-events:none!important;
+}
+#productModal .product-info .detail-discount-badge.show{display:block!important}
+#productModal .price-sale-wrap .price-sale{
+  margin-left:6px!important;
+}
+@media(max-width:600px){
+  #productModal .product-info .detail-discount-badge{
+    right:16px!important;
+    top:104px!important;
+    font-size:44px!important;
+  }
+  #productModal .price-sale-wrap .price-sale{
+    margin-left:5px!important;
   }
 }
 </style>
@@ -584,7 +615,7 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 
 
 
-<div id="productModal" class="product-modal"><div class="product-view"><button class="view-close" onclick="closeProduct()">✕</button><div id="viewer" class="viewer"><div id="viewDiscount" class="view-discount"></div><button class="view-arrow view-prev" onclick="productPrev()">‹</button><img id="viewImage" alt=""><button class="view-arrow view-next" onclick="productNext()">›</button></div><div class="view-info"><div id="viewBrand" class="brand"></div><h2 id="viewName"></h2><div id="viewPrice" class="price"></div><div id="viewStock" class="stock"></div><p id="viewDescription"></p><div id="viewDetails"></div><div class="thumbs" id="viewThumbs"></div><h3>⭐ Ulasan Customer</h3><div id="viewReviews"></div>
+<div id="productModal" class="product-modal"><div class="product-view"><button class="view-close" onclick="closeProduct()">✕</button><div id="viewer" class="viewer"><button class="view-arrow view-prev" onclick="productPrev()">‹</button><img id="viewImage" alt=""><button class="view-arrow view-next" onclick="productNext()">›</button></div><div class="view-info"><div id="viewBrand" class="brand"></div><div id="detailDiscountBadge" class="detail-discount-badge"></div><h2 id="viewName"></h2><div id="viewPrice" class="price"></div><div id="viewStock" class="stock"></div><p id="viewDescription"></p><div id="viewDetails"></div><div class="thumbs" id="viewThumbs"></div><h3>⭐ Ulasan Customer</h3><div id="viewReviews"></div>
 <div class="size-box">
   <div class="size-title">Pilih Size</div>
   <div id="viewSizes" class="size-options"></div>
@@ -1062,13 +1093,14 @@ async function showProduct(p){
 
   galleryIndex=galleryIndex%images.length;
   document.getElementById('viewImage').src=images[galleryIndex];
-  const viewDiscount=document.getElementById('viewDiscount');
-  if(viewDiscount){
-    const pct=discountPercent(p);
-    viewDiscount.textContent=pct>0?`-${pct}%`:'';
-    viewDiscount.classList.toggle('show',pct>0);
-  }
+  
   document.getElementById('viewBrand').textContent=p.brand||'BALIVO';
+  const detailDiscountBadge=document.getElementById('detailDiscountBadge');
+  if(detailDiscountBadge){
+    const pct=discountPercent(p);
+    detailDiscountBadge.textContent=pct>0?`-${pct}%`:'';
+    detailDiscountBadge.classList.toggle('show',pct>0);
+  }
   document.getElementById('viewName').textContent=p.name||'';
   document.getElementById('viewPrice').innerHTML=priceHtml(p);
   document.getElementById('viewStock').textContent=p.product_type==='AFFILIATE'?'':(p.product_type==='DROPSHIP'?'Pembelian melalui Shopee':(Number(p.stock)>0?'Stok '+Number(p.stock):'Stok habis'));
