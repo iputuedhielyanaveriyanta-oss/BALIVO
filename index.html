@@ -265,51 +265,21 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 }
 </style>
 
-<style id="discount-90-blink">
-@keyframes discount90Text{
-  0%,45%{color:#fff!important}
-  50%,95%{color:#ffd400!important}
-  100%{color:#fff!important}
-}
+<style id="discount-90-text-animation-fixed">
 .hero button.discount-90-blink{
   background:#d71920!important;
   color:#fff!important;
   border:2px solid #d71920!important;
   font-weight:900!important;
-  box-shadow:0 0 0 0 rgba(215,25,32,.45),0 8px 22px rgba(0,0,0,.18);
 }
-.hero button.discount-90-blink{
-  animation:none;
-}
-.hero button.discount-90-blink::first-line{
-  animation:discount90Text 1.2s ease-in-out infinite;
-}
-.hero button.discount-90-blink{
-  text-shadow:0 0 0 #fff;
-}
-@keyframes discount90TextWrap{
-  0%,45%{color:#fff}
-  50%,95%{color:#ffd400}
-  100%{color:#fff}
-}
-.hero button.discount-90-blink:hover{
-  animation-play-state:paused;
-}
-@media(prefers-reduced-motion:reduce){
-  .hero button.discount-90-blink{animation:none;background:#d71920!important;color:#fff!important}
-}
-</style>
-<style id="discount-90-text-animation">
 .hero button.discount-90-blink span{
   display:inline-block;
-  animation:discount90TextWrap 1.2s ease-in-out infinite;
-  font-weight:900;
+  color:#fff!important;
+  transition:color .35s ease;
+  font-weight:900!important;
 }
-@media(prefers-reduced-motion:reduce){
-  .hero button.discount-90-blink span{
-    animation:none;
-    color:#fff!important;
-  }
+.hero button.discount-90-blink span.discount-yellow{
+  color:#ffd400!important;
 }
 </style>
 </head>
@@ -373,7 +343,19 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 
 const SUPABASE_URL='https://hftgmssnzvrlwlslcaet.supabase.co';
 const SUPABASE_KEY='sb_publishable_xOadp1YRBil2PZ9RHeeWIQ_Z3LqMF-D';
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);function openMyOrders(){document.getElementById("myOrdersModal").classList.add("open");document.getElementById("lookupPhone").focus()}
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+function startDiscount90TextAnimation(){
+  const text=document.querySelector('.discount-90-blink span');
+  if(!text)return;
+  if(window.__discount90Timer)clearInterval(window.__discount90Timer);
+  let yellow=false;
+  window.__discount90Timer=setInterval(()=>{
+    yellow=!yellow;
+    text.classList.toggle('discount-yellow',yellow);
+  },650);
+}
+window.addEventListener('load',startDiscount90TextAnimation);
+function openMyOrders(){document.getElementById("myOrdersModal").classList.add("open");document.getElementById("lookupPhone").focus()}
 function closeMyOrders(){document.getElementById("myOrdersModal").classList.remove("open")}
 function orderStatusText(v){return ({NEW:"MENUNGGU CEK STOK",pending:"MENUNGGU CEK STOK",confirmed:"MENUNGGU PEMBAYARAN",WAITING_VERIFICATION:"MENUNGGU VERIFIKASI PEMBAYARAN",paid:"SUDAH BAYAR",PAID:"SUDAH BAYAR",shipped:"DIKIRIM",completed:"SELESAI",rejected:"STOK TIDAK TERSEDIA",cancelled:"DIBATALKAN"})[v]||String(v||"-").toUpperCase()}
 async function lookupMyOrders(){const phone=document.getElementById("lookupPhone").value.trim(),out=document.getElementById("myOrdersResult");out.innerHTML="<div class=\"empty\">Memuat pesanan...</div>";try{const r=await sb.from("orders").select("id,order_number,created_at,customer_name,customer_phone,payment_method,payment_status,status,total").eq("customer_phone",phone).order("created_at",{ascending:false}).limit(50);if(r.error)throw r.error;if(!r.data?.length){out.innerHTML="<div class=\"empty\">Belum ada pesanan dengan nomor WhatsApp tersebut.</div>";return}const ids=r.data.map(x=>x.id),ir=await sb.from("order_items").select("order_id,product_name,size,unit_price,quantity").in("order_id",ids);if(ir.error)throw ir.error;const by={};(ir.data||[]).forEach(i=>(by[i.order_id]??=[]).push(i));out.innerHTML=r.data.map(o=>`<div style="border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:10px"><div><b>${esc(o.order_number||o.id)}</b><div class="order-note">${new Date(o.created_at).toLocaleString("id-ID")}</div></div><b>${esc(orderStatusText(o.payment_status||o.status))}</b></div><div style="margin-top:10px">${(by[o.id]||[]).map(i=>`<div style="padding:7px 0;border-bottom:1px solid var(--line)"><b>${esc(i.product_name||"-")}</b><br><span class="order-note">Size: ${esc(i.size||"-")} · Qty: ${Number(i.quantity||0)} · ${money(Number(i.unit_price||0)*Number(i.quantity||0))}</span></div>`).join("")}</div><div style="margin-top:10px">Pembayaran: <b>${esc(o.payment_method||"-")}</b><br>Total: <strong>${money(o.total)}</strong><br><span class="order-note">Status pesanan: ${esc(orderStatusText(o.status))}</span></div></div>`).join("")}catch(e){out.innerHTML=`<div class="empty">Gagal memuat pesanan.<br><small>${esc(e.message)}</small></div>`}}
