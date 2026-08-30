@@ -229,15 +229,15 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 .balivo-chat-head{padding:17px 18px;background:#111;color:#fff;display:flex;align-items:center;justify-content:space-between}
 .balivo-chat-head strong{font-size:18px}.balivo-chat-head small{display:block;color:#bbb;margin-top:3px}
 .balivo-chat-close{width:34px;height:34px;border-radius:50%;background:#fff;color:#111;font-size:20px}
-.balivo-chat-body{flex:1;overflow:auto;padding:18px;background:#fff}
+.balivo-chat-body{flex:1;overflow:auto;padding:18px;background:#fff0f5}
 .balivo-msg{max-width:86%;padding:11px 13px;border-radius:15px;margin:0 0 10px;line-height:1.45;font-size:14px;word-break:break-word}
 .balivo-msg.bot{background:#f1f1f1;color:#111;border-top-left-radius:5px}
 .balivo-msg.user{background:#111;color:#fff;margin-left:auto;border-top-right-radius:5px}
 .balivo-typing{display:inline-flex;gap:4px;align-items:center}.balivo-typing i{width:5px;height:5px;border-radius:50%;background:#777;display:block;animation:balivoDot 1s infinite}.balivo-typing i:nth-child(2){animation-delay:.15s}.balivo-typing i:nth-child(3){animation-delay:.3s}
 @keyframes balivoDot{0%,60%,100%{opacity:.25}30%{opacity:1}}
-.balivo-chat-suggestions{display:flex;gap:7px;overflow:auto;padding:0 18px 10px}
+.balivo-chat-suggestions{display:flex;gap:7px;overflow:auto;padding:0 18px 10px;background:#fff0f5}
 .balivo-chat-suggestions button{white-space:nowrap;background:#fff;border:1px solid #ddd;border-radius:999px;padding:8px 11px;font-size:12px}
-.balivo-chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid #eee;background:#fff}
+.balivo-chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid #eee;background:#fff0f5}
 .balivo-chat-form input{flex:1;border:1px solid #ccc;border-radius:14px;padding:12px;outline:none}
 .balivo-chat-form button{width:46px;border-radius:14px;background:#111;color:#fff;font-weight:900}
 @media(max-width:600px){#balivoChatFab{right:14px;bottom:14px}#balivoChatPanel{right:10px;bottom:82px;width:calc(100vw - 20px);height:72vh}}
@@ -1147,7 +1147,8 @@ if ('serviceWorker' in navigator) {
       history.push({role:'user',content:q},{role:'assistant',content:data.answer||''});
     }catch(e){
       t.remove();
-      addMsg('Maaf, BALIVO AI sedang tidak tersedia. Silakan coba lagi sebentar.','bot');
+      const msg = (e && e.message) ? e.message : 'Terjadi kesalahan saat menghubungi BALIVO AI.';
+      addMsg(msg,'bot');
     }
   }
   fab.addEventListener('click',openChat);
