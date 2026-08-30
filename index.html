@@ -282,6 +282,64 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   color:#ffd400!important;
 }
 </style>
+<style id="balivo-promo-card-fix">
+.special-promo-page-grid .product{width:100%;min-width:0}
+.special-promo-page-grid .product .info{min-width:0;padding:14px 16px 16px}
+.special-promo-page-grid .product .name{min-height:44px}
+.special-promo-page-grid .product .price{min-width:0;width:100%;overflow:visible}
+.special-promo-page-grid .product .price-sale-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:5px;width:100%;min-width:0}
+.special-promo-page-grid .product .price-normal{display:block;white-space:normal;line-height:1.1}
+.special-promo-page-grid .product .price-sale{display:block;white-space:normal!important;overflow-wrap:anywhere;word-break:break-word;line-height:1.12;font-size:clamp(19px,5vw,28px);max-width:100%}
+@media(max-width:600px){
+ .special-promo-page-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .special-promo-page-grid .product .info{padding:12px 10px 12px}
+ .special-promo-page-grid .product .name{min-height:40px;font-size:13px}
+ .special-promo-page-grid .product .price-sale{font-size:17px}
+ .special-promo-page-grid .product .add{font-size:12px;padding:9px 5px}
+}
+</style>
+<style id="balivo-special-promo-5col">
+.special-promo-page-grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:10px!important;align-items:start}
+.special-promo-page-grid .product{min-width:0!important;overflow:hidden!important}
+.special-promo-page-grid .product .photo{position:relative!important;aspect-ratio:1/1!important;overflow:hidden!important}
+.special-promo-page-grid .product .photo img{width:100%!important;height:100%!important;object-fit:cover!important}
+.special-promo-page-grid .product .info{padding:8px 7px 10px!important}
+.special-promo-page-grid .product .brand{font-size:11px!important;line-height:1.2!important;margin:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.special-promo-page-grid .product .name{display:none!important}
+.special-promo-page-grid .product .price{margin-top:5px!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:2px!important;line-height:1.1!important;white-space:normal!important}
+.special-promo-page-grid .product .price del,.special-promo-page-grid .product .price s{font-size:9px!important;color:#888!important;font-weight:500!important;white-space:nowrap!important}
+.special-promo-page-grid .product .price strong,.special-promo-page-grid .product .price b{font-size:13px!important;color:#111!important;font-weight:900!important;white-space:nowrap!important}
+.special-promo-page-grid .promo-discount{right:5px!important;top:5px!important;padding:4px 5px!important;font-size:9px!important;border-radius:6px!important}
+@media(max-width:700px){
+ .special-promo-page-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important}
+ .special-promo-page-grid .product .info{padding:6px 4px 8px!important}
+ .special-promo-page-grid .product .brand{font-size:8px!important}
+ .special-promo-page-grid .product .price{margin-top:4px!important}
+ .special-promo-page-grid .product .price del,.special-promo-page-grid .product .price s{font-size:7px!important}
+ .special-promo-page-grid .product .price strong,.special-promo-page-grid .product .price b{font-size:9px!important}
+ .special-promo-page-grid .promo-discount{font-size:7px!important;padding:3px 4px!important}
+}
+</style>
+<style id="balivo-special-promo-visible-button">
+.special-promo-page-grid .product .add{
+  display:block!important;
+  width:100%!important;
+  margin-top:7px!important;
+  padding:7px 3px!important;
+  font-size:9px!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+@media(max-width:700px){
+  .special-promo-page-grid .product .add{
+    margin-top:5px!important;
+    padding:5px 2px!important;
+    font-size:7px!important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -305,7 +363,7 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
     <div class="special-promo-empty">Memuat Special Promo...</div>
   </div>
 </section>
-<div class="section-head"><h2 id="productTitle">Produk Pilihan</h2><span id="resultCount" style="font-size:12px;color:#777"></span></div>
+<div id="productSectionHead" class="section-head"><h2 id="productTitle">Produk Pilihan</h2><span id="resultCount" style="font-size:12px;color:#777"></span></div>
 <div id="products" class="grid"></div>
 <div id="empty" class="empty hidden">Produk tidak ditemukan.</div>
 </main>
@@ -409,6 +467,8 @@ function saveCart(){
 function productList(){
   const q=document.getElementById('search').value.trim().toLowerCase();
   return products.filter(p=>{
+    // Produk Pilihan customer hanya menampilkan produk AFFILIATE.
+    if(p.product_type!=='AFFILIATE') return false;
     const cats=Array.isArray(p.categories)
       ? p.categories
       : String(p.category||'Lainnya').split(' | ').filter(Boolean);
@@ -416,7 +476,6 @@ function productList(){
     return categoryOK && (!q||`${p.name||''} ${p.brand||''} ${cats.join(' ')}`.toLowerCase().includes(q));
   });
 }
-
 function specialPromoList(){
   return products.filter(p =>
     p.product_type==='OWN' &&
@@ -430,10 +489,12 @@ function showSpecialPromoPage(){
   if(!page)return;
 
   document.querySelector('.hero')?.classList.add('hidden');
+  document.getElementById('categorySectionHead')?.classList.add('hidden');
   document.getElementById('categories')?.classList.add('hidden');
+  document.getElementById('productSectionHead')?.classList.add('hidden');
   document.getElementById('products')?.classList.add('hidden');
   document.getElementById('empty')?.classList.add('hidden');
-  document.getElementById('productTitle')?.closest('.section-head')?.classList.add('hidden');
+  document.querySelector('.footer')?.classList.add('hidden');
   page.classList.add('open');
 
   const list=specialPromoList();
@@ -451,12 +512,11 @@ function showSpecialPromoPage(){
   grid.innerHTML=list.map(p=>`
     <article class="product" onclick="openSpecialPromoProduct('${p.id}')">
       <div class="photo">
-        <img src="${esc(p.image||'')}" alt="${esc(p.name||'')}" loading="lazy" onerror="this.style.display='none'">
+        <img src="${esc(p.image||'')}" alt="${esc(p.brand||p.name||'Produk')}" loading="lazy" onerror="this.style.display='none'">
         <span class="promo-discount">-${Number(discountPercent(p))}%</span>
       </div>
       <div class="info">
         <div class="brand">${esc(p.brand||'BALIVO')}</div>
-        <div class="name">${esc(p.name||'Produk')}</div>
         <div class="price">${priceHtml(p)}</div>
         <button class="add" type="button" onclick="event.stopPropagation();openSpecialPromoProduct('${p.id}')">LIHAT PRODUK</button>
       </div>
@@ -478,10 +538,13 @@ function openSpecialPromoProduct(id){
 function closeSpecialPromoPage(){
   document.getElementById('specialPromoPage')?.classList.remove('open');
   document.querySelector('.hero')?.classList.remove('hidden');
+  document.getElementById('categorySectionHead')?.classList.remove('hidden');
   document.getElementById('categories')?.classList.remove('hidden');
+  document.getElementById('productSectionHead')?.classList.remove('hidden');
   document.getElementById('products')?.classList.remove('hidden');
   document.getElementById('empty')?.classList.add('hidden');
-  document.getElementById('productTitle')?.closest('.section-head')?.classList.remove('hidden');
+  document.querySelector('.footer')?.classList.remove('hidden');
+  render();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function categoryCatalog(){
