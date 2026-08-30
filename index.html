@@ -534,6 +534,23 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 #checkoutModal{z-index:10050!important}
 #productModal{z-index:10000!important}
 </style>
+<style id="balivo-promo-fast-images">
+.special-promo-page-grid .product .photo{
+  background:#f1f1f1!important;
+  min-height:0!important;
+}
+.special-promo-page-grid .product .photo img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  opacity:1!important;
+  transition:opacity .15s ease!important;
+}
+.special-promo-page-grid .product .photo img.promo-loading{
+  opacity:.35!important;
+}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -680,6 +697,17 @@ function specialPromoList(){
   );
 }
 
+function preloadSpecialPromoImages(list){
+  list.slice(0,8).forEach(p=>{
+    const src=p.image;
+    if(!src)return;
+    const img=new Image();
+    img.decoding='async';
+    img.fetchPriority='high';
+    img.src=src;
+  });
+}
+
 function showSpecialPromoPage(){
   const page=document.getElementById('specialPromoPage');
   if(!page)return;
@@ -694,6 +722,7 @@ function showSpecialPromoPage(){
   page.classList.add('open');
 
   const list=specialPromoList();
+  preloadSpecialPromoImages(list);
   const grid=document.getElementById('specialPromoPageGrid');
   const count=document.getElementById('specialPromoPageCount');
   if(count) count.textContent=list.length ? `${list.length} produk dengan diskon spesial` : 'Belum ada produk diskon';
@@ -708,7 +737,7 @@ function showSpecialPromoPage(){
   grid.innerHTML=list.map(p=>`
     <article class="product" onclick="openSpecialPromoProduct('${p.id}')">
       <div class="photo">
-        <img src="${esc(p.image||'')}" alt="${esc(p.brand||p.name||'Produk')}" loading="lazy" onerror="this.style.display='none'">
+        <img class="promo-loading" src="${esc(p.image||'')}" alt="${esc(p.brand||p.name||'Produk')}" loading="eager" fetchpriority="high" decoding="async" onload="this.classList.remove('promo-loading')" onerror="this.style.display='none'">
         <span class="promo-discount">-${Number(discountPercent(p))}%</span>
       </div>
       <div class="info">
