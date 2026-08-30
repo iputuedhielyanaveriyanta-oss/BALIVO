@@ -551,6 +551,26 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
   opacity:.35!important;
 }
 </style>
+
+<style id="balivo-discount-product-count-fixed">
+/* Count sits beside the existing CTA; the CTA itself keeps its original box. */
+.discount-product-count{
+  display:inline-block;
+  vertical-align:middle;
+  margin-left:10px;
+  font-size:15px;
+  font-weight:900;
+  line-height:1;
+  white-space:nowrap;
+  color:#111;
+}
+@media(max-width:600px){
+  .discount-product-count{
+    margin-left:7px;
+    font-size:10px;
+  }
+}
+</style>
 </head>
 <body>
 <div class="top">BALIVO • Bali's Online Marketplace</div>
@@ -560,7 +580,7 @@ main{max-width:1180px;margin:auto;padding:22px 20px}.hero{background:#111;color:
 <div class="cart-actions"><button class="cart" onclick="openCart()">🛒 Cart <span id="cartCount" class="count">0</span></button> <button class="cart" onclick="openMyOrders()">📦 Pesanan</button></div>
 </div></header>
 <main>
-<section class="hero"><small>DISCOVER • SHOP • BALI</small><h1>Belanja lebih mudah.<br>Temukan pilihan terbaik.</h1><p>Fashion, lifestyle, surf, dan produk pilihan dari berbagai supplier dalam satu marketplace.</p><button type="button" class="discount-90-blink" onclick="showSpecialPromoPage()"><span>DISCOUNT UP TO 90% OFF</span></button></section>
+<section class="hero"><small>DISCOVER • SHOP • BALI</small><h1>Belanja lebih mudah.<br>Temukan pilihan terbaik.</h1><p>Fashion, lifestyle, surf, dan produk pilihan dari berbagai supplier dalam satu marketplace.</p><button type="button" class="discount-90-blink" onclick="showSpecialPromoPage()"><span>DISCOUNT UP TO 90% OFF</span></button><span class="discount-product-count">100+ PRODUCTS</span></section>
 <div id="categorySectionHead" class="section-head"><h2>Kategori</h2></div><div id="categories" class="categories"></div>
 <section id="specialPromoPage" class="special-promo-page" aria-label="Special Promo">
   <div class="special-promo-page-head">
