@@ -104,6 +104,7 @@
 @media(max-width:700px){.cat-menu{grid-template-columns:1fr 1fr;max-height:65vh}}
 @media(max-width:430px){.cat-menu{grid-template-columns:1fr}}
 </style>
+<style id="special-promo-style">#special-promo .promo-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}#special-promo .promo-product{display:flex;align-items:center;gap:12px;min-width:0;flex:1}#special-promo .promo-product img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#f5f5f5}#special-promo .promo-product strong{display:block}#special-promo .promo-product small{display:block;color:#777;margin-top:4px}#special-promo .promo-input{display:flex;align-items:end;gap:8px;flex-shrink:0}#special-promo .promo-input label{font-size:12px;color:#666;display:block}#special-promo .promo-discount{width:110px;padding:11px;border:1px solid var(--line);border-radius:10px}#special-promo .promo-save{padding:11px 14px}@media(max-width:600px){#special-promo .promo-row{align-items:stretch;flex-direction:column}#special-promo .promo-input{width:100%;align-items:end}#special-promo .promo-discount{flex:1}}</style>
 <style id="multi-category-style">
 .selected-cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .selected-cat{display:inline-flex;align-items:center;gap:5px;background:#111;color:#fff;border-radius:999px;padding:5px 9px;font-size:11px}
@@ -115,7 +116,7 @@
 <body>
 <div class="top"><b>BALIVO ADMIN</b> <span style="opacity:.7">— Dropship & Marketplace</span></div>
 <div class="wrap">
-<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="products">Produk</button><button data-tab="bulkImport">Import Massal</button><button data-tab="orders">Order</button><button data-tab="payment-settings">Pembayaran</button></div>
+<div class="tabs"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="products">Produk</button><button data-tab="special-promo">SPECIAL PROMO</button><button data-tab="bulkImport">Import Massal</button><button data-tab="orders">Order</button><button data-tab="payment-settings">Pembayaran</button></div>
 <div class="authbar">
   <span id="authStatus" class="authdot">Belum login admin</span>
   <button id="loginBtn" class="btn" onclick="openLogin()">Login Admin</button>
@@ -267,9 +268,9 @@
         <span id="shopeeFetchStatus" class="shopee-fetch-status"></span>
       </span>
     </label>
-      <input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp">
-      <div id="ownImagePreview" style="display:none;margin-top:8px"><img id="ownImagePreviewImg" alt="Preview foto" style="width:96px;height:96px;object-fit:cover;border-radius:10px;border:1px solid #ddd"></div>
-      <div class="file-note">Maks. 5 MB. Untuk Affiliate, tombol <b>TARIK DATA SHOPEE</b> akan mengisi foto dan harga otomatis.</div>
+      <input id="ownImageFile" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+      <div id="ownImagePreview" style="display:none;margin-top:8px;display:flex;flex-wrap:wrap;gap:8px"></div>
+      <div class="file-note">Bisa pilih lebih dari 1 foto. Maks. 5 MB per foto. Foto pertama menjadi foto utama. Untuk Affiliate, tombol <b>TARIK DATA SHOPEE</b> akan mengisi foto dan harga otomatis.</div>
     </div>
     <div><label>Atau URL Foto</label><input id="ownImageUrl" type="url" placeholder="https://...jpg"></div>
     <div class="wide"><label>Deskripsi</label><textarea id="ownDescription" rows="3" placeholder="Deskripsi produk"></textarea></div>
@@ -284,6 +285,8 @@
   <table class="table"><thead><tr><th>Produk</th><th>Jenis</th><th>Modal</th><th>Harga Jual</th><th>Size / Stok</th><th>Stok</th><th>Profit</th><th>Supplier</th><th>Affiliate</th><th>Aksi</th></tr></thead><tbody id="productRows"></tbody></table>
 </div>
 </section>
+
+<section id="special-promo" class="tab hidden"><div class="panel"><h2 style="margin-bottom:6px">SPECIAL PROMO</h2><p style="color:#777;margin-top:0">Khusus Produk Saya. Atur diskon produk dengan cepat di layar ini.</p><div id="promoMessage" class="preview" style="margin-bottom:12px">Memuat produk...</div><div id="promoRows"></div></div></section>
 
 <section id="bulkImport" class="tab hidden">
 <div class="panel">
@@ -639,6 +642,9 @@ async function balivoSetTracking(id){if(!requireAdmin())return;const courier=pro
 async function balivoMarkDelivered(id){if(!requireAdmin())return;const courier=prompt('Kurir (opsional):','');const {error}=await sb.rpc('balivo_admin_mark_delivered',{p_order_id:id,p_courier:courier||null});if(error)alert(error.message);else{document.getElementById('balivoAdminDetail')?.remove();await refresh()}}
 async function balivoCancelAdmin(id){if(!requireAdmin())return;const o=orders.find(x=>x.id===id);if(!o)return;if(!confirm('Batalkan order dan kembalikan stok?'))return;const {error}=await sb.rpc('balivo_cancel_order',{p_order_number:o.order_number,p_phone:o.customer_phone,p_reason:'Dibatalkan admin'});if(error)alert(error.message);else{document.getElementById('balivoAdminDetail')?.remove();await refresh()}}
 
+async function loadSpecialPromo(){if(!requireAdmin())return;const wrap=document.getElementById('promoRows'),msg=document.getElementById('promoMessage');if(!wrap)return;wrap.innerHTML='<div class="preview">Memuat Produk Saya...</div>';try{const {data,error}=await sb.from('products').select('id,name,brand,image,price,discount_percent,stock,status,product_type').eq('product_type','OWN').order('created_at',{ascending:false});if(error)throw error;const rows=data||[];msg.textContent=rows.length?`${rows.length} Produk Saya ditemukan. Atur diskon lalu tekan SIMPAN.`:'Belum ada Produk Saya.';wrap.innerHTML=rows.map(p=>`<div class="promo-row" data-promo-id="${p.id}"><div class="promo-product">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:''}<div><strong>${esc(p.name)}</strong><small>${esc(p.brand||'BALIVO')} · ${money(p.price)} · Stok ${Number(p.stock||0)}</small></div></div><div class="promo-input"><div><label>Diskon (%)</label><input class="promo-discount" type="number" min="0" max="100" step="1" value="${adminDiscount(p)}"></div><button class="primary promo-save" onclick="saveSpecialPromo('${p.id}',this)">SIMPAN</button></div></div>`).join('')}catch(e){msg.textContent='Gagal memuat SPECIAL PROMO: '+e.message;wrap.innerHTML=''}}
+async function saveSpecialPromo(id,btn){if(!requireAdmin())return;const row=btn.closest('[data-promo-id]'),input=row?.querySelector('.promo-discount');const value=Math.min(100,Math.max(0,Number(input?.value)||0));btn.disabled=true;btn.textContent='MENYIMPAN...';try{const {error}=await sb.from('products').update({discount_percent:value}).eq('id',id).eq('product_type','OWN');if(error)throw error;btn.textContent='TERSIMPAN ✓';await refresh();setTimeout(()=>{btn.disabled=false;btn.textContent='SIMPAN'},900)}catch(e){alert('Gagal menyimpan diskon: '+e.message);btn.disabled=false;btn.textContent='SIMPAN'}}
+
 async function refresh(){
   if(!session){
     products=[]; orders=[];
@@ -744,8 +750,7 @@ function resetUnifiedProductForm(){
   ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=el.type==='number'&&id==='affiliateCommission'?'0':'';});
   const ownDiscount=document.getElementById('ownDiscount'); if(ownDiscount)ownDiscount.value='0';
   const fileEl=document.getElementById('ownImageFile'); if(fileEl)fileEl.value='';
-  const preview=document.getElementById('ownImagePreview'); if(preview)preview.style.display='none';
-  const previewImg=document.getElementById('ownImagePreviewImg'); if(previewImg)previewImg.removeAttribute('src');
+  const preview=document.getElementById('ownImagePreview'); if(preview){preview.innerHTML='';preview.style.display='none';}
   const sizeGroup=document.getElementById('sizeGroup'); if(sizeGroup){sizeGroup.value='';sizeGroup.dispatchEvent(new Event('change',{bubbles:true}));}
   const ownStock=document.getElementById('ownStock'); if(ownStock)ownStock.value='0';
   if(typeof selectedCats!=='undefined'){selectedCats=[];syncCategories();}
@@ -781,14 +786,18 @@ async function saveUnifiedProduct(){
   const msg=document.getElementById('ownMessage');msg.textContent='Menyimpan produk...';
   try{
     let image=ownImageUrl.value.trim();
-    if(ownImageFile.files[0])image=await uploadProductImage(ownImageFile.files[0]);
+    const uploadedImages=[];
+    const selectedFiles=Array.from(ownImageFile?.files||[]);
+    for(const file of selectedFiles) uploadedImages.push(await uploadProductImage(file));
+    const allImages=[...uploadedImages,...(image?[image]:[])].filter(Boolean);
+    image=allImages[0]||'';
     const supplierId=mode==='DROPSHIP'?await getSupplierId(ownSupplier.value.trim()):null;
     const supCost=mode==='DROPSHIP'?(Number(supplierCost.value)||cost):0;
     const mk=mode==='DROPSHIP'?(Number(supplierMarkup.value)||Math.max(0,price-supCost)):0;
     const {error}=await sb.from('products').insert({
       name,brand:ownBrand.value.trim()||'BALIVO',category:ownCategoryList[ownCategoryList.length-1]||'Lainnya',categories:ownCategoryList,
       supplier_id:supplierId,cost:mode==='AFFILIATE'?0:cost,price,discount_percent:discount,stock,stock_source:mode==='DROPSHIP'?'SUPPLIER':'OWN',product_type:mode,
-      image,images:image?[image]:[],sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',
+      image,images:allImages,sizes,description:ownDescription.value.trim(),details:ownDetails.value.trim(),status:'ACTIVE',
       supplier_cost:supCost,markup:mk,supplier_product_url:mode==='DROPSHIP'?supplierUrl:null,affiliate_url:mode==='AFFILIATE'?affiliateUrl:null,
       affiliate_commission:mode==='AFFILIATE'?(Number(affiliateCommission.value)||0):0
     });
@@ -928,17 +937,27 @@ function switchProductMode(mode){
 switchProductMode(document.getElementById('productMode')?.value||'OWN');
 
 ownImageFile?.addEventListener('change',()=>{
-  const f=ownImageFile.files?.[0], box=document.getElementById('ownImagePreview'), img=document.getElementById('ownImagePreviewImg');
-  if(!f){box.style.display='none';return}
-  if(f.size>5*1024*1024){alert('Foto maksimal 5 MB.');ownImageFile.value='';box.style.display='none';return}
-  if(!/^image\/(jpeg|png|webp)$/.test(f.type)){alert('Gunakan JPG, PNG, atau WEBP.');ownImageFile.value='';box.style.display='none';return}
-  img.src=URL.createObjectURL(f);box.style.display='block';
+  const files=Array.from(ownImageFile.files||[]);
+  const box=document.getElementById('ownImagePreview');
+  if(!box)return;
+  box.innerHTML='';
+  if(!files.length){box.style.display='none';return}
+  for(const f of files){
+    if(f.size>5*1024*1024){alert(`Foto ${f.name} maksimal 5 MB.`);ownImageFile.value='';box.style.display='none';box.innerHTML='';return}
+    if(!/^image\/(jpeg|png|webp)$/.test(f.type)){alert(`Format foto ${f.name} harus JPG, PNG, atau WEBP.`);ownImageFile.value='';box.style.display='none';box.innerHTML='';return}
+    const img=document.createElement('img');
+    img.src=URL.createObjectURL(f);
+    img.alt='Preview foto';
+    img.style.cssText='width:82px;height:82px;object-fit:cover;border-radius:10px;border:1px solid #ddd';
+    box.appendChild(img);
+  }
+  box.style.display='flex';
 });
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   if(!requireAdmin()) return;
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
-  document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));document.getElementById(b.dataset.tab).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));document.getElementById(b.dataset.tab).classList.remove('hidden');if(b.dataset.tab==='special-promo')loadSpecialPromo();
 });
 sb.auth.onAuthStateChange(()=>setTimeout(async()=>{await updateAuthUI();await refresh()},0));
 (async()=>{await updateAuthUI();await refresh()})();
